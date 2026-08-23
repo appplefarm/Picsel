@@ -11,7 +11,7 @@ import SwiftUI
 struct PicxelApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SwiftUIViewExample()
         }
     }
 }
