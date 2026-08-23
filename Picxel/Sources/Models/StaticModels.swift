@@ -9,7 +9,8 @@
 import Foundation
 import CoreLocation
 
-// MARK: - API 응답 및 프리셋 장소 데이터 (Place + PresetPlace 통합)
+// MARK: - "API 응답" 및 프리셋 장소 데이터 (Place + PresetPlace 통합)
+// TODO: - API 담당자가 한번 더 수정해야 함.
 struct PlaceDTO: Identifiable, Codable, Hashable {
     var id: String
     var name: String            // placeName
@@ -34,13 +35,13 @@ struct RoutePoint: Codable {
 // MARK: - 백지도 픽셀 격자 (PixelRegion)
 struct PixelRegion: Identifiable {
     let id = UUID()
-    let code: String
+    let code: Int // 지역코드
     let name: String
     let gridX: Int
     let gridY: Int
 }
 
 let allPixelRegions: [PixelRegion] = [
-    PixelRegion(code: "KR-GB-YD", name: "영덕", gridX: 2, gridY: 4),
+    PixelRegion(code: 11111, name: "영덕", gridX: 2, gridY: 4),
     // ... 80개 세팅
 ]
