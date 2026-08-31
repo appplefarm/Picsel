@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		639548F1302DE738001B48E6 /* Picxel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Picxel.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		639548F1302DE738001B48E6 /* Picsel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Picsel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		639548F3302DE738001B48E6 /* Picxel */ = {
+		639548F3302DE738001B48E6 /* Picsel */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Picxel;
+			path = Picsel;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		639548E8302DE738001B48E6 = {
 			isa = PBXGroup;
 			children = (
-				639548F3302DE738001B48E6 /* Picxel */,
+				639548F3302DE738001B48E6 /* Picsel */,
 				639548F2302DE738001B48E6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		639548F2302DE738001B48E6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				639548F1302DE738001B48E6 /* Picxel.app */,
+				639548F1302DE738001B48E6 /* Picsel.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		639548F0302DE738001B48E6 /* Picxel */ = {
+		639548F0302DE738001B48E6 /* Picsel */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 639548FC302DE73A001B48E6 /* Build configuration list for PBXNativeTarget "Picxel" */;
+			buildConfigurationList = 639548FC302DE73A001B48E6 /* Build configuration list for PBXNativeTarget "Picsel" */;
 			buildPhases = (
 				639548ED302DE738001B48E6 /* Sources */,
 				639548EE302DE738001B48E6 /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				639548F3302DE738001B48E6 /* Picxel */,
+				639548F3302DE738001B48E6 /* Picsel */,
 			);
-			name = Picxel;
+			name = Picsel;
 			packageProductDependencies = (
 			);
 			productName = Picxel;
-			productReference = 639548F1302DE738001B48E6 /* Picxel.app */;
+			productReference = 639548F1302DE738001B48E6 /* Picsel.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 639548EC302DE738001B48E6 /* Build configuration list for PBXProject "Picxel" */;
+			buildConfigurationList = 639548EC302DE738001B48E6 /* Build configuration list for PBXProject "Picsel" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				639548F0302DE738001B48E6 /* Picxel */,
+				639548F0302DE738001B48E6 /* Picsel */,
 			);
 		};
 /* End PBXProject section */
@@ -313,7 +313,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		639548EC302DE738001B48E6 /* Build configuration list for PBXProject "Picxel" */ = {
+		639548EC302DE738001B48E6 /* Build configuration list for PBXProject "Picsel" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				639548FA302DE73A001B48E6 /* Debug */,
@@ -322,7 +322,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		639548FC302DE73A001B48E6 /* Build configuration list for PBXNativeTarget "Picxel" */ = {
+		639548FC302DE73A001B48E6 /* Build configuration list for PBXNativeTarget "Picsel" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				639548FD302DE73A001B48E6 /* Debug */,

@@ -1,6 +1,6 @@
 //
 //  DatabaseModels.swift
-//  Picxel
+//  Picsel
 //
 //  Created by 김나영 on 8/23/26.
 //

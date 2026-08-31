@@ -1,6 +1,6 @@
 //
 //  SwiftUIViewExample.swift
-//  Picxel
+//  Picsel
 //
 //  Created by 김나영 on 8/13/26.
 //
