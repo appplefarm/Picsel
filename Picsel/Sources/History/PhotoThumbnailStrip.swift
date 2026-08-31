@@ -17,7 +17,6 @@ struct PhotoThumbnailStrip: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                // TODO: Step 3 - canAddMore일 때 + 버튼 셀
                 if canAddMore {
                     Button(action: onAddTapped) {
                         RoundedRectangle(cornerRadius: 12)
@@ -30,7 +29,6 @@ struct PhotoThumbnailStrip: View {
                     }
                 }
 
-                // TODO: Step 3 - photos를 썸네일로 (Image(uiImage:) + 삭제 버튼)
                 ForEach(photos) { photo in
                     if let uiImage = UIImage(data: photo.imageData) {
                         HStack {

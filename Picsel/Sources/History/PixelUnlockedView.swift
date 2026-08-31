@@ -9,6 +9,7 @@ import SwiftUI
 
 struct PixelUnlockedView: View {
 
+    let thumbnailData: Data?
     let regionName: String      // "영덕"
     let travelDate: Date
     let tripTitle: String
@@ -16,12 +17,20 @@ struct PixelUnlockedView: View {
     let placeCount: Int
 
     var body: some View {
-        VStack(spacing: 24) {
-            // TODO: Step 6 - 헤더 ("새로운 픽셀이 채워졌어요!" + "OO 여행이 나의 픽셀 지도에 기록됐어요")
-
-            // TODO: Step 6 - 대표 사진 / 픽셀맵 영역 (지금은 회색 박스 placeholder)
-
-            // TODO: Step 6 - TripSummaryCard(...)
+        VStack(alignment: .leading, spacing: 16) {
+            Text("새로운 픽셀이 채워졌어요!")
+                .font(.title)
+                .fontWeight(.bold)
+            
+            Text("\(regionName) 여행이 나의 픽셀 지도에 기록됐어요.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.gray.opacity(0.2))
+                .frame(height: 240)
+            
+            TripSummaryCard(thumbnailData: thumbnailData, travelDate: travelDate, title: tripTitle, photoCount: photoCount, placeCount: placeCount)
 
             Spacer()
 
@@ -33,9 +42,11 @@ struct PixelUnlockedView: View {
 }
 
 #Preview {
-    PixelUnlockedView(regionName: "영덕",
-                      travelDate: .now,
-                      tripTitle: "영덕 바다 여행",
-                      photoCount: 3,
-                      placeCount: 3)
+    PixelUnlockedView(
+        thumbnailData: nil,
+        regionName: "영덕",
+        travelDate: .now,
+        tripTitle: "영덕 바다 여행",
+        photoCount: 3,
+        placeCount: 3)
 }

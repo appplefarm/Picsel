@@ -9,12 +9,12 @@ import SwiftUI
 import PhotosUI
 
 struct TripRecordView: View {
-
+    
     @State private var viewModel = TripRecordViewModel()
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var isGalleryPresented = false
     @State private var isPixelUnlockedPresented = false
-
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             Text("오늘 여행의 마무리")
@@ -28,14 +28,14 @@ struct TripRecordView: View {
             TitleTextField(text: $viewModel.title)
             
             MemoTextEditor(text: $viewModel.memo, maxCount: viewModel.maxMemoCount)
-
+            
             PhotoThumbnailStrip(
                 photos: viewModel.pickedPhotos,
                 canAddMore: viewModel.canAddMorePhotos,
                 onAddTapped: { isGalleryPresented = true },
                 onDelete: { viewModel.removePhoto($0) }
             )
-
+            
             Spacer()
             
             Text("여행 제목과 내용은 픽셀 상세에 저장돼요.")
@@ -70,7 +70,18 @@ struct TripRecordView: View {
             matching: .images
         )
         .navigationDestination(isPresented: $isPixelUnlockedPresented) {
-            // TODO: Step 6 - PixelUnlockedView(...)
+            PixelUnlockedView(
+                thumbnailData: viewModel.pickedPhotos.first?.imageData,
+                
+                // TODO: Trip 연결 후 실제 지역명
+                regionName: "영덕",
+                travelDate: .now,
+                tripTitle: viewModel.title,
+                photoCount: viewModel.pickedPhotos.count,
+                
+                // TODO: Trip 연결 후 실제 간 장소 수
+                placeCount: 3
+            )
         }
     }
     
