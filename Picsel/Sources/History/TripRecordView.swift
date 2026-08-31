@@ -36,7 +36,12 @@ struct TripRecordView: View {
                 maxSelectionCount: viewModel.maxPhotoCount - viewModel.pickedPhotos.count,
                 matching: .images
             ) {
-                Text("사진 추가")
+                PhotoThumbnailStrip(
+                    photos: viewModel.pickedPhotos,
+                    canAddMore: viewModel.canAddMorePhotos,
+                    onAddTapped: { isGalleryPresented = true },
+                    onDelete: { viewModel.removePhoto($0) }
+                )
             }
 
             // 확인용 임시 — Step 3에서 썸네일로 교체
@@ -51,9 +56,12 @@ struct TripRecordView: View {
             guard !newItems.isEmpty else { return }
             Task { await loadPhotos(from: newItems) }
         }
-        .sheet(isPresented: $isGalleryPresented) {
-            // TODO: Step 4 - GalleryPickerView(...)
-        }
+        .photosPicker(
+            isPresented: $isGalleryPresented,
+            selection: $pickerItems,
+            maxSelectionCount: viewModel.maxPhotoCount - viewModel.pickedPhotos.count,
+            matching: .images
+        )
         .navigationDestination(isPresented: $isPixelUnlockedPresented) {
             // TODO: Step 6 - PixelUnlockedView(...)
         }

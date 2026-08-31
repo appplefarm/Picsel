@@ -50,6 +50,7 @@ final class TripRecordViewModel {
 
     func removePhoto(_ photo: PickedPhoto) {
         // TODO: Step 3
+        pickedPhotos.removeAll { $0.id == photo.id }
     }
 
     func movePhoto(from source: IndexSet, to destination: Int) {
