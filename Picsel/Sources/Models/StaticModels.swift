@@ -19,7 +19,7 @@ struct PlaceDTO: Identifiable, Codable, Hashable {
     var longitude: Double
     var photoURL: String?       // URL(string:)으로 파싱하여 사용
     var detailDescription: String?
-    var regionCode: String?     // targetPixelCode 역할 통합
+    var regionCode: Int?     // targetPixelCode 역할 통합
     
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
