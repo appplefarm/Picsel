@@ -30,8 +30,8 @@ final class TripRecordViewModel {
     // MARK: - 파생 상태
     /// "인증하고 픽셀 채우기" 버튼 활성화 조건
     var canSave: Bool {
-        // TODO: Step 5 - 제목이 비어있지 않고, 사진이 1장 이상일 때 true
-        false
+        // TODO: Step 5 - 제목이 비어있지 않을 때 true
+        !title.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     /// 사진을 더 추가할 수 있는지 (+ 버튼 노출 여부)

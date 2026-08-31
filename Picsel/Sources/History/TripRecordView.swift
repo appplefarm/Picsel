@@ -17,7 +17,6 @@ struct TripRecordView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            // TODO: Step 1 - 헤더 (타이틀 "오늘 여행의 마무리" + 안내 문구)
             Text("오늘 여행의 마무리")
                 .font(.title)
                 .fontWeight(.bold)
@@ -30,26 +29,33 @@ struct TripRecordView: View {
             
             MemoTextEditor(text: $viewModel.memo, maxCount: viewModel.maxMemoCount)
 
-            // TODO: Step 3 - PhotoThumbnailStrip(...)  + 버튼 탭 시 isGalleryPresented = true
-            PhotosPicker(
-                selection: $pickerItems,
-                maxSelectionCount: viewModel.maxPhotoCount - viewModel.pickedPhotos.count,
-                matching: .images
-            ) {
-                PhotoThumbnailStrip(
-                    photos: viewModel.pickedPhotos,
-                    canAddMore: viewModel.canAddMorePhotos,
-                    onAddTapped: { isGalleryPresented = true },
-                    onDelete: { viewModel.removePhoto($0) }
-                )
-            }
-
-            // 확인용 임시 — Step 3에서 썸네일로 교체
-            Text("\(viewModel.pickedPhotos.count) / \(viewModel.maxPhotoCount)장 선택됨")
+            PhotoThumbnailStrip(
+                photos: viewModel.pickedPhotos,
+                canAddMore: viewModel.canAddMorePhotos,
+                onAddTapped: { isGalleryPresented = true },
+                onDelete: { viewModel.removePhoto($0) }
+            )
 
             Spacer()
-
-            // TODO: Step 5 - 저장 버튼 ("인증하고 픽셀 채우기"), disabled(!viewModel.canSave)
+            
+            Text("여행 제목과 내용은 픽셀 상세에 저장돼요.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            
+            Button {
+                isPixelUnlockedPresented = true
+            } label: {
+                Text("인증하고 픽셀 채우기")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 18)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(viewModel.canSave ? Color.black : Color.gray.opacity(0.3))
+                    )
+            }
+            .disabled(!viewModel.canSave)
         }
         .padding(20)
         .onChange(of: pickerItems) { _, newItems in
@@ -60,6 +66,7 @@ struct TripRecordView: View {
             isPresented: $isGalleryPresented,
             selection: $pickerItems,
             maxSelectionCount: viewModel.maxPhotoCount - viewModel.pickedPhotos.count,
+            selectionBehavior: .ordered,
             matching: .images
         )
         .navigationDestination(isPresented: $isPixelUnlockedPresented) {
