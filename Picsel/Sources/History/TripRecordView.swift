@@ -70,17 +70,9 @@ struct TripRecordView: View {
             matching: .images
         )
         .navigationDestination(isPresented: $isPixelUnlockedPresented) {
+            // TODO: Trip 연결 후 regionName / placeCount를 실제 값으로 교체
             PixelUnlockedView(
-                thumbnailData: viewModel.pickedPhotos.first?.imageData,
-                
-                // TODO: Trip 연결 후 실제 지역명
-                regionName: "영덕",
-                travelDate: .now,
-                tripTitle: viewModel.title,
-                photoCount: viewModel.pickedPhotos.count,
-                
-                // TODO: Trip 연결 후 실제 간 장소 수
-                placeCount: 3
+                snapshot: viewModel.makeSnapshot(regionName: "영덕", placeCount: 3)
             )
         }
     }

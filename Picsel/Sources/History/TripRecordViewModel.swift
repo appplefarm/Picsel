@@ -55,6 +55,20 @@ final class TripRecordViewModel {
         // TODO: Step 3 - 배열 순서가 곧 orderIndex
     }
 
+    // MARK: - 다음 화면으로 넘기기
+    /// 작성한 내용을 결과/상세 화면으로 넘길 형태로 변환한다.
+    /// regionName, placeCount는 아직 Trip이 없어서 밖에서 받는다.
+    func makeSnapshot(regionName: String, placeCount: Int) -> TripRecordSnapshot {
+        TripRecordSnapshot(
+            regionName: regionName,
+            title: title,
+            memo: memo,
+            travelDate: Date(),
+            photoDataList: pickedPhotos.map(\.imageData),
+            placeCount: placeCount
+        )
+    }
+
     // MARK: - 저장 (지금은 비워둠)
     func save(to trip: Trip) {
         // TODO: Step 7 - trip.title / trip.memo 채우고

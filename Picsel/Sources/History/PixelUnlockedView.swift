@@ -2,51 +2,91 @@
 //  PixelUnlockedView.swift
 //  Picsel
 //
-//  Created by kosoobin on 8/31/26.
+//  18_픽셀_획득 — "새로운 픽셀이 채워졌어요!"
+//  저장 직후 결과 화면.
 //
 
 import SwiftUI
 
 struct PixelUnlockedView: View {
 
-    let thumbnailData: Data?
-    let regionName: String      // "영덕"
-    let travelDate: Date
-    let tripTitle: String
-    let photoCount: Int
-    let placeCount: Int
+    let snapshot: TripRecordSnapshot
+
+    @State private var isPixelDetailPresented = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("새로운 픽셀이 채워졌어요!")
                 .font(.title)
                 .fontWeight(.bold)
-            
-            Text("\(regionName) 여행이 나의 픽셀 지도에 기록됐어요.")
+
+            Text("\(snapshot.regionName) 여행이 나의 픽셀 지도에 기록됐어요.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.2))
-                .frame(height: 240)
-            
-            TripSummaryCard(thumbnailData: thumbnailData, travelDate: travelDate, title: tripTitle, photoCount: photoCount, placeCount: placeCount)
+
+            // TODO: 픽셀맵 연결 시 실제 지도로 교체 (팀원 파트)
+            Group {
+                if let data = snapshot.representativePhotoData,
+                   let uiImage = UIImage(data: data) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    Color.gray.opacity(0.2)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 240)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+            TripSummaryCard(
+                thumbnailData: snapshot.representativePhotoData,
+                travelDate: snapshot.travelDate,
+                title: snapshot.title,
+                photoCount: snapshot.photoCount,
+                placeCount: snapshot.placeCount
+            )
 
             Spacer()
 
-            // TODO: Step 6 - "홈으로" / "픽셀맵 확인하기" 버튼 2개
+            Button {
+                // TODO: 홈 탭으로 이동 (탭 구조 붙은 뒤 연결)
+            } label: {
+                Text("홈으로")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 18)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
+            }
+            .foregroundStyle(.primary)
+
+            Button {
+                isPixelDetailPresented = true
+            } label: {
+                Text("픽셀맵 확인하기")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 18)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color.black)
+                    )
+            }
         }
         .padding(20)
         .navigationBarBackButtonHidden(true)
+        .navigationDestination(isPresented: $isPixelDetailPresented) {
+            PixelDetailView(snapshot: snapshot)
+        }
     }
 }
 
 #Preview {
-    PixelUnlockedView(
-        thumbnailData: nil,
-        regionName: "영덕",
-        travelDate: .now,
-        tripTitle: "영덕 바다 여행",
-        photoCount: 3,
-        placeCount: 3)
+    NavigationStack {
+        PixelUnlockedView(snapshot: .sample)
+    }
 }
