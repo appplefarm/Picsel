@@ -16,8 +16,8 @@ struct TourAPIPhotoConfiguration: Sendable {
 
     /// 키는 소스에 저장하지 않고 Xcode Scheme 환경변수 또는 Info.plist로 주입합니다.
     static var current: TourAPIPhotoConfiguration {
-        let environmentKey = ProcessInfo.processInfo.environment["TOUR_API_SERVICE_KEY"]
-        let bundleKey = Bundle.main.object(forInfoDictionaryKey: "TOUR_API_SERVICE_KEY") as? String
+        let environmentKey = ProcessInfo.processInfo.environment["TOUR_API_SERVICE_KEY_WINNERS"]
+        let bundleKey = Bundle.main.object(forInfoDictionaryKey: "TOUR_API_SERVICE_KEY_WINNERS") as? String
         let rawKey = environmentKey ?? bundleKey ?? ""
         let serviceKey = rawKey.contains("$(") ? "" : rawKey
 
