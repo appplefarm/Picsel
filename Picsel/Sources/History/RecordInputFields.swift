@@ -59,7 +59,7 @@ struct MemoTextEditor: View {
                     .font(.body)
                     .padding(8)
                     .scrollContentBackground(.hidden) // 배경 투명 처리
-                    .onChange(of: text) { newValue in
+                    .onChange(of: text) { _, newValue in
                         if newValue.count > maxCount {
                             text = String(newValue.prefix(maxCount))
                         }

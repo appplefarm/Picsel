@@ -41,7 +41,11 @@ final class TripRecordViewModel {
 
     // MARK: - 사진 조작
     func addPhotos(_ photos: [PickedPhoto]) {
-        // TODO: Step 2 - maxPhotoCount를 넘지 않게 append
+        // 남은 자리만큼만 받는다 (최대 10장)
+        let remainingCount = maxPhotoCount - pickedPhotos.count
+        guard remainingCount > 0 else { return }
+
+        pickedPhotos.append(contentsOf: photos.prefix(remainingCount))
     }
 
     func removePhoto(_ photo: PickedPhoto) {
