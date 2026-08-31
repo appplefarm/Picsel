@@ -11,7 +11,7 @@ import SwiftUI
 struct PicselApp: App {
     var body: some Scene {
         WindowGroup {
-            SwiftUIViewExample()
+            PhotoExploreRootView()
         }
     }
 }
