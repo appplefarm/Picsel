@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>TOUR_API_SERVICE_KEY_ENTRY</key>
+	<string>$(TOUR_API_SERVICE_KEY_ENTRY)</string>
 	<key>TOUR_API_SERVICE_KEY_WINNERS</key>
 	<string>$(TOUR_API_SERVICE_KEY_WINNERS)</string>
 </dict>
