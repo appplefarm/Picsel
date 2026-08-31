@@ -12,7 +12,15 @@ import GoogleMaps
 @main
 struct PicselApp: App {
     init() {
-        GMSServices.provideAPIKey("")
+        guard let apiKey = Bundle.main.object(
+            forInfoDictionaryKey: "GOOGLE_MAPS_API_KEY"
+        ) as? String,
+        !apiKey.isEmpty,
+        !apiKey.contains("$(")
+        else {
+            fatalError("GoogleMapsAPIKey를 불러오지 못했습니다.")
+        }
+        GMSServices.provideAPIKey(apiKey)
     }
     
     var body: some Scene {

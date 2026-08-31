@@ -6,5 +6,7 @@
 	<string>$(TOUR_API_SERVICE_KEY_ENTRY)</string>
 	<key>TOUR_API_SERVICE_KEY_WINNERS</key>
 	<string>$(TOUR_API_SERVICE_KEY_WINNERS)</string>
+	<key>GOOGLE_MAPS_API_KEY</key>
+	<string>$(GOOGLE_MAPS_API_KEY)</string>
 </dict>
 </plist>
