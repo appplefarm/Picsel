@@ -1,0 +1,4 @@
+// Shared build settings. Keep real credentials in Secrets.xcconfig.
+TOUR_API_SERVICE_KEY =
+
+#include? "Secrets.xcconfig"
