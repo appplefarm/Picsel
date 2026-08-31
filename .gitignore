@@ -65,3 +65,6 @@ fastlane/test_output
 
 # Local API secrets
 Configs/Secrets.xcconfig
+
+# Local API keys
+**/Secrets.xcconfig
