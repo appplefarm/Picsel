@@ -11,6 +11,7 @@ import SwiftUI
 struct TransitSwipeView: View {
     @State var viewModel: TransitSwipeViewModel
     @State private var isShowingRouteConfirmation = false
+    @State private var isShowingTripRecord = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -73,7 +74,13 @@ struct TransitSwipeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .navigationDestination(isPresented: $isShowingRouteConfirmation) {
-            RouteConfirmationView(trip: viewModel.activeTrip)
+            RouteConfirmationView(trip: viewModel.activeTrip) { _ in
+                isShowingTripRecord = true
+            }
+                .toolbar(.hidden, for: .tabBar)
+        }
+        .navigationDestination(isPresented: $isShowingTripRecord) {
+            TripRecordView()
                 .toolbar(.hidden, for: .tabBar)
         }
         .onAppear {
