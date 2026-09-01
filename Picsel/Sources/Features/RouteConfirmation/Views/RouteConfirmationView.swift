@@ -115,7 +115,7 @@ struct RouteConfirmationView: View {
         Button {
             onStartNavigation(viewModel.activeTrip)
         } label: {
-            Text("네비게이션으로 출발")
+            Text("확인")
                 .font(.headline)
                 .foregroundStyle(Color(.systemBackground))
                 .frame(maxWidth: .infinity)

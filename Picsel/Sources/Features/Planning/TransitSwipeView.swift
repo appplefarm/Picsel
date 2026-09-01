@@ -10,6 +10,7 @@ import SwiftUI
 
 struct TransitSwipeView: View {
     @State var viewModel: TransitSwipeViewModel
+    @State private var isShowingRouteConfirmation = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -65,12 +66,16 @@ struct TransitSwipeView: View {
                 selectedCount: viewModel.selectedPlaces.count,
                 onConfirm: {
                     viewModel.finalizeWaypoints()
-                    // TODO: 다음 화면(최종 경로 확정 뷰)으로 네비게이션 이동 로직 추가
+                    isShowingRouteConfirmation = true
                 }
             )
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
+        .navigationDestination(isPresented: $isShowingRouteConfirmation) {
+            RouteConfirmationView(trip: viewModel.activeTrip)
+                .toolbar(.hidden, for: .tabBar)
+        }
         .onAppear {
             // 화면 진입 시 추천 장소 로드 (테스트용 더미 데이터 통신)
             Task {
