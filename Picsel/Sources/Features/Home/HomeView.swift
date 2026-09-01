@@ -10,7 +10,7 @@ import SwiftUI
 struct HomeView: View {
     @State private var viewModel = HomeViewModel()
     @State private var locationManager = CurrentLocationManager()
-    @State private var selectedTab: Int = 0
+    @State private var confirmedDestination: PhotoDestination?
 
     private var mapCoordinate: CLLocationCoordinate2D {
         locationManager.currentLocation?.coordinate ?? viewModel.fallbackCoordinate
@@ -66,16 +66,18 @@ struct HomeView: View {
                 // 슬라이더 및 하단 액션 버튼
                 bottomControlSection
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 8)
-
-                // TODO: 탭바 수정 - 바닐라 TabView
-                // 커스텀 플로팅 탭바
-                customFloatingTabBar
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 24)
             }
         }
         .task {
             locationManager.requestCurrentLocation()
+        }
+        .navigationDestination(item: $confirmedDestination) { destination in
+            TransitSwipeView(
+                viewModel: TransitSwipeViewModel(
+                    trip: makeTrip(for: destination)
+                )
+            )
         }
     }
 
@@ -126,8 +128,14 @@ struct HomeView: View {
             }
 
             // 사진으로 목적지 고르기 버튼
-            Button {
-                // 탐색 플로우 진입 액션
+            NavigationLink {
+                PhotoExploreView(
+                    service: TourAPIPhotoDestinationService(
+                        configuration: .current
+                    )
+                ) { destination in
+                    confirmedDestination = destination
+                }
             } label: {
                 VStack(spacing: 4) {
                     Text("사진으로 목적지 고르기")
@@ -143,39 +151,31 @@ struct HomeView: View {
                 .background(Color(white: 0.2))
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
+            .buttonStyle(.plain)
         }
     }
 
-    // TODO: 탭바 수정 후 삭제
-    // 하단 커스텀 탭바
-    private var customFloatingTabBar: some View {
-        HStack(spacing: 36) {
-            tabItem(title: "홈", icon: "house.fill", tag: 0)
-            tabItem(title: "픽셀맵", icon: "mappin.and.ellipse", tag: 1)
-            tabItem(title: "히스토리", icon: "newspaper", tag: 2)
+    private func makeTrip(for destination: PhotoDestination) -> Trip {
+        let trip = Trip(title: "\(destination.name) 여행")
+
+        guard let place = destination.placeDTO else {
+            return trip
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 8)
-        .background(
-            Capsule()
-                .fill(Color(UIColor.secondarySystemBackground).opacity(0.95))
-                .shadow(color: .black.opacity(0.06), radius: 10, y: 4)
+
+        let destinationStop = RouteStop(
+            placeId: place.id,
+            name: place.name,
+            latitude: place.latitude,
+            longitude: place.longitude,
+            stopType: "destination",
+            orderIndex: 0
         )
-    }
+        destinationStop.address = place.address
+        destinationStop.regionCode = place.regionCode
+        destinationStop.trip = trip
+        trip.stops.append(destinationStop)
 
-    private func tabItem(title: String, icon: String, tag: Int) -> some View {
-        Button {
-            selectedTab = tag
-        } label: {
-            VStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.system(size: 18))
-                Text(title)
-                    .font(.system(size: 11, weight: selectedTab == tag ? .bold : .regular))
-            }
-            .foregroundStyle(selectedTab == tag ? .primary : .secondary)
-            .frame(width: 48)
-        }
+        return trip
     }
 }
 

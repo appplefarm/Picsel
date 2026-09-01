@@ -58,6 +58,12 @@ final class TransitSwipeViewModel {
     
     // MARK: - 최종 경로 확정 (DB에 반영)
     func finalizeWaypoints() {
+        // 확인 화면에서 되돌아와 다시 확정해도 기존 경유지가 중복되지 않게 교체합니다.
+        for stop in activeTrip.stops where !stop.isDestination {
+            stop.trip = nil
+        }
+        activeTrip.stops.removeAll { !$0.isDestination }
+
         // 임시로 모아둔 selectedPlaces를 RouteStop 엔티티로 변환하여 마스터 Trip에 꽂아 넣음
         for (index, place) in selectedPlaces.enumerated() {
             let newStop = RouteStop(
