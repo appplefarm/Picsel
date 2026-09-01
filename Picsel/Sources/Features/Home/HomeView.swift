@@ -67,7 +67,8 @@ struct HomeView: View {
                 bottomControlSection
                     .padding(.horizontal, 24)
                     .padding(.bottom, 8)
-                
+
+                // TODO: 탭바 수정 - 바닐라 TabView
                 // 커스텀 플로팅 탭바
                 customFloatingTabBar
                     .padding(.bottom, 8)
@@ -145,6 +146,7 @@ struct HomeView: View {
         }
     }
 
+    // TODO: 탭바 수정 후 삭제
     // 하단 커스텀 탭바
     private var customFloatingTabBar: some View {
         HStack(spacing: 36) {
