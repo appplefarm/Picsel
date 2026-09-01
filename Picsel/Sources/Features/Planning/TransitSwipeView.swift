@@ -70,6 +70,7 @@ struct TransitSwipeView: View {
             )
         }
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
         .onAppear {
             // 화면 진입 시 추천 장소 로드 (테스트용 더미 데이터 통신)
             Task {

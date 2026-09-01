@@ -10,6 +10,7 @@ import SwiftUI
 struct HomeView: View {
     @State private var viewModel = HomeViewModel()
     @State private var locationManager = CurrentLocationManager()
+    @State private var confirmedDestination: PhotoDestination?
 
     private var mapCoordinate: CLLocationCoordinate2D {
         locationManager.currentLocation?.coordinate ?? viewModel.fallbackCoordinate
@@ -71,6 +72,13 @@ struct HomeView: View {
         .task {
             locationManager.requestCurrentLocation()
         }
+        .navigationDestination(item: $confirmedDestination) { destination in
+            TransitSwipeView(
+                viewModel: TransitSwipeViewModel(
+                    trip: makeTrip(for: destination)
+                )
+            )
+        }
     }
 
     // MARK: - 서브 뷰 컴포넌트
@@ -125,8 +133,8 @@ struct HomeView: View {
                     service: TourAPIPhotoDestinationService(
                         configuration: .current
                     )
-                ) { _ in
-                    // 목적지 선택 이후의 다음 화면은 추후 연결합니다.
+                ) { destination in
+                    confirmedDestination = destination
                 }
             } label: {
                 VStack(spacing: 4) {
@@ -145,6 +153,29 @@ struct HomeView: View {
             }
             .buttonStyle(.plain)
         }
+    }
+
+    private func makeTrip(for destination: PhotoDestination) -> Trip {
+        let trip = Trip(title: "\(destination.name) 여행")
+
+        guard let place = destination.placeDTO else {
+            return trip
+        }
+
+        let destinationStop = RouteStop(
+            placeId: place.id,
+            name: place.name,
+            latitude: place.latitude,
+            longitude: place.longitude,
+            stopType: "destination",
+            orderIndex: 0
+        )
+        destinationStop.address = place.address
+        destinationStop.regionCode = place.regionCode
+        destinationStop.trip = trip
+        trip.stops.append(destinationStop)
+
+        return trip
     }
 }
 
