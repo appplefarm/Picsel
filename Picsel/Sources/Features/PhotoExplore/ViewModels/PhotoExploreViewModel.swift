@@ -12,7 +12,7 @@ import Observation
 final class PhotoExploreViewModel {
     enum Phase {
         case loading
-        case loaded([SpatialPlaceItem])
+        case loaded([PhotoDestination])
         case empty
         case failed(String)
     }
@@ -35,8 +35,7 @@ final class PhotoExploreViewModel {
             )
             try Task.checkCancellation()
 
-            let items = SpatialPlaceItem.compose(from: destinations)
-            phase = items.isEmpty ? .empty : .loaded(items)
+            phase = destinations.isEmpty ? .empty : .loaded(destinations)
         } catch is CancellationError {
             // 화면이 사라져 취소된 작업은 오류로 표시하지 않습니다.
         } catch {

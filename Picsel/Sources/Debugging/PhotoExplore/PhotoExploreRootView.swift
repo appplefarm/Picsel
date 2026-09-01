@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+#if DEBUG
 /// 다음 화면이 연결되기 전까지 PhotoExplore 기능을 독립 실행하는 컨테이너입니다.
 struct PhotoExploreRootView: View {
     private let service: any PhotoDestinationService
@@ -43,10 +44,5 @@ struct PhotoExploreRootView: View {
 
         return "서버에서 주소와 좌표를 보강하면 PlaceDTO로 변환됩니다."
     }
-}
-
-#if DEBUG
-#Preview {
-    PhotoExploreRootView(service: PreviewPhotoDestinationService())
 }
 #endif

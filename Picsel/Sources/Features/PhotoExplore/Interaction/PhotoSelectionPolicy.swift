@@ -8,6 +8,14 @@ import Foundation
 
 /// 렌더링과 분리된 순수 선택 규칙입니다.
 struct PhotoSelectionPolicy {
+    private struct Projection {
+        let depthError: Float
+        let horizontalDistance: Float
+        let verticalDistance: Float
+        let halfHorizontalSpan: Float
+        let halfVerticalSpan: Float
+    }
+
     func isSelectable(
         _ item: SpatialPlaceItem,
         from camera: PhotoCameraState,
@@ -77,26 +85,19 @@ struct PhotoSelectionPolicy {
         from camera: PhotoCameraState,
         viewportSize: CGSize
     ) -> Float? {
-        let relativePosition = PhotoSpace.position(for: item) - camera.position
-        let forwardDepth = -relativePosition.z
-        guard forwardDepth > 0.15 else { return nil }
-
-        let depthError = abs(forwardDepth - PhotoSpace.focusDistance)
-        guard depthError <= PhotoSpace.selectionDepthTolerance else { return nil }
-
-        let halfVerticalSpan = forwardDepth * tan(
-            PhotoSpace.verticalFieldOfViewDegrees * .pi / 360
-        )
-        let aspectRatio = Float(viewportSize.width / max(viewportSize.height, 1))
-        let halfHorizontalSpan = halfVerticalSpan * aspectRatio
-        let horizontalLimit = halfHorizontalSpan * PhotoSpace.selectionViewportMargin
-        let verticalLimit = halfVerticalSpan * PhotoSpace.selectionViewportMargin
-
-        guard abs(relativePosition.x) <= horizontalLimit,
-              abs(relativePosition.y) <= verticalLimit else { return nil }
+        guard let projection = projection(
+            of: item,
+            from: camera,
+            viewportSize: viewportSize
+        ),
+        projection.depthError <= PhotoSpace.selectionDepthTolerance,
+        projection.horizontalDistance <= projection.halfHorizontalSpan
+            * PhotoSpace.selectionViewportMargin,
+        projection.verticalDistance <= projection.halfVerticalSpan
+            * PhotoSpace.selectionViewportMargin else { return nil }
 
         // 화면 중심보다 실제 깊이가 가까운 사진을 우선합니다.
-        return depthError
+        return projection.depthError
     }
 
     private func magnetScore(
@@ -105,24 +106,19 @@ struct PhotoSelectionPolicy {
         viewportSize: CGSize,
         settings: PhotoInteractionSettings
     ) -> Float? {
-        let relativePosition = PhotoSpace.position(for: item) - camera.position
-        let forwardDepth = -relativePosition.z
-        guard forwardDepth > 0.15 else { return nil }
-
-        let depthError = abs(forwardDepth - PhotoSpace.focusDistance)
-        guard depthError <= Float(settings.magnetDepthTolerance) else {
+        guard let projection = projection(
+            of: item,
+            from: camera,
+            viewportSize: viewportSize
+        ),
+        projection.depthError <= Float(settings.magnetDepthTolerance) else {
             return nil
         }
 
-        let halfVerticalSpan = forwardDepth * tan(
-            PhotoSpace.verticalFieldOfViewDegrees * .pi / 360
-        )
-        let aspectRatio = Float(viewportSize.width / max(viewportSize.height, 1))
-        let halfHorizontalSpan = halfVerticalSpan * aspectRatio
-        let horizontalDistance = abs(relativePosition.x)
-            / max(halfHorizontalSpan, 0.001)
-        let verticalDistance = abs(relativePosition.y)
-            / max(halfVerticalSpan, 0.001)
+        let horizontalDistance = projection.horizontalDistance
+            / max(projection.halfHorizontalSpan, 0.001)
+        let verticalDistance = projection.verticalDistance
+            / max(projection.halfVerticalSpan, 0.001)
 
         let viewportMargin = Float(settings.magnetViewportMargin)
         guard horizontalDistance <= viewportMargin,
@@ -130,6 +126,32 @@ struct PhotoSelectionPolicy {
             return nil
         }
 
-        return depthError + hypot(horizontalDistance, verticalDistance)
+        return projection.depthError + hypot(
+            horizontalDistance,
+            verticalDistance
+        )
+    }
+
+    private func projection(
+        of item: SpatialPlaceItem,
+        from camera: PhotoCameraState,
+        viewportSize: CGSize
+    ) -> Projection? {
+        let relativePosition = PhotoSpace.position(for: item) - camera.position
+        let forwardDepth = -relativePosition.z
+        guard forwardDepth > 0.15 else { return nil }
+
+        let halfVerticalSpan = forwardDepth * tan(
+            PhotoSpace.verticalFieldOfViewDegrees * .pi / 360
+        )
+        let aspectRatio = Float(viewportSize.width / max(viewportSize.height, 1))
+
+        return Projection(
+            depthError: abs(forwardDepth - PhotoSpace.focusDistance),
+            horizontalDistance: abs(relativePosition.x),
+            verticalDistance: abs(relativePosition.y),
+            halfHorizontalSpan: halfVerticalSpan * aspectRatio,
+            halfVerticalSpan: halfVerticalSpan
+        )
     }
 }

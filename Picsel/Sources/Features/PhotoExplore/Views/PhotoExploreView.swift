@@ -30,9 +30,12 @@ struct PhotoExploreView: View {
                 )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            case let .loaded(places):
-                SpatialPhotoCanvas(destinations: places, onConfirm: onConfirm)
-                    .id(places)
+            case let .loaded(destinations):
+                SpatialPhotoCanvas(
+                    destinations: destinations,
+                    onConfirm: onConfirm
+                )
+                .id(destinations)
 
             case .empty:
                 ContentUnavailableView(
@@ -59,11 +62,3 @@ struct PhotoExploreView: View {
         .toolbarBackground(.hidden, for: .navigationBar)
     }
 }
-
-#if DEBUG
-#Preview {
-    NavigationStack {
-        PhotoExploreView(service: PreviewPhotoDestinationService()) { _ in }
-    }
-}
-#endif

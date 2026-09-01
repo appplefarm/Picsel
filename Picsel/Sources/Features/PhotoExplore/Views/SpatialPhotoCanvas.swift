@@ -15,17 +15,22 @@ struct SpatialPhotoCanvas: View {
     @State private var viewModel: SpatialPhotoCanvasViewModel
     @State private var renderer = RealityPhotoRenderer()
     @State private var settings = PhotoInteractionSettings.defaults
-    @State private var isShowingSettings = false
     @State private var presentedPlace: SpatialPlaceItem?
     @GestureState private var isCameraGestureActive = false
 
+#if DEBUG
+    @State private var isShowingSettings = false
+#endif
+
     init(
-        destinations: [SpatialPlaceItem],
+        destinations: [PhotoDestination],
         onConfirm: @escaping (PhotoDestination) -> Void
     ) {
         self.onConfirm = onConfirm
         _viewModel = State(
-            initialValue: SpatialPhotoCanvasViewModel(places: destinations)
+            initialValue: SpatialPhotoCanvasViewModel(
+                places: SpatialPlaceItem.compose(from: destinations)
+            )
         )
     }
 
@@ -105,6 +110,7 @@ struct SpatialPhotoCanvas: View {
                     .labelStyle(.iconOnly)
                     .disabled(!viewModel.canInteract)
 
+#if DEBUG
                     Button("조작 설정", systemImage: "slider.horizontal.3") {
                         isShowingSettings = true
                     }
@@ -112,6 +118,7 @@ struct SpatialPhotoCanvas: View {
                     .popover(isPresented: $isShowingSettings, arrowEdge: .top) {
                         PhotoInteractionSettingsPanel(settings: $settings)
                     }
+#endif
                 }
             }
             .task(id: viewModel.sceneLoadRequest) {
@@ -121,7 +128,7 @@ struct SpatialPhotoCanvas: View {
         .sensoryFeedback(.selection, trigger: viewModel.selectedPlaceID)
         .fullScreenCover(item: $presentedPlace) { item in
             DestinationDetailView(
-                item: item,
+                destination: item.destination,
                 info: DestinationDetailInfo(destination: item.destination)
             ) {
                 onConfirm(item.destination)
@@ -271,17 +278,3 @@ struct SpatialPhotoCanvas: View {
         }
     }
 }
-
-#if DEBUG
-#Preview("Spatial Photo Canvas") {
-    NavigationStack {
-        SpatialPhotoCanvas(
-            destinations: SpatialPlaceItem.compose(
-                from: PhotoDestination.previewSamples
-            )
-        ) { _ in }
-        .navigationTitle("사진으로 목적지 고르기")
-        .navigationBarTitleDisplayMode(.large)
-    }
-}
-#endif

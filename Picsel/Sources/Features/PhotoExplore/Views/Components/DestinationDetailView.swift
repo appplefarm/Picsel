@@ -4,11 +4,12 @@
 //
 
 import CoreGraphics
+import Foundation
 import SwiftUI
 
 /// 선택된 사진을 최종 목적지로 확정하기 전 보여주는 전체 화면 상세입니다.
 struct DestinationDetailView: View {
-    let item: SpatialPlaceItem
+    let destination: PhotoDestination
     let info: DestinationDetailInfo
     let onConfirm: () -> Void
 
@@ -70,7 +71,7 @@ struct DestinationDetailView: View {
             }
         }
         .presentationBackground(.clear)
-        .task(id: item.imageURL) {
+        .task(id: destination.photoURL) {
             await loadPhoto()
         }
     }
@@ -105,7 +106,7 @@ struct DestinationDetailView: View {
                 .frame(width: size.width, height: size.height)
                 .background(Color(.systemBackground))
                 .clipShape(.rect(cornerRadius: 10))
-                .accessibilityLabel(item.name)
+                .accessibilityLabel(destination.name)
         } else if didFailToLoadPhoto {
             Image(systemName: "photo")
                 .font(.largeTitle)
@@ -141,13 +142,14 @@ struct DestinationDetailView: View {
         loadedPhoto = nil
         didFailToLoadPhoto = false
 
-        guard let imageURL = item.imageURL else {
+        guard let photoURL = destination.photoURL,
+              let imageURL = URL(string: photoURL) else {
             didFailToLoadPhoto = true
             return
         }
 
         do {
-            let image = try await RemotePhotoTextureLoader.image(
+            let image = try await RemotePhotoImageLoader.image(
                 from: imageURL,
                 maximumPixelSize: 2_400
             )
@@ -188,17 +190,3 @@ struct DestinationDetailView: View {
         }
     }
 }
-
-#if DEBUG
-#Preview {
-    DestinationDetailView(
-        item: SpatialPlaceItem.compose(
-            from: PhotoDestination.previewSamples
-        )[0],
-        info: DestinationDetailInfo(
-            destination: PhotoDestination.previewSamples[0]
-        )
-    ) { }
-    .background(PhotoExploreBackground())
-}
-#endif

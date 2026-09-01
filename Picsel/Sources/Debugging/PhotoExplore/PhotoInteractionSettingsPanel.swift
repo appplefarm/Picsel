@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+#if DEBUG
 struct PhotoInteractionSettingsPanel: View {
     @Binding var settings: PhotoInteractionSettings
 
@@ -183,12 +184,5 @@ private struct SettingsSlider: View {
             .number.precision(.fractionLength(fractionDigits))
         ) + unit
     }
-}
-
-#if DEBUG
-#Preview {
-    @Previewable @State var settings = PhotoInteractionSettings.defaults
-
-    PhotoInteractionSettingsPanel(settings: $settings)
 }
 #endif

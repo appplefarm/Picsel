@@ -10,7 +10,7 @@ import Foundation
 /// 선택 결과로는 이 타입이 아닌 `PhotoDestination`을 전달합니다.
 struct SpatialPlaceItem: Identifiable, Hashable {
     let destination: PhotoDestination
-    let placement: SpatialPlacePlacement
+    private let placement: SpatialPlacePlacement
 
     var id: PhotoDestination.ID { destination.id }
     var name: String { destination.name }
@@ -24,7 +24,7 @@ struct SpatialPlaceItem: Identifiable, Hashable {
     var yaw: Double { placement.yaw }
 }
 
-struct SpatialPlacePlacement: Hashable {
+private struct SpatialPlacePlacement: Hashable {
     let position: CGPoint
     let size: CGSize
     /// 0...1. 클수록 사용자에게 가까운 레이어입니다.

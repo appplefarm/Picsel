@@ -30,7 +30,6 @@ final class RealityPhotoRenderer {
     let camera = PerspectiveCamera()
 
     private var entries: [PhotoDestination.ID: PhotoEntry] = [:]
-    private var loadedItems: [SpatialPlaceItem] = []
     private var loadGeneration = UUID()
 
     init() {
@@ -45,10 +44,6 @@ final class RealityPhotoRenderer {
     }
 
     func load(_ items: [SpatialPlaceItem]) async -> Set<PhotoDestination.ID> {
-        if items == loadedItems, !entries.isEmpty {
-            return Set(entries.keys)
-        }
-
         let generation = UUID()
         loadGeneration = generation
         resetScene()
@@ -75,10 +70,6 @@ final class RealityPhotoRenderer {
 
         for id in remoteIDs.subtracting(loadedIDs) {
             removeEntry(id: id)
-        }
-
-        if entries.count == items.count {
-            loadedItems = items
         }
 
         return Set(entries.keys)
@@ -181,7 +172,7 @@ final class RealityPhotoRenderer {
                 let id = item.id
 
                 group.addTask {
-                    guard let image = try? await RemotePhotoTextureLoader.image(
+                    guard let image = try? await RemotePhotoImageLoader.image(
                         from: url
                     ) else { return nil }
 
@@ -297,6 +288,5 @@ final class RealityPhotoRenderer {
             entry.entity.removeFromParent()
         }
         entries.removeAll()
-        loadedItems.removeAll()
     }
 }

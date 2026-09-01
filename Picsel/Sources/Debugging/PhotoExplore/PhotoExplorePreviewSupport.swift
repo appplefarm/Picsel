@@ -1,5 +1,5 @@
 //
-//  PhotoDestination+Preview.swift
+//  PhotoExplorePreviewSupport.swift
 //  Picsel
 //
 
