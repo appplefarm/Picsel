@@ -111,10 +111,8 @@ struct TourAPIPhotoDestinationService: PhotoDestinationService {
             )
         }
 
-        return envelope.response.body.items?.item
-            .compactMap(\.record)
-            .prefix(limit)
-            .map { $0 } ?? []
+        guard let items = envelope.response.body.items?.item else { return [] }
+        return Array(items.compactMap(\.record).prefix(limit))
     }
 
     private func makeRequestURL(limit: Int) -> URL? {

@@ -1,5 +1,5 @@
 //
-//  RemotePhotoTextureLoader.swift
+//  RemotePhotoImageLoader.swift
 //  Picsel
 //
 
@@ -7,8 +7,8 @@ import CoreGraphics
 import Foundation
 import ImageIO
 
-/// 원격 사진을 RealityKit 텍스처로 만들기 좋은 크기의 `CGImage`로 변환합니다.
-enum RemotePhotoTextureLoader {
+/// 원격 사진을 화면 용도에 맞는 크기의 `CGImage`로 변환합니다.
+enum RemotePhotoImageLoader {
     nonisolated private static let maximumTexturePixelSize = 1_600
 
     enum LoadError: Error {
