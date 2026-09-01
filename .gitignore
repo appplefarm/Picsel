@@ -68,3 +68,4 @@ Configs/Secrets.xcconfig
 
 # Local API keys
 **/Secrets.xcconfig
+**/Secrets.xcconfig
