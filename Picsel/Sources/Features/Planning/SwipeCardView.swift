@@ -18,10 +18,28 @@ struct SwipeCardView: View {
     
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.gray)
-//                .fill(Color.gray.opacity(0.3)) // 임시 배경 (나중에 AsyncImage로 교체)
-//                .shadow(radius: 5)
+//            RoundedRectangle(cornerRadius: 20)
+//                .fill(.gray)
+            AsyncImage(url: URL(string: place.photoURL ?? "")) { phase in
+                switch phase {
+                case .empty:
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color.gray.opacity(0.1))
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    Color.gray.opacity(0.3)
+                @unknown default:
+                    Color.gray.opacity(0.3)
+                }
+            }
+            .frame(width: 320, height: 420)
+            .cornerRadius(20)
+            .clipped()
+            .shadow(radius: 5)
             
             VStack {
                 Spacer()

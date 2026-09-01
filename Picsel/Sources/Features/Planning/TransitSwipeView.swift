@@ -35,18 +35,19 @@ struct TransitSwipeView: View {
                         .foregroundColor(.gray)
                 } else {
                     ForEach(Array(viewModel.candidates.enumerated().reversed()), id: \.element.id) { index, place in
-                        
-                        // 홀수/짝수 인덱스에 따라 지그재그로 각도 주기
-                        let randomAngle = (index % 2 == 0) ? Double(index) * 2.0 : Double(-index) * 2.5
+                        let angle = (index == 1) ? 3.0 : (index == 2) ? -2.0 : 0.0
+                        let yOffset = CGFloat(index * 12)
                         
                         SwipeCardView(place: place) {
                             withAnimation(.spring()) { viewModel.swipeLeft(on: place) }
                         } onSwipeRight: {
                             withAnimation(.spring()) { viewModel.swipeRight(on: place) }
                         }
-                        .rotationEffect(.degrees(index == 0 ? 0 : randomAngle))
-                        .offset(y: index == 0 ? 0 : CGFloat(index * 6))
+                        .rotationEffect(.degrees(index == 0 ? 0 : angle))
+                        .offset(y: index == 0 ? 0 : yOffset)
+                        .opacity(index < 3 ? 1 : 0)
                         .allowsHitTesting(index == 0)
+                        .animation(.spring(), value: index)
                     }
                 }
             }
@@ -72,7 +73,8 @@ struct TransitSwipeView: View {
         .onAppear {
             // 화면 진입 시 추천 장소 로드 (테스트용 더미 데이터 통신)
             Task {
-                await viewModel.fetchRecommendedPlaces(regionCode: 11111)
+//                await viewModel.fetchRecommendedPlaces(regionCode: 11111)
+                await viewModel.fetchRecommendedPlaces(regionName: "포항")
             }
         }
     }

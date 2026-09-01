@@ -11,13 +11,10 @@ import SwiftData
 
 @Observable
 final class TransitSwipeViewModel {
-    // 1. 주입받을 마스터 여행 데이터
     var activeTrip: Trip
     
-    // 2. 뷰에서 관리할 임시 상태 배열
     var candidates: [PlaceDTO] = []       // API로 받아올 추천 장소 최대 10곳
     var selectedPlaces: [PlaceDTO] = []   // 오른쪽으로 스와이프(선택)한 장소들
-    
     var isLoading: Bool = false
     
     init(trip: Trip) {
@@ -25,25 +22,26 @@ final class TransitSwipeViewModel {
     }
     
     // MARK: - API 통신 (한국관광공사 사진 갤러리 API)
-    func fetchRecommendedPlaces(regionCode: Int) async {
+    // TODO: - regionCode로 갈아끼워야함
+//    func fetchRecommendedPlaces(regionCode: Int) async {
+    func fetchRecommendedPlaces(regionName: String) async {
         isLoading = true
         
-        // TODO: 한국관광공사 API (https://www.data.go.kr/data/15101914/openapi.do) 호출 로직
-        // URLSession을 통해 JSON 파싱 후 [PlaceDTO] 형태로 변환하여 candidates에 할당
-        // 예시: let fetchedData = await NetworkManager.shared.getPhotos(areaCode: regionCode)
-        // self.candidates = fetchedData.prefix(10).map { ... }
-        
-        // 2. 포항 관광지 목데이터
-        let mockPlaces = [
-            PlaceDTO(id: "P1", name: "호미곶 해맞이광장", address: "경북 포항시 남구", latitude: 36.0773, longitude: 129.5685, regionCode: 11111),
-            PlaceDTO(id: "P2", name: "환호공원 스페이스워크", address: "경북 포항시 북구", latitude: 36.0646, longitude: 129.3903, regionCode: 11111),
-            PlaceDTO(id: "P3", name: "영일대 해수욕장", address: "경북 포항시 북구", latitude: 36.0594, longitude: 129.3802, regionCode: 11111)
-        ]
-        
-        // 3. 배열에 데이터 주입
-        self.candidates = mockPlaces
-        
-        isLoading = false
+        do {
+            // "포항", "영덕" 등의 키워드를 넘겨 10개의 데이터를 받아옴
+            let fetchedData = try await PhotoAPIManager.shared.fetchRecommendedPhotos(keyword: regionName)
+            
+            // UI 스레드(Main Actor)에서 상태 업데이트
+            await MainActor.run {
+                self.candidates = fetchedData
+                self.isLoading = false
+            }
+        } catch {
+            print("API 통신 에러: \(error.localizedDescription)")
+            await MainActor.run {
+                self.isLoading = false
+            }
+        }
     }
     
     // MARK: - 스와이프 액션 로직

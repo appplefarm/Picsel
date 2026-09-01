@@ -34,4 +34,5 @@ struct PicselApp: App {
             TripPhoto.self,
             UserPixel.self
         ])
-    }}
+    }
+}
