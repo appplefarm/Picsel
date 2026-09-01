@@ -22,10 +22,10 @@ struct PicselApp: App {
         }
         GMSServices.provideAPIKey(apiKey)
     }
-    
+        
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            MainTabView()
         }
         // 2. SwiftData 모델들을 앱 전체에서 쓸 수 있도록 컨테이너 등록
         .modelContainer(for: [

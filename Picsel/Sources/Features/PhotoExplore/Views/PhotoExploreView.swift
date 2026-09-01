@@ -60,5 +60,6 @@ struct PhotoExploreView: View {
         .navigationTitle("사진으로 목적지 고르기")
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
     }
 }
