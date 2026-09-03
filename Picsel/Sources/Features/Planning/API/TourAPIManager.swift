@@ -16,14 +16,10 @@ final class TourAPIManager {
         return key
     }
     
-    // 국문 관광정보 API (키워드 검색)
-    private let baseURL = "https://apis.data.go.kr/B551011/KorService2/searchKeyword2"
+    // 국문 관광정보 API (지역기반 관광정보 조회)
+    private let baseURL = "https://apis.data.go.kr/B551011/KorService2/areaBasedList2"
     
-    func fetchRecommendedPlaces(keyword: String) async throws -> [PlaceDTO] {
-        guard let encodedKeyword = keyword.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            return []
-        }
-        
+    func fetchRecommendedPlaces(areaCode: String, sigunguCode: String) async throws -> [PlaceDTO] {
         let urlString = """
         \(baseURL)\
         ?serviceKey=\(serviceKey)\
@@ -31,7 +27,9 @@ final class TourAPIManager {
         &pageNo=1\
         &MobileOS=IOS\
         &MobileApp=Picsel\
-        &keyword=\(encodedKeyword)\
+        &areaCode=\(areaCode)\
+        &sigunguCode=\(sigunguCode)\
+        &arrange=A\
         &_type=json
         """
         

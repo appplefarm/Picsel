@@ -21,15 +21,12 @@ final class TransitSwipeViewModel {
         self.activeTrip = trip
     }
     
-    // MARK: - API 통신 (한국관광공사 사진 갤러리 API)
-    // TODO: - regionCode로 갈아끼워야함
-//    func fetchRecommendedPlaces(regionCode: Int) async {
-    func fetchRecommendedPlaces(regionName: String) async {
+    // MARK: - API 통신 (한국관광공사 지역기반 API)
+    func fetchRecommendedPlaces(areaCode: String, sigunguCode: String) async {
         isLoading = true
         
         do {
-            // "포항", "영덕" 등의 키워드를 넘겨 10개의 데이터를 받아옴
-            let fetchedData = try await TourAPIManager.shared.fetchRecommendedPlaces(keyword: regionName)
+            let fetchedData = try await TourAPIManager.shared.fetchRecommendedPlaces(areaCode: areaCode, sigunguCode: sigunguCode)
             
             // UI 스레드(Main Actor)에서 상태 업데이트
             await MainActor.run {

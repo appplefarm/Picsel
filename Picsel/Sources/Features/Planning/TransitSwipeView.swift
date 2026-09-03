@@ -71,10 +71,11 @@ struct TransitSwipeView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            // 화면 진입 시 추천 장소 로드 (테스트용 더미 데이터 통신)
+            // 화면 진입 시 추천 장소 로드 (테스트용 더미 데이터: 포항시 남구)
             Task {
-//                await viewModel.fetchRecommendedPlaces(regionCode: 11111)
-                await viewModel.fetchRecommendedPlaces(regionName: "포항")
+                if let pohang = RegionCodeManager.shared.findRegion(by: "포항시 남구") {
+                    await viewModel.fetchRecommendedPlaces(areaCode: pohang.areaCd, sigunguCode: pohang.sigunguCd)
+                }
             }
         }
     }
