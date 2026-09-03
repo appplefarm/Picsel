@@ -1,0 +1,11 @@
+PicselMap prototype boundary data
+
+Source: KOSTAT 2013 administrative division boundary data
+Converted and simplified by the southkorea-maps project:
+https://github.com/southkorea/southkorea-maps
+
+This legacy file is retained only for comparing the original 17-province
+prototype. The app now uses Maps/sigungu_boundaries_2023.geojson.
+
+The SIG source Shapefile was supplied locally by a project member and contains
+250 records. Confirm its distribution license and provenance before release.
