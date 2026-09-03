@@ -25,7 +25,7 @@ struct SwipeCardView: View {
                 case .empty:
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color.gray.opacity(0.1))
+                        .background(Color.gray)
                 case .success(let image):
                     image
                         .resizable()
