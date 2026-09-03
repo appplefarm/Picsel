@@ -29,7 +29,7 @@ final class TransitSwipeViewModel {
         
         do {
             // "포항", "영덕" 등의 키워드를 넘겨 10개의 데이터를 받아옴
-            let fetchedData = try await PhotoAPIManager.shared.fetchRecommendedPhotos(keyword: regionName)
+            let fetchedData = try await TourAPIManager.shared.fetchRecommendedPlaces(keyword: regionName)
             
             // UI 스레드(Main Actor)에서 상태 업데이트
             await MainActor.run {

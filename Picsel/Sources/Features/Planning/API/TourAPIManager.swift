@@ -1,15 +1,12 @@
 //
-//  PhotoAPIManager.swift
+//  TourAPIManager.swift
 //  Picsel
 //
-//  Created by 김나영 on 9/1/26.
-//
-
 
 import Foundation
 
-final class PhotoAPIManager {
-    static let shared = PhotoAPIManager()
+final class TourAPIManager {
+    static let shared = TourAPIManager()
     private init() {}
     
     private var serviceKey: String {
@@ -18,9 +15,11 @@ final class PhotoAPIManager {
         }
         return key
     }
-    private let baseURL = "https://apis.data.go.kr/B551011/PhotoGalleryService1/gallerySearchList1"
     
-    func fetchRecommendedPhotos(keyword: String) async throws -> [PlaceDTO] {
+    // 국문 관광정보 API (키워드 검색)
+    private let baseURL = "https://apis.data.go.kr/B551011/KorService2/searchKeyword2"
+    
+    func fetchRecommendedPlaces(keyword: String) async throws -> [PlaceDTO] {
         guard let encodedKeyword = keyword.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             return []
         }
@@ -32,7 +31,6 @@ final class PhotoAPIManager {
         &pageNo=1\
         &MobileOS=IOS\
         &MobileApp=Picsel\
-        &arrange=B\
         &keyword=\(encodedKeyword)\
         &_type=json
         """
@@ -41,19 +39,18 @@ final class PhotoAPIManager {
         
         let (data, _) = try await URLSession.shared.data(from: url)
         
-        let decodedData = try JSONDecoder().decode(TourPhotoRoot.self, from: data)
+        let decodedData = try JSONDecoder().decode(TourRoot.self, from: data)
         
         guard let items = decodedData.response.body.items.item else { return [] }
         
-        // API 응답 데이터를 우리가 만든 PlaceDTO로 변환
         return items.map { item in
             PlaceDTO(
-                id: item.galContentId,
-                name: item.galTitle,
-                address: item.galPhotographyLocation ?? "주소 미상",
-                latitude: 0.0,  // 주의: 사진 API에 좌표 정보가 없음
-                longitude: 0.0, // 주의: 사진 API에 좌표 정보가 없음
-                photoURL: item.galWebImageUrl,
+                id: item.contentid,
+                name: item.title,
+                address: item.addr1 ?? "주소 미상",
+                latitude: Double(item.mapy ?? "") ?? 0.0,
+                longitude: Double(item.mapx ?? "") ?? 0.0,
+                photoURL: (item.firstimage ?? "").replacingOccurrences(of: "http://", with: "https://"),
                 detailDescription: nil,
                 regionCode: nil
             )
