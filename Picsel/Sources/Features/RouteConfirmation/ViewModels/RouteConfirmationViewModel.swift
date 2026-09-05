@@ -27,7 +27,7 @@ final class RouteConfirmationViewModel {
         self.estimatedDurationMinutes = estimatedDurationMinutes
         self.thumbnailURLsByStopID = thumbnailURLsByStopID
         self.travelMinutesByStopID = travelMinutesByStopID
-        routeStops = trip.stops
+        routeStops = trip.orderedStops
     }
 
     var activeTrip: Trip { trip }
@@ -52,7 +52,7 @@ final class RouteConfirmationViewModel {
     }
 
     func beginEditing() {
-        routeStops = trip.stops
+        routeStops = trip.orderedStops
     }
 
     func commitEditing() {

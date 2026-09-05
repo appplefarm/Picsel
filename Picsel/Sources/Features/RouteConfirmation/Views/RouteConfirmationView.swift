@@ -181,23 +181,28 @@ private enum RouteConfirmationPreviewData {
         trip: Trip,
         travelMinutes: [UUID: Int]
     ) {
-        let trip = Trip(title: "포항 바다 여행")
+        let trip = Trip(title: "이가리 닻 전망대 여행")
         trip.totalDistanceMeters = 124_000
 
-        let names = [
-            "호미곶 해맞이광장",
-            "구룡포 일본인가옥거리",
-            "월포해수욕장",
-            "장사상륙작전 전승기념관"
+        // 경유지는 국문 관광정보 API에서 받아오고, 마지막은 수상작 목적지입니다.
+        let places: [(name: String, latitude: Double, longitude: Double)] = [
+            ("호미곶 해맞이광장", 36.076_2, 129.567_3),
+            ("구룡포 일본인가옥거리", 35.989_6, 129.554_9),
+            ("월포해수욕장", 36.157_8, 129.396_1),
+            (
+                DestinationCoordinateStore.ancharPointOfIgari.name,
+                DestinationCoordinateStore.ancharPointOfIgari.latitude,
+                DestinationCoordinateStore.ancharPointOfIgari.longitude
+            )
         ]
         let minutes = [12, 8, 15, 5]
 
-        let stops = names.enumerated().map { index, name in
+        let stops = places.enumerated().map { index, place in
             RouteStop(
-                name: name,
-                latitude: 36.0 + Double(index) * 0.01,
-                longitude: 129.3 + Double(index) * 0.01,
-                stopType: index == names.count - 1 ? "destination" : "waypoint",
+                name: place.name,
+                latitude: place.latitude,
+                longitude: place.longitude,
+                stopType: index == places.count - 1 ? "destination" : "waypoint",
                 orderIndex: index
             )
         }
