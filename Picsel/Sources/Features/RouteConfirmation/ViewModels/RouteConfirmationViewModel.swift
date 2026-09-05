@@ -3,6 +3,7 @@
 //  Picsel
 //
 
+import CoreLocation
 import Foundation
 import Observation
 import SwiftUI
@@ -31,6 +32,14 @@ final class RouteConfirmationViewModel {
     }
 
     var activeTrip: Trip { trip }
+
+    /// 지도에 표시할 지점들입니다. 좌표가 아직 없는 장소는 제외합니다.
+    /// TODO: 현재 위치를 출발지로 앞에 붙입니다. (경로 계산 연결 시)
+    var mapCoordinates: [CLLocationCoordinate2D] {
+        routeStops
+            .filter { $0.latitude != 0 || $0.longitude != 0 }
+            .map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+    }
 
     var routeSummary: String {
         var values: [String] = []

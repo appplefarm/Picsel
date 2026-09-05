@@ -81,8 +81,9 @@ struct RouteConfirmationView: View {
                 .foregroundStyle(.primary)
                 .padding(.bottom, 24)
 
-            RouteMapPlaceholderView()
+            routeMap
                 .aspectRatio(342 / 286, contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
             Text(viewModel.routeSummary)
                 .font(.footnote)
@@ -109,6 +110,16 @@ struct RouteConfirmationView: View {
         .listRowInsets(EdgeInsets(top: 12, leading: 24, bottom: 6, trailing: 24))
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
+    }
+
+    /// 좌표가 하나도 없으면 지도를 띄우는 대신 안내 자리를 보여줍니다.
+    @ViewBuilder
+    private var routeMap: some View {
+        if viewModel.mapCoordinates.isEmpty {
+            RouteMapPlaceholderView()
+        } else {
+            RouteMapView(coordinates: viewModel.mapCoordinates)
+        }
     }
 
     private var startNavigationButton: some View {
