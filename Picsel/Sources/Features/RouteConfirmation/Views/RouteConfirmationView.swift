@@ -8,6 +8,7 @@ import SwiftUI
 struct RouteConfirmationView: View {
     @State private var viewModel: RouteConfirmationViewModel
     @State private var editMode: EditMode
+    @State private var locationManager = CurrentLocationManager()
 
     private let onStartNavigation: (Trip) -> Void
 
@@ -71,6 +72,17 @@ struct RouteConfirmationView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: editMode)
+        .task {
+            // 권한 요청과 동시에, 위치가 없어도 우선 경로를 그려 둡니다.
+            locationManager.requestCurrentLocation()
+            await viewModel.loadDirections(origin: locationManager.currentLocation?.coordinate)
+        }
+        .onChange(of: locationManager.currentLocation?.timestamp) { _, _ in
+            // 현재 위치가 도착하면 출발지를 반영해 다시 계산합니다.
+            Task {
+                await viewModel.loadDirections(origin: locationManager.currentLocation?.coordinate)
+            }
+        }
     }
 
     private var headerSection: some View {
@@ -115,10 +127,13 @@ struct RouteConfirmationView: View {
     /// 좌표가 하나도 없으면 지도를 띄우는 대신 안내 자리를 보여줍니다.
     @ViewBuilder
     private var routeMap: some View {
-        if viewModel.mapCoordinates.isEmpty {
+        if viewModel.mapMarkers.isEmpty {
             RouteMapPlaceholderView()
         } else {
-            RouteMapView(coordinates: viewModel.mapCoordinates)
+            RouteMapView(
+                path: viewModel.mapPath,
+                markers: viewModel.mapMarkers
+            )
         }
     }
 
