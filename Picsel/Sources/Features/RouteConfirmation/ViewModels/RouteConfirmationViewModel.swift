@@ -23,6 +23,9 @@ final class RouteConfirmationViewModel {
     private(set) var directions: RouteDirections?
     /// 같은 출발지로 중복 요청하지 않기 위한 표식입니다.
     private var lastRequestSignature: String?
+    /// 계산된 경로가 현재 위치에서 출발하는지 여부입니다.
+    /// 구간 시간을 어느 장소에 붙일지 결정하는 데 씁니다.
+    private var directionsStartFromCurrentLocation = false
 
     init(
         trip: Trip,
@@ -102,6 +105,7 @@ final class RouteConfirmationViewModel {
                 waypoints: waypoints,
                 destination: destination
             )
+            directionsStartFromCurrentLocation = origin != nil
         } catch {
             // TODO: 사용자에게 보여줄 실패 상태를 붙입니다.
             lastRequestSignature = nil
@@ -130,6 +134,33 @@ final class RouteConfirmationViewModel {
 
         values.append("자동차 기준")
         return values.joined(separator: " · ")
+    }
+
+    /// 요약 숫자가 어림값임을 알려 주는 문구입니다.
+    var routeSummaryCaption: String? {
+        directions == nil
+            ? nil
+            : "실제 소요 시간은 출발 시각과 교통 상황에 따라 달라져요"
+    }
+
+    /// 직전 지점에서 이 장소까지 걸리는 시간(분)입니다.
+    ///
+    /// 경로 응답의 leg는 "출발지 → 첫 지점", "첫 지점 → 두 번째 지점" 순서라
+    /// 장소 순번에 그대로 대응합니다. 다만 현재 위치에서 출발하지 못한 경우에는
+    /// 첫 장소가 곧 출발지이므로 한 칸씩 밀어서 맞춥니다.
+    func travelMinutes(before stop: RouteStop) -> Int? {
+        guard let legs = directions?.legs else {
+            return travelMinutesByStopID[stop.id]
+        }
+
+        guard let index = locatedStops.firstIndex(where: { $0.id == stop.id }) else {
+            return nil
+        }
+
+        let legIndex = directionsStartFromCurrentLocation ? index : index - 1
+
+        guard legs.indices.contains(legIndex) else { return nil }
+        return legs[legIndex].durationMinutes
     }
 
     func beginEditing() {
@@ -164,14 +195,12 @@ final class RouteConfirmationViewModel {
         thumbnailURLsByStopID[stop.id]
     }
 
-    func travelMinutes(for stop: RouteStop) -> Int? {
-        travelMinutesByStopID[stop.id]
-    }
-
     private var distanceText: String? {
-        guard let totalDistanceMeters = trip.totalDistanceMeters else { return nil }
+        // 계산된 경로가 있으면 그 값을, 없으면 저장된 값을 씁니다.
+        let meters = directions.map { Double($0.distanceMeters) } ?? trip.totalDistanceMeters
+        guard let meters else { return nil }
 
-        let kilometers = totalDistanceMeters / 1_000
+        let kilometers = meters / 1_000
         let formattedDistance = kilometers.formatted(
             .number.precision(.fractionLength(kilometers < 10 ? 0...1 : 0...0))
         )
@@ -179,10 +208,12 @@ final class RouteConfirmationViewModel {
     }
 
     private var durationText: String? {
-        guard let estimatedDurationMinutes else { return nil }
+        let totalMinutes = directions.map { Int(($0.duration / 60).rounded()) }
+            ?? estimatedDurationMinutes
+        guard let totalMinutes else { return nil }
 
-        let hours = estimatedDurationMinutes / 60
-        let minutes = estimatedDurationMinutes % 60
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
 
         switch (hours, minutes) {
         case (0, let minutes):

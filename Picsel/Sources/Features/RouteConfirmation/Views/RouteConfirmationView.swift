@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+internal import _LocationEssentials
 
 struct RouteConfirmationView: View {
     @State private var viewModel: RouteConfirmationViewModel
@@ -40,7 +41,7 @@ struct RouteConfirmationView: View {
                 RouteStopRow(
                     stop: stop,
                     thumbnailURL: viewModel.thumbnailURL(for: stop),
-                    travelMinutes: viewModel.travelMinutes(for: stop),
+                    travelMinutes: viewModel.travelMinutes(before: stop),
                     position: position(for: stop),
                     showsTimeline: !editMode.isEditing
                 )
@@ -97,10 +98,19 @@ struct RouteConfirmationView: View {
                 .aspectRatio(342 / 286, contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
-            Text(viewModel.routeSummary)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .padding(.top, 14)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(viewModel.routeSummary)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+
+                // 내비 앱마다 값이 조금씩 다르므로 어림값임을 알려 줍니다.
+                if let caption = viewModel.routeSummaryCaption {
+                    Text(caption)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .padding(.top, 14)
 
             HStack {
                 Spacer()

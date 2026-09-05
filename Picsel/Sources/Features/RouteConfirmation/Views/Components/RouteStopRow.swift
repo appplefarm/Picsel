@@ -8,6 +8,7 @@ import SwiftUI
 struct RouteStopRow: View {
     let stop: RouteStop
     let thumbnailURL: URL?
+    /// 직전 지점에서 이 장소까지 걸리는 시간입니다.
     let travelMinutes: Int?
     let position: Position
     let showsTimeline: Bool
@@ -25,18 +26,48 @@ struct RouteStopRow: View {
         var hasBottomLine: Bool {
             self == .first || self == .middle
         }
+
+        var isFirst: Bool {
+            self == .first || self == .only
+        }
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            if showsTimeline {
-                timelineIndicator
+        VStack(alignment: .leading, spacing: 0) {
+            // 이동 시간은 장소가 아니라 장소와 장소 "사이"의 값이라
+            // 카드 안이 아닌 타임라인 선 옆에 둡니다.
+            if showsTimeline, let travelMinutes {
+                travelSegment(minutes: travelMinutes)
             }
 
-            card
+            HStack(spacing: 12) {
+                if showsTimeline {
+                    timelineIndicator
+                }
+
+                card
+            }
         }
-        .frame(minHeight: 70)
         .accessibilityElement(children: .combine)
+    }
+
+    private func travelSegment(minutes: Int) -> some View {
+        HStack(spacing: 12) {
+            Rectangle()
+                .fill(Color(.separator))
+                .frame(width: 1)
+                .frame(width: 20)
+
+            Text(position.isFirst ? "현재 위치에서 \(minutes)분" : "\(minutes)분")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .frame(height: 26)
+        .accessibilityLabel(
+            position.isFirst
+                ? "현재 위치에서 \(minutes)분 이동"
+                : "직전 장소에서 \(minutes)분 이동"
+        )
     }
 
     private var timelineIndicator: some View {
@@ -46,7 +77,7 @@ struct RouteStopRow: View {
                 .frame(width: 1)
 
             Circle()
-                .fill(Color(.systemGray5))
+                .fill(stop.isDestination ? Color.primary : Color(.systemGray5))
                 .frame(width: 18, height: 18)
 
             Rectangle()
@@ -61,19 +92,11 @@ struct RouteStopRow: View {
         HStack(spacing: 12) {
             thumbnail
 
-            VStack(alignment: .leading, spacing: 5) {
-                Text(stop.name)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-
-                if let travelMinutes {
-                    Text("이동 +\(travelMinutes)분")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
+            Text(stop.name)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.primary)
+                .lineLimit(1)
 
             Spacer(minLength: 0)
         }

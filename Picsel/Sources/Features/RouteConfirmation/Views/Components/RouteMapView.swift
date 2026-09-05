@@ -165,3 +165,29 @@ private enum MapStyle {
     static let destinationTint = UIColor.label
     static let waypointTint = UIColor.systemGray2
 }
+
+#if DEBUG
+#Preview("경로 지도") {
+    let stops: [(String, Double, Double, Bool)] = [
+        ("호미곶 해맞이광장", 36.076_2, 129.567_3, false),
+        ("구룡포 일본인가옥거리", 35.989_6, 129.554_9, false),
+        ("월포해수욕장", 36.157_8, 129.396_1, false),
+        ("이가리 닻 전망대", 36.187_992, 129.379_005, true)
+    ]
+
+    return RouteMapView(
+        // 실제 경로 대신 지점을 직선으로 이은 선입니다.
+        path: stops.map { CLLocationCoordinate2D(latitude: $0.1, longitude: $0.2) },
+        markers: stops.map {
+            RouteMapMarker(
+                coordinate: CLLocationCoordinate2D(latitude: $0.1, longitude: $0.2),
+                title: $0.0,
+                isDestination: $0.3
+            )
+        }
+    )
+    .aspectRatio(342 / 286, contentMode: .fit)
+    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .padding()
+}
+#endif
