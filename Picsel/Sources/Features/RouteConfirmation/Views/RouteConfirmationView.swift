@@ -35,31 +35,37 @@ struct RouteConfirmationView: View {
 
     var body: some View {
         List {
-            headerSection
-
-            ForEach(viewModel.routeStops) { stop in
-                RouteStopRow(
-                    stop: stop,
-                    thumbnailURL: viewModel.thumbnailURL(for: stop),
-                    travelMinutes: viewModel.travelMinutes(before: stop),
-                    position: position(for: stop),
-                    showsTimeline: !editMode.isEditing
-                )
-                .listRowInsets(
-                    EdgeInsets(
-                        top: 4,
-                        leading: editMode.isEditing ? 20 : 24,
-                        bottom: 4,
-                        trailing: 24
-                    )
-                )
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-                .deleteDisabled(!editMode.isEditing)
-                .moveDisabled(!editMode.isEditing)
+            // 헤더와 경유지를 같은 섹션에 두면 순서 변경 시 위치 계산이 어긋나
+            // 드래그가 되돌아가 버립니다. 섹션을 분리해 ForEach만 이동 대상이 되게 합니다.
+            Section {
+                headerSection
             }
-            .onDelete(perform: deleteStops)
-            .onMove(perform: moveStops)
+
+            Section {
+                ForEach(viewModel.routeStops) { stop in
+                    RouteStopRow(
+                        stop: stop,
+                        thumbnailURL: viewModel.thumbnailURL(for: stop),
+                        travelMinutes: viewModel.travelMinutes(before: stop),
+                        position: position(for: stop),
+                        showsTimeline: !editMode.isEditing
+                    )
+                    .listRowInsets(
+                        EdgeInsets(
+                            top: 4,
+                            leading: editMode.isEditing ? 20 : 24,
+                            bottom: 4,
+                            trailing: 24
+                        )
+                    )
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                    .deleteDisabled(!editMode.isEditing)
+                    .moveDisabled(!editMode.isEditing)
+                }
+                .onDelete(perform: deleteStops)
+                .onMove(perform: moveStops)
+            }
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
@@ -72,7 +78,6 @@ struct RouteConfirmationView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: editMode)
         .task {
             // 권한 요청과 동시에, 위치가 없어도 우선 경로를 그려 둡니다.
             locationManager.requestCurrentLocation()
