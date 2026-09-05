@@ -109,6 +109,10 @@ struct RouteConfirmationView: View {
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
+
+                if let message = viewModel.directionsErrorMessage {
+                    routeErrorBanner(message: message)
+                }
             }
             .padding(.top, 14)
 
@@ -144,7 +148,44 @@ struct RouteConfirmationView: View {
                 path: viewModel.mapPath,
                 markers: viewModel.mapMarkers
             )
+            .overlay {
+                if viewModel.isCalculatingFirstRoute {
+                    routeLoadingOverlay
+                }
+            }
         }
+    }
+
+    private var routeLoadingOverlay: some View {
+        ZStack {
+            Color(.systemBackground).opacity(0.6)
+
+            VStack(spacing: 8) {
+                ProgressView()
+                Text("경로를 계산하고 있어요")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("경로를 계산하고 있어요")
+    }
+
+    private func routeErrorBanner(message: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Button("다시 시도") {
+                Task { await viewModel.retryDirections() }
+            }
+            .font(.caption)
+            .fontWeight(.semibold)
+            .buttonStyle(.plain)
+            .foregroundStyle(.primary)
+        }
+        .padding(.top, 2)
     }
 
     private var startNavigationButton: some View {

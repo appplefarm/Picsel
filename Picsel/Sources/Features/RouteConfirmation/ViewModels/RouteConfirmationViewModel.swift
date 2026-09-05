@@ -26,6 +26,16 @@ final class RouteConfirmationViewModel {
     /// 계산된 경로가 현재 위치에서 출발하는지 여부입니다.
     /// 구간 시간을 어느 장소에 붙일지 결정하는 데 씁니다.
     private var directionsStartFromCurrentLocation = false
+    /// 다시 시도할 때 같은 출발지를 쓰기 위해 보관합니다.
+    private var lastOrigin: CLLocationCoordinate2D?
+
+    private(set) var isLoadingDirections = false
+    private(set) var directionsErrorMessage: String?
+
+    /// 경로를 아직 한 번도 못 그린 채 계산 중인 상태입니다.
+    var isCalculatingFirstRoute: Bool {
+        isLoadingDirections && directions == nil
+    }
 
     init(
         trip: Trip,
@@ -98,6 +108,11 @@ final class RouteConfirmationViewModel {
 
         guard lastRequestSignature != signature else { return }
         lastRequestSignature = signature
+        lastOrigin = origin
+
+        isLoadingDirections = true
+        directionsErrorMessage = nil
+        defer { isLoadingDirections = false }
 
         do {
             directions = try await directionsService.directions(
@@ -107,10 +122,16 @@ final class RouteConfirmationViewModel {
             )
             directionsStartFromCurrentLocation = origin != nil
         } catch {
-            // TODO: 사용자에게 보여줄 실패 상태를 붙입니다.
+            // 실패한 요청은 표식을 지워서 다시 시도할 수 있게 합니다.
             lastRequestSignature = nil
-            print("경로 계산 실패: \(error.localizedDescription)")
+            directionsErrorMessage = (error as? RouteDirectionsError)?.errorDescription
+                ?? "경로를 계산하지 못했어요."
         }
+    }
+
+    /// 실패했을 때 같은 조건으로 한 번 더 계산합니다.
+    func retryDirections() async {
+        await loadDirections(origin: lastOrigin)
     }
 
     private func coordinate(of stop: RouteStop) -> CLLocationCoordinate2D {
