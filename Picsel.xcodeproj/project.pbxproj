@@ -104,13 +104,19 @@
 				TargetAttributes = {
 					639548F0302DE738001B48E6 = {
 						CreatedOnToolsVersion = 26.3;
+						SystemCapabilities = {
+							com.apple.SignInWithApple = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
 			buildConfigurationList = 639548EC302DE738001B48E6 /* Build configuration list for PBXProject "Picsel" */;
-			developmentRegion = en;
+			developmentRegion = ko;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				ko,
 				en,
 				Base,
 			);

@@ -25,7 +25,7 @@ struct PicselApp: App {
         
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            AppRootView()
         }
         // 2. SwiftData 모델들을 앱 전체에서 쓸 수 있도록 컨테이너 등록
         .modelContainer(for: [
