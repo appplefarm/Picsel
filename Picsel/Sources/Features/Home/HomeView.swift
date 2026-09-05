@@ -81,7 +81,8 @@ struct HomeView: View {
         .navigationDestination(item: $confirmedDestination) { destination in
             TransitSwipeView(
                 viewModel: TransitSwipeViewModel(
-                    trip: makeTrip(for: destination)
+                    trip: makeTrip(for: destination),
+                    destinationPhotoURL: destination.photoURL.flatMap(URL.init(string:))
                 )
             )
         }

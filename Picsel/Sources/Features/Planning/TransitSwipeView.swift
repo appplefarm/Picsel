@@ -74,7 +74,10 @@ struct TransitSwipeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .navigationDestination(isPresented: $isShowingRouteConfirmation) {
-            RouteConfirmationView(trip: viewModel.activeTrip) { _ in
+            RouteConfirmationView(
+                trip: viewModel.activeTrip,
+                thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
+            ) { _ in
                 isShowingTripRecord = true
             }
                 .toolbar(.hidden, for: .tabBar)
