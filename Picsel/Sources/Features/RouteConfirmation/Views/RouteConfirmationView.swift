@@ -235,8 +235,11 @@ struct RouteConfirmationView: View {
     }
 
     private func moveStops(from offsets: IndexSet, to destination: Int) {
+        // TODO: 순서 변경 원인 파악용 로그. 확인 후 제거합니다.
+        print("[reorder] onMove 호출 offsets=\(Array(offsets)) destination=\(destination) editing=\(editMode.isEditing)")
         guard editMode.isEditing else { return }
         viewModel.moveStops(from: offsets, to: destination)
+        print("[reorder] 이동 후 순서 = \(viewModel.routeStops.map(\.name))")
     }
 
     private func position(for stop: RouteStop) -> RouteStopRow.Position {
