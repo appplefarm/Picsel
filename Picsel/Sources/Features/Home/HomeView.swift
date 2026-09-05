@@ -70,7 +70,13 @@ struct HomeView: View {
             }
         }
         .task {
+            // 실제 위치를 받기 전에도 포항 기본 좌표에 맞는 범위를 보여줍니다.
+            viewModel.updateMaximumRadius(from: mapCoordinate)
             locationManager.requestCurrentLocation()
+        }
+        .onChange(of: locationManager.currentLocation?.timestamp) { _, _ in
+            guard let coordinate = locationManager.currentLocation?.coordinate else { return }
+            viewModel.updateMaximumRadius(from: coordinate)
         }
         .navigationDestination(item: $confirmedDestination) { destination in
             TransitSwipeView(
@@ -86,10 +92,6 @@ struct HomeView: View {
     // 상단 텍스트 헤더
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("여행을 떠나기 좋은 날이에요 \(viewModel.userName)님,")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            
             Text("이번엔 어디까지 떠나볼까요?")
                 .font(.system(size: 26, weight: .bold))
                 .foregroundStyle(.primary)
@@ -105,18 +107,22 @@ struct HomeView: View {
     // 슬라이더 및 CTA 버튼
     private var bottomControlSection: some View {
         VStack(spacing: 20) {
-            // 0~150km, 1km 단위 실시간 슬라이더
+            // 가까운 거리를 넓게 쓰는 로그 스케일, 1km 단위 실시간 슬라이더
             VStack(spacing: 8) {
                 Slider(
-                    value: $viewModel.currentRadiusKm,
-                    in: viewModel.radiusRange,
-                    step: 1
+                    value: $viewModel.radiusSliderPosition,
+                    in: 0...1
                 )
                 .tint(Color(white: 0.2))
+                .accessibilityValue("반경 \(Int(viewModel.currentRadiusKm))킬로미터")
                 
                 HStack {
                     ForEach(viewModel.radiusGuideValues, id: \.self) { radius in
-                        Text("\(Int(radius))")
+                        Text(
+                            radius == viewModel.radiusGuideValues.last
+                                ? "최대 \(Int(radius))"
+                                : "\(Int(radius))"
+                        )
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                         if radius != viewModel.radiusGuideValues.last {
