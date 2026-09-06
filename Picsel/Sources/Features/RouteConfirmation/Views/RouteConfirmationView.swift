@@ -264,7 +264,8 @@ struct RouteConfirmationView: View {
 private enum RouteConfirmationPreviewData {
     static func make() -> (
         trip: Trip,
-        travelMinutes: [UUID: Int]
+        travelMinutes: [UUID: Int],
+        thumbnails: [UUID: URL]
     ) {
         let trip = Trip(title: "이가리 닻 전망대 여행")
         trip.totalDistanceMeters = 124_000
@@ -295,9 +296,21 @@ private enum RouteConfirmationPreviewData {
         stops.forEach { $0.trip = trip }
         trip.stops = stops
 
+        // 프리뷰에서 썸네일이 채워지는지 눈으로 확인하기 위한 임시 이미지입니다.
+        // 실제 화면에서는 관광정보 API의 firstimage가 들어갑니다.
+        let thumbnails = Dictionary(
+            uniqueKeysWithValues: stops.enumerated().compactMap { index, stop -> (UUID, URL)? in
+                guard let url = URL(string: "https://picsum.photos/seed/picsel\(index)/200") else {
+                    return nil
+                }
+                return (stop.id, url)
+            }
+        )
+
         return (
             trip,
-            Dictionary(uniqueKeysWithValues: zip(stops, minutes).map { ($0.id, $1) })
+            Dictionary(uniqueKeysWithValues: zip(stops, minutes).map { ($0.id, $1) }),
+            thumbnails
         )
     }
 }
@@ -309,6 +322,7 @@ private enum RouteConfirmationPreviewData {
         RouteConfirmationView(
             trip: data.trip,
             estimatedDurationMinutes: 230,
+            thumbnailURLsByStopID: data.thumbnails,
             travelMinutesByStopID: data.travelMinutes
         )
     }
@@ -321,6 +335,7 @@ private enum RouteConfirmationPreviewData {
         RouteConfirmationView(
             trip: data.trip,
             estimatedDurationMinutes: 230,
+            thumbnailURLsByStopID: data.thumbnails,
             travelMinutesByStopID: data.travelMinutes,
             initiallyEditing: true
         )
