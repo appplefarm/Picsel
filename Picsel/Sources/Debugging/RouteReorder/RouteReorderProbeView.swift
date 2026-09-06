@@ -67,6 +67,36 @@ struct RouteReorderProbeView: View {
         }
     }
 
+    /// C: 행 데이터를 값 타입으로 바꾼 형태 — SwiftData 모델을 직접 읽지 않음
+    struct ValueType: View {
+        struct Item: Identifiable, Hashable {
+            let id: UUID
+            let name: String
+        }
+
+        @State private var items: [Item]
+
+        init(stops: [RouteStop]) {
+            _items = State(initialValue: stops.map { Item(id: $0.id, name: $0.name) })
+        }
+
+        var body: some View {
+            NavigationStack {
+                List {
+                    ForEach(items) { item in
+                        Text(item.name)
+                    }
+                    .onMove { offsets, destination in
+                        print("[probe-C] onMove \(Array(offsets)) -> \(destination)")
+                        items.move(fromOffsets: offsets, toOffset: destination)
+                    }
+                }
+                .navigationTitle("C. 값 타입")
+                .toolbar { EditButton() }
+            }
+        }
+    }
+
     var body: some View {
         EmptyView()
     }
@@ -96,5 +126,9 @@ private func makeProbeStops() -> [RouteStop] {
 
 #Preview("B. id 명시") {
     RouteReorderProbeView.ExplicitID(stops: makeProbeStops())
+}
+
+#Preview("C. 값 타입") {
+    RouteReorderProbeView.ValueType(stops: makeProbeStops())
 }
 #endif
