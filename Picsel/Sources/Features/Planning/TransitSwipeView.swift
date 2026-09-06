@@ -11,6 +11,7 @@ import SwiftUI
 struct TransitSwipeView: View {
     @State var viewModel: TransitSwipeViewModel
     @State private var isShowingRouteConfirmation = false
+    @State private var isShowingTripProgress = false
     @State private var isShowingTripRecord = false
     
     var body: some View {
@@ -78,9 +79,18 @@ struct TransitSwipeView: View {
                 trip: viewModel.activeTrip,
                 thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
             ) { _ in
-                isShowingTripRecord = true
+                isShowingTripProgress = true
             }
                 .toolbar(.hidden, for: .tabBar)
+        }
+        .navigationDestination(isPresented: $isShowingTripProgress) {
+            TripProgressView(
+                trip: viewModel.activeTrip,
+                thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
+            ) {
+                isShowingTripRecord = true
+            }
+            .toolbar(.hidden, for: .tabBar)
         }
         .navigationDestination(isPresented: $isShowingTripRecord) {
             TripRecordView()
