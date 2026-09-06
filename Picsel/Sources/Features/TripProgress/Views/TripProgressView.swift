@@ -60,7 +60,10 @@ struct TripProgressView: View {
         VStack(spacing: 0) {
             ForEach(Array(stops.enumerated()), id: \.element.id) { index, stop in
                 HStack(alignment: .top, spacing: Metric.timelineSpacing) {
-                    TripTimelineColumn(isLast: index == stops.count - 1)
+                    TripTimelineColumn(
+                        isFirst: index == 0,
+                        isLast: index == stops.count - 1
+                    )
 
                     TripStopCard(
                         name: stop.name,
@@ -68,9 +71,10 @@ struct TripProgressView: View {
                         photoURL: thumbnailURLsByStopID[stop.id],
                         onNavigateTapped: { startNavigation(to: stop) }
                     )
+                    // 카드에만 간격을 주어야 행 높이가 늘어나고,
+                    // 그래야 점선이 다음 카드 자리까지 내려옵니다.
+                    .padding(.bottom, index == stops.count - 1 ? 0 : Metric.cardSpacing)
                 }
-                // 점선이 다음 카드까지 이어지도록 간격을 행 안쪽에 둡니다.
-                .padding(.bottom, index == stops.count - 1 ? 0 : Metric.cardSpacing)
             }
         }
         .padding(.leading, Metric.listLeadingPadding)

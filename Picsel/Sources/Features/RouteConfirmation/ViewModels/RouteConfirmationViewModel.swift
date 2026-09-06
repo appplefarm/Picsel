@@ -30,6 +30,8 @@ final class RouteConfirmationViewModel {
     private var lastOrigin: CLLocationCoordinate2D?
 
     private(set) var isLoadingDirections = false
+    /// 화면에는 노출하지 않고 콘솔 확인용으로만 둡니다.
+    /// 실패해도 요약 문구가 "경로 정보를 계산하고 있어요"로 남아 조용히 처리됩니다.
     private(set) var directionsErrorMessage: String?
 
     /// 경로를 아직 한 번도 못 그린 채 계산 중인 상태입니다.
@@ -126,6 +128,7 @@ final class RouteConfirmationViewModel {
             lastRequestSignature = nil
             directionsErrorMessage = (error as? RouteDirectionsError)?.errorDescription
                 ?? "경로를 계산하지 못했어요."
+            print("경로 계산 실패: \(error)")
         }
     }
 

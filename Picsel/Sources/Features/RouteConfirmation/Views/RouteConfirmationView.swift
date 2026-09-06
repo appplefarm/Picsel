@@ -114,10 +114,6 @@ struct RouteConfirmationView: View {
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
-
-                if let message = viewModel.directionsErrorMessage {
-                    routeErrorBanner(message: message)
-                }
             }
             .padding(.top, 14)
 
@@ -176,28 +172,11 @@ struct RouteConfirmationView: View {
         .accessibilityLabel("경로를 계산하고 있어요")
     }
 
-    private func routeErrorBanner(message: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(message)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Button("다시 시도") {
-                Task { await viewModel.retryDirections() }
-            }
-            .font(.caption)
-            .fontWeight(.semibold)
-            .buttonStyle(.plain)
-            .foregroundStyle(.primary)
-        }
-        .padding(.top, 2)
-    }
-
     private var startNavigationButton: some View {
         Button {
             onStartNavigation(viewModel.activeTrip)
         } label: {
-            Text("확인")
+            Text("이대로 여행 계획표 만들기")
                 .font(.headline)
                 .foregroundStyle(Color(.systemBackground))
                 .frame(maxWidth: .infinity)
