@@ -17,10 +17,6 @@ struct NavigationAppPicker: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("길찾기에 사용할 앱")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.secondary)
-
             Picker("길찾기에 사용할 앱", selection: $selection) {
                 ForEach(NavigationApp.allCases) { app in
                     Text(app.displayName).tag(app)

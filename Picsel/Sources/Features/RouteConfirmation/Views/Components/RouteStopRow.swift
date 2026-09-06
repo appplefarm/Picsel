@@ -68,6 +68,12 @@ struct RouteStopRow: View {
     private var timelineIndicator: some View {
         VStack(spacing: 0) {
             // 이동 시간 구간이 이미 위쪽 선을 그리므로 여기서는 아래로만 이어 줍니다.
+            if position.isFirst {
+                Color.clear.frame(maxHeight: .infinity)
+            } else {
+                dashedLine.frame(maxHeight: .infinity)
+            }
+            
             Circle()
                 .fill(PicselColor.actionGreen)
                 .frame(width: Metric.dotSize, height: Metric.dotSize)
