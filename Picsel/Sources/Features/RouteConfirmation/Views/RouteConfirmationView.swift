@@ -69,7 +69,7 @@ struct RouteConfirmationView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .background(Color(.systemBackground))
+        .background(Color.white)
         .environment(\.editMode, $editMode)
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -93,28 +93,36 @@ struct RouteConfirmationView: View {
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("최종 경로가 완성됐어요")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundStyle(.primary)
-                .padding(.bottom, 24)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("최종 경로가 완성되었어요")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(.black)
+
+                Text("일정을 확인하고 편집을 이용해 자유롭게 수정해보세요")
+                    .font(.system(size: 13))
+                    .foregroundStyle(PicselColor.subtitle)
+            }
+            .padding(.vertical, 10)
+            .padding(.bottom, 14)
 
             routeMap
                 .aspectRatio(342 / 286, contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(spacing: 4) {
                 Text(viewModel.routeSummary)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 12))
+                    .foregroundStyle(PicselColor.summaryText)
 
                 // 내비 앱마다 값이 조금씩 다르므로 어림값임을 알려 줍니다.
                 if let caption = viewModel.routeSummaryCaption {
                     Text(caption)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(.system(size: 11))
+                        .foregroundStyle(PicselColor.summaryText.opacity(0.7))
                 }
             }
+            .frame(maxWidth: .infinity)
+            .multilineTextAlignment(.center)
             .padding(.top, 14)
 
             HStack {
@@ -123,8 +131,8 @@ struct RouteConfirmationView: View {
                 Button(editMode.isEditing ? "완료" : "편집") {
                     toggleEditing()
                 }
-                .font(.subheadline)
-                .foregroundStyle(.primary)
+                .font(.system(size: 12))
+                .foregroundStyle(PicselColor.editLabel)
                 .buttonStyle(.plain)
                 .accessibilityHint(
                     editMode.isEditing
@@ -159,7 +167,7 @@ struct RouteConfirmationView: View {
 
     private var routeLoadingOverlay: some View {
         ZStack {
-            Color(.systemBackground).opacity(0.6)
+            Color.white.opacity(0.6)
 
             VStack(spacing: 8) {
                 ProgressView()
@@ -177,23 +185,18 @@ struct RouteConfirmationView: View {
             onStartNavigation(viewModel.activeTrip)
         } label: {
             Text("이대로 여행 계획표 만들기")
-                .font(.headline)
-                .foregroundStyle(Color(.systemBackground))
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(PicselColor.onPrimary)
                 .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(Color.primary)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .frame(height: 66)
+                .background(PicselColor.primaryGreen)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
-        .padding(.horizontal, 59)
-        .padding(.top, 18)
+        .buttonStyle(.plain)
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
         .padding(.bottom, 8)
-        .background(
-            LinearGradient(
-                colors: [Color(.systemBackground).opacity(0), Color(.systemBackground)],
-                startPoint: .top,
-                endPoint: .center
-            )
-        )
+        .background(Color.white)
     }
 
     private func toggleEditing() {

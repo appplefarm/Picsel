@@ -26,6 +26,16 @@ enum PicselColor {
     static let timelineLine = Color(hex: 0x48C98B).opacity(0.45)
     /// 카드 그림자
     static let cardShadow = Color.black.opacity(0.1)
+    /// 경로 목록 행 배경
+    static let rowBackground = Color(hex: 0xFAFBFA)
+    /// 경로 목록 행 테두리
+    static let rowBorder = Color(hex: 0xECF2EF)
+    /// 경로 요약 문구
+    static let summaryText = Color(hex: 0x868686)
+    /// 편집 버튼 글자
+    static let editLabel = Color(hex: 0x738376)
+    /// 구간 이동 시간
+    static let travelMinutes = Color(hex: 0x858585)
 }
 
 extension Color {
