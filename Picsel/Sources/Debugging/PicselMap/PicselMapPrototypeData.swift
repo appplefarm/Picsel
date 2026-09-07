@@ -2,7 +2,7 @@
 //  PicselMapPrototypeData.swift
 //  Picsel
 //
-//  Created by JonghyeonLee on 9/1/26.
+//  Created by Jonghyeon Lee on 9/1/26.
 //
 
 #if DEBUG
@@ -25,8 +25,24 @@ enum PicselMapPrototypeData {
     }
 
     static var unlockedRegionCodes: Set<String> {
-        ["11110", "26350", "50110"]
+        ["11110", "26350", "50110", "47770"]
     }
+
+    static let records = [
+        PicselMapRecord(
+            id: UUID(),
+            regionCode: "47770",
+            snapshot: TripRecordSnapshot(
+                regionName: "영덕",
+                title: "영덕 바다 여행",
+                memo: "바다를 따라 걸으며 남긴 여행 기록",
+                travelDate: Date(timeIntervalSince1970: 1_786_147_200),
+                photoDataList: [],
+                placeCount: 3
+            ),
+            stops: []
+        )
+    ]
 
     private enum PreviewDataError: LocalizedError {
         case unexpectedRegionCount(Int)

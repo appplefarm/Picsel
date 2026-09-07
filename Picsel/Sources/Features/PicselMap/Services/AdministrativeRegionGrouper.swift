@@ -2,7 +2,7 @@
 //  AdministrativeRegionGrouper.swift
 //  Picsel
 //
-//  Created by JonghyeonLee on 9/3/26.
+//  Created by Jonghyeon Lee on 9/3/26.
 //
 
 import Foundation

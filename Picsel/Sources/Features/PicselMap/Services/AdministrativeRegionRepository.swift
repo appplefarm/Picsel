@@ -2,16 +2,16 @@
 //  AdministrativeRegionRepository.swift
 //  Picsel
 //
-//  Created by JonghyeonLee on 9/1/26.
+//  Created by Jonghyeon Lee on 9/1/26.
 //
 
 import Foundation
 
-protocol AdministrativeRegionRepository {
+nonisolated protocol AdministrativeRegionRepository: Sendable {
     func loadRegions() throws -> [AdministrativeRegion]
 }
 
-struct BundledGeoJSONRegionRepository: AdministrativeRegionRepository {
+nonisolated struct BundledGeoJSONRegionRepository: AdministrativeRegionRepository {
     private let bundle: Bundle
     private let resourceName: String
 
@@ -43,7 +43,7 @@ struct BundledGeoJSONRegionRepository: AdministrativeRegionRepository {
     }
 }
 
-enum RegionRepositoryError: LocalizedError {
+nonisolated enum RegionRepositoryError: LocalizedError {
     case missingResource(String)
     case emptyFeatureCollection
 
@@ -57,11 +57,11 @@ enum RegionRepositoryError: LocalizedError {
     }
 }
 
-private struct FeatureCollection: Decodable {
+nonisolated private struct FeatureCollection: Decodable {
     let features: [Feature]
 }
 
-private struct Feature: Decodable {
+nonisolated private struct Feature: Decodable {
     let properties: Properties
     let geometry: Geometry
 
@@ -78,13 +78,13 @@ private struct Feature: Decodable {
     }
 }
 
-private struct Properties: Decodable {
+nonisolated private struct Properties: Decodable {
     let code: String
     let name: String
     let parentCode: String?
 }
 
-private struct Geometry: Decodable {
+nonisolated private struct Geometry: Decodable {
     private enum CodingKeys: String, CodingKey {
         case type
         case coordinates

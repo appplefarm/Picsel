@@ -2,11 +2,13 @@
 //  AdministrativeRegionMapView.swift
 //  Picsel
 //
-//  Created by JonghyeonLee on 9/1/26.
+//  Created by Jonghyeon Lee on 9/1/26.
 //
 
 import SwiftUI
 
+/// 경계·해금 코드·선택 콜백만으로 재사용하는 지도입니다.
+/// 화면 제목, 기록 카드, 탭바, 데이터 저장소는 포함하지 않습니다.
 struct AdministrativeRegionMapView: View {
     let regions: [AdministrativeRegion]
     let unlockedRegionCodes: Set<String>
@@ -26,9 +28,9 @@ struct AdministrativeRegionMapView: View {
 
     init(
         regions: [AdministrativeRegion],
-        unlockedRegionCodes: Set<String>,
-        selectedRegionCode: String?,
-        pixelResolution: Int,
+        unlockedRegionCodes: Set<String> = [],
+        selectedRegionCode: String? = nil,
+        pixelResolution: Int = 128,
         onSelectRegion: @escaping (String?) -> Void
     ) {
         self.regions = regions
@@ -60,7 +62,7 @@ struct AdministrativeRegionMapView: View {
             )
 
             ZStack {
-                Color(.systemGray6)
+                Color.clear
                     .contentShape(Rectangle())
                     .onTapGesture {
                         onSelectRegion(nil)

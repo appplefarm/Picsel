@@ -2,7 +2,7 @@
 //  AdministrativeRegionTile.swift
 //  Picsel
 //
-//  Created by JonghyeonLee on 9/1/26.
+//  Created by Jonghyeon Lee on 9/1/26.
 //
 
 import SwiftUI
@@ -57,7 +57,7 @@ struct AdministrativeRegionTile: View {
         if isSelected {
             return .accentColor
         }
-        return isUnlocked ? .clear : Color(.systemGray4)
+        return isUnlocked ? .primary.opacity(0.7) : Color(.systemGray5)
     }
 
     private var strokeColor: Color {

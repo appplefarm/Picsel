@@ -2,6 +2,8 @@
 //  PhotoSelectionPolicy.swift
 //  Picsel
 //
+//  Created by Jonghyeon Lee on 8/28/26.
+//
 
 import CoreGraphics
 import Foundation

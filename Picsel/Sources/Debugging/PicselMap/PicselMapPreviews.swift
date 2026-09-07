@@ -2,7 +2,7 @@
 //  PicselMapPreviews.swift
 //  Picsel
 //
-//  Created by JonghyeonLee on 9/1/26.
+//  Created by Jonghyeon Lee on 9/1/26.
 //
 
 #if DEBUG
@@ -20,7 +20,8 @@ private struct PicselMapPreview: View {
                 PicselMapView(
                     regions: regions,
                     unlockedRegionCodes: PicselMapPrototypeData.unlockedRegionCodes,
-                    pixelResolution: 180
+                    records: PicselMapPrototypeData.records,
+                    pixelResolution: 128
                 )
             }
 
@@ -31,6 +32,23 @@ private struct PicselMapPreview: View {
                 description: Text(error.localizedDescription)
             )
         }
+    }
+}
+#Preview("지도 서브뷰 · 단독 재사용") {
+    @Previewable @State var selectedCode: String?
+
+    AdministrativeRegionMapView(
+        regions: PicselMapPrototypeData.regions,
+        unlockedRegionCodes: PicselMapPrototypeData.unlockedRegionCodes,
+        selectedRegionCode: selectedCode
+    ) { selectedCode = $0 }
+        .frame(height: 420)
+        .padding(24)
+}
+
+#Preview("픽셀맵 · 첫 여행 전") {
+    NavigationStack {
+        PicselMapView(regions: PicselMapPrototypeData.regions)
     }
 }
 #endif
