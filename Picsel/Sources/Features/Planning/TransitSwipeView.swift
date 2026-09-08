@@ -11,6 +11,7 @@ import SwiftUI
 struct TransitSwipeView: View {
     @State var viewModel: TransitSwipeViewModel
     @State private var isShowingRouteConfirmation = false
+    @State private var isShowingTripProgress = false
     @State private var isShowingTripRecord = false
     
     var body: some View {
@@ -74,19 +75,33 @@ struct TransitSwipeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .navigationDestination(isPresented: $isShowingRouteConfirmation) {
-            RouteConfirmationView(trip: viewModel.activeTrip) { _ in
-                isShowingTripRecord = true
+            RouteConfirmationView(
+                trip: viewModel.activeTrip,
+                thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
+            ) { _ in
+                isShowingTripProgress = true
             }
                 .toolbar(.hidden, for: .tabBar)
+        }
+        .navigationDestination(isPresented: $isShowingTripProgress) {
+            TripProgressView(
+                trip: viewModel.activeTrip,
+                thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
+            ) {
+                isShowingTripRecord = true
+            }
+            .toolbar(.hidden, for: .tabBar)
         }
         .navigationDestination(isPresented: $isShowingTripRecord) {
             TripRecordView()
                 .toolbar(.hidden, for: .tabBar)
         }
         .onAppear {
-            // 화면 진입 시 추천 장소 로드 (테스트용 더미 데이터: 포항시 남구)
+            // 화면 진입 시 추천 장소 로드
+            // TODO: 목적지 좌표에서 시군구를 판별해 지역을 자동으로 정합니다.
+            //       RegionCodes.json은 포항시를 구 단위로 나누지 않으므로 북구·남구가 함께 조회됩니다.
             Task {
-                if let pohang = RegionCodeManager.shared.findRegion(by: "포항시 남구") {
+                if let pohang = RegionCodeManager.shared.findRegion(by: "포항시") {
                     await viewModel.fetchRecommendedPlaces(areaCode: pohang.areaCd, sigunguCode: pohang.sigunguCd)
                 }
             }

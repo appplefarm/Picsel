@@ -16,9 +16,17 @@ final class TransitSwipeViewModel {
     var candidates: [PlaceDTO] = []       // API로 받아올 추천 장소 최대 10곳
     var selectedPlaces: [PlaceDTO] = []   // 오른쪽으로 스와이프(선택)한 장소들
     var isLoading: Bool = false
-    
-    init(trip: Trip) {
+
+    /// 경로 확인 화면에 넘길 장소 사진입니다.
+    /// RouteStop 모델에는 사진 필드가 없어 화면 사이에서만 들고 다닙니다.
+    private(set) var thumbnailURLsByStopID: [UUID: URL] = [:]
+
+    /// 수상작 목적지 사진입니다. 경유지와 달리 홈 화면에서 넘겨받습니다.
+    private let destinationPhotoURL: URL?
+
+    init(trip: Trip, destinationPhotoURL: URL? = nil) {
         self.activeTrip = trip
+        self.destinationPhotoURL = destinationPhotoURL
     }
     
     // MARK: - API 통신 (한국관광공사 지역기반 API)
@@ -61,6 +69,8 @@ final class TransitSwipeViewModel {
         }
         activeTrip.stops.removeAll { !$0.isDestination }
 
+        var thumbnails: [UUID: URL] = [:]
+
         // 임시로 모아둔 selectedPlaces를 RouteStop 엔티티로 변환하여 마스터 Trip에 꽂아 넣음
         for (index, place) in selectedPlaces.enumerated() {
             let newStop = RouteStop(
@@ -71,9 +81,22 @@ final class TransitSwipeViewModel {
                 stopType: "waypoint",
                 orderIndex: index // 선택한 순서대로 인덱스 부여
             )
+            newStop.address = place.address
+            newStop.regionCode = place.regionCode
+
             // 양방향 연결
             newStop.trip = activeTrip
             activeTrip.stops.append(newStop)
+
+            if let photoURL = place.photoURL, let url = URL(string: photoURL) {
+                thumbnails[newStop.id] = url
+            }
         }
+
+        if let destinationStop = activeTrip.destinationStop, let destinationPhotoURL {
+            thumbnails[destinationStop.id] = destinationPhotoURL
+        }
+
+        thumbnailURLsByStopID = thumbnails
     }
 }

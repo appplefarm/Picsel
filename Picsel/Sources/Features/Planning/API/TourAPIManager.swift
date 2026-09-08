@@ -23,7 +23,7 @@ final class TourAPIManager {
         let urlString = """
         \(baseURL)\
         ?serviceKey=\(serviceKey)\
-        &numOfRows=10\
+        &numOfRows=30\
         &pageNo=1\
         &MobileOS=IOS\
         &MobileApp=Picsel\
@@ -40,18 +40,37 @@ final class TourAPIManager {
         let decodedData = try JSONDecoder().decode(TourRoot.self, from: data)
         
         guard let items = decodedData.response.body.items.item else { return [] }
-        
-        return items.map { item in
-            PlaceDTO(
-                id: item.contentid,
-                name: item.title,
-                address: item.addr1 ?? "주소 미상",
-                latitude: Double(item.mapy ?? "") ?? 0.0,
-                longitude: Double(item.mapx ?? "") ?? 0.0,
-                photoURL: (item.firstimage ?? "").replacingOccurrences(of: "http://", with: "https://"),
-                detailDescription: nil,
-                regionCode: nil
-            )
-        }
+
+        // 사진으로 목적지를 고르는 서비스라 대표 이미지가 없는 장소는 제외합니다.
+        // 응답에서 걸러낸 뒤 필요한 개수만 남기려고 numOfRows를 넉넉히 요청합니다.
+        return items
+            .compactMap { item -> PlaceDTO? in
+                guard let photoURL = Self.secureImageURL(from: item.firstimage) else {
+                    return nil
+                }
+
+                return PlaceDTO(
+                    id: item.contentid,
+                    name: item.title,
+                    address: item.addr1 ?? "주소 미상",
+                    latitude: Double(item.mapy ?? "") ?? 0.0,
+                    longitude: Double(item.mapx ?? "") ?? 0.0,
+                    photoURL: photoURL,
+                    detailDescription: nil,
+                    regionCode: nil
+                )
+            }
+            .prefix(Self.recommendationCount)
+            .map { $0 }
+    }
+
+    /// 추천 카드로 보여줄 장소 개수입니다.
+    private static let recommendationCount = 10
+
+    /// 관광공사 이미지가 http로 내려오면 App Transport Security에 막혀 로드되지 않습니다.
+    /// 비어 있으면 사진이 없는 장소이므로 nil을 돌려줍니다.
+    private static func secureImageURL(from value: String?) -> String? {
+        guard let value, !value.isEmpty else { return nil }
+        return value.replacingOccurrences(of: "http://", with: "https://")
     }
 }
