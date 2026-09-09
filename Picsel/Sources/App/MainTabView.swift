@@ -3,6 +3,7 @@
 //  Picsel
 //
 
+import SwiftData
 import SwiftUI
 
 struct MainTabView: View {
@@ -16,7 +17,7 @@ struct MainTabView: View {
             }
 
             NavigationStack {
-                PicxelMapView()
+                PicselMapScreen()
             }
             .tabItem {
                 Label("픽셀맵", systemImage: "mappin.and.ellipse")
@@ -28,4 +29,5 @@ struct MainTabView: View {
 
 #Preview {
     MainTabView()
+        .modelContainer(for: [Trip.self, RouteStop.self, TripPhoto.self, UserPixel.self], inMemory: true)
 }

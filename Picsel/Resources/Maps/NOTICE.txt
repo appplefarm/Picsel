@@ -1,0 +1,12 @@
+PicselMap sigungu boundary data
+
+Input supplied locally by a project member:
+  sig_20230729/sig.shp and sig.dbf
+
+The input contains 250 SIG records, CP949 attribute text, and projected
+coordinates matching EPSG:5179 (Korea 2000 / Unified CS). It is converted to
+WGS84 GeoJSON and quantized to a 250-meter grid by:
+  Tools/convert_sigungu_shapefile.py
+
+Confirm the original provider, redistribution terms, and required attribution
+before shipping the generated GeoJSON in a production build.

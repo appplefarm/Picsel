@@ -2,6 +2,8 @@
 //  RouteConfirmationView.swift
 //  Picsel
 //
+//  Created by Jonghyeon Lee on 8/31/26.
+//
 
 import SwiftUI
 internal import _LocationEssentials
