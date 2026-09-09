@@ -54,10 +54,10 @@
 Python 3.11 이상. 아래 패키지는 오프라인 가공 도구용이며 iOS 앱에 추가되지 않는다.
 
 ```sh
-python3 -m venv .venv-boundaries
-.venv-boundaries/bin/python -m pip install -r Tools/BoundaryData/requirements.txt
-.venv-boundaries/bin/python -m unittest discover -s Tools/BoundaryData -p 'test_*.py'
-.venv-boundaries/bin/python Tools/convert_sigungu_shapefile.py \
+python3 -m venv Tools/.venv-boundaries
+Tools/.venv-boundaries/bin/python -m pip install -r Tools/BoundaryData/requirements.txt
+Tools/.venv-boundaries/bin/python -m unittest discover -s Tools/BoundaryData -p 'test_*.py'
+Tools/.venv-boundaries/bin/python Tools/convert_sigungu_shapefile.py \
   /다운로드경로/AL_D001_00_20260909.zip \
   /임시경로/sigungu_boundaries_20260909.geojson \
   --corrections Tools/BoundaryData/corrections_20260909.json \
@@ -71,6 +71,52 @@ python3 -m venv .venv-boundaries
 - 투영 좌표에서 공통 250m 격자로 정밀도를 줄인 후 WGS84 **경도, 위도** 순으로 변환한다.
 - 중복 코드, 빈 지역, 잘못된 좌표계·좌표 범위, 변환 후 유효하지 않은 도형은 출력 전에 거부한다.
 - 출처별 시군구 코드가 다를 수 있으므로 서버 데이터와는 이 원본 코드 체계를 명시적으로 맞춰야 한다.
+- `.prj`가 없는 옛 SHP는 좌표계를 추측하지 않고 거부한다.
+
+## 앱 연결과 검증 결과
+
+- 번들: `Picsel/Resources/Maps/sigungu_boundaries_20260909.geojson`
+- 256개 고유 시군구 → **161개 고유 선택 타일**. 원본의 각 시군구는 정확히 한 타일에 속함
+- 파일 크기: 3,532,926 bytes. 2023년 번들은 제거했고 Git 이력에서 복구 가능
+- `validation_20260909.json`에 원본/결과 해시, 보정 내역, 지역별 복구 여부·면적을 기록
+- 원본 도형 4개(강진군·해남군·옹진군·태안군)의 유효성 복구 후 전체 출력 도형 유효성 통과
+- 격자 경량화는 작은 섬·만·홀을 축약할 수 있음. 원본 대비 면적 변화는 보고서에 남김
+- 서로 독립적으로 2회 변환한 파일이 바이트 단위로 같음
+- 변환 도구 단위 테스트 **14개 통과**
+- 실제 앱 모델·저장소·그룹화 코드를 사용하는 Swift 검증 통과
+- Xcode 26.6 / iOS Simulator Debug 빌드 성공. 빌드된 앱 번들에서도 Swift 검증 통과
+- iPhone 17 / iOS 26.5: 픽셀맵 진입, 전체 지도 표시, 대구·부산의 독립 선택, 화성·광주 타일 선택 확인
+- 기존 줌/드래그 구현은 변경하지 않음. 이번 검증에서는 핀치 제스처·실기기를 별도로 검증하지 않음
+- 지도 SDK의 deprecated API 및 기존 Home/RouteConfirmation 동시성 경고는 이번 변경과 별개로 남아 있음
+
+실제 번들의 로딩·그룹화 회귀 검사 (macOS, Xcode 설치 필요):
+
+```sh
+xcrun swiftc -parse-as-library \
+  Picsel/Sources/Features/PicselMap/Models/AdministrativeRegion.swift \
+  Picsel/Sources/Features/PicselMap/Services/AdministrativeRegionRepository.swift \
+  Picsel/Sources/Features/PicselMap/Services/AdministrativeRegionGrouper.swift \
+  Tools/BoundaryData/validate_boundary_bundle.swift \
+  -o /tmp/validate-picsel-boundaries
+/tmp/validate-picsel-boundaries /빌드경로/Picsel.app
+```
+
+### 지역 코드 호환성 — 서버 담당자와 맞출 부분
+
+공통 데이터 모델 및 저장된 사용자 기록은 수정하지 않았다. 서버가 반환하는 `regionCode`는
+**현재 번들의 시군구 코드**와 맞춰야 한다. 이전 코드가 저장되어 있다면 별도의 이관 정책이 필요하다.
+
+| 이전 입력 | 새 데이터 / 지도 표현 | 처리 |
+| --- | --- | --- |
+| 전북 `45…` | 원본 전북 `52…` | 기존 기록을 자동 수정하지 않음 |
+| 전남 `46…` / 광주 `29…` | 원본 전남광주 `12…` | 이름/지역별 대응 필요. 접두어만 일괄 바꾸면 잘못 매칭됨 |
+| 광주 지도 타일 `29` | `29`, 이름 `광주`, 소속 시도 `12` | 기존 한 타일 UX 유지. 새 5개 구 코드는 constituentCodes에 보존 |
+| 화성 `41590` | 새 4개 구 → 지도 그룹 `4159` | 옛 도시 단위 기록 이관은 별도 처리 |
+| 부천 `41190` | 새 3개 구 → 지도 그룹 `4119` | 옛 도시 단위 기록 이관은 별도 처리 |
+| 인천 옛 중구·동구·서구 | 새 구 코드 | 과거 기록을 새 구에 무조건 복제하지 않음; 지도 전체 인천 그룹 `28`은 유지 |
+
+광주의 5개 구만 묶고 전남 전체를 한 타일로 만들지 않는다. 현재 이름 `광주`와 그룹 코드 `29`는
+앱의 표시 단위이며 신규 법정 시도 코드라는 뜻이 아니다.
 
 ## 작업 경계
 
@@ -78,4 +124,4 @@ python3 -m venv .venv-boundaries
 - 공통 Picsel Model, 사진 서버, 관광사진 거리 필터링은 변경하지 않는다.
 - 시도별 그룹화, 일반시의 구 합치기, 내부 경계 제거와 픽셀화 동작을 유지한다.
 - 행정구역 개편 전의 저장된 해금 코드를 새 지역에 무조건 복사하지 않는다. 특히 분할된 지역은 별도 이관 정책이 필요하다.
-- 데이터 변환과 검증을 통과하기 전에는 현재 2023년 번들을 유지한다.
+- 데이터 변환과 검증을 통과한 후 2023년 번들을 20260909 번들로 교체했다.
