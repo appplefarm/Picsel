@@ -3,7 +3,7 @@
 //  Picsel
 //
 //  Created by Jonghyeon Lee on 8/31/26.
-//  Updated by kosoobin on 9/6/26.
+//  Created by kosoobin on 9/6/26.
 //
 
 import SwiftUI
