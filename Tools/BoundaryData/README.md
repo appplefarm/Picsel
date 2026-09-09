@@ -36,6 +36,42 @@
 - **중복을 임의 삭제하거나 같은 지역으로 합치지 않는다.** 검증 실패 시 번들 교체를 중단한다.
 - 원본 보정은 공간 대조 및 사용자 확인 후 별도 이력으로 관리한다.
 
+### 승인된 보정
+
+2026-09-09 사용자 승인 후, `corrections_20260909.json`에 **76번 레코드의 코드·이름만** 보정하도록 기록했다.
+
+- 비교 원본: 이전에 받은 공식 `N3A_G0100000.zip`의 `BJCD=2720000000 / 남구` 도형
+- 참조 ZIP SHA-256: `2daebab76e7e185b95723f0e933441a715ac4e88ec0608157631e97754d9e056`
+- 두 원본의 PRJ를 읽고 참조 EPSG:5179를 EPSG:5186으로 변환하여 비교
+- 76번과 참조 대구 남구의 교집합/합집합 면적 비율 (IoU): **0.9993162414**
+- 63번 실제 부산 남구와 참조 대구 남구의 IoU: **0**
+- 76번의 `26290 / 부산광역시 남구` → `27200 / 대구광역시 남구`; 좌표는 원본 유지
+- 원본 ZIP 전체 해시, 레코드 번호, 기존 코드·이름, 경계 범위, 좌표계가 일치할 때만 보정 가능
+- 다음 배포본에 이 보정을 그대로 재사용하지 않는다. 공식 파일이 바뀌면 검증부터 다시 한다.
+
+## 변환 도구
+
+Python 3.11 이상. 아래 패키지는 오프라인 가공 도구용이며 iOS 앱에 추가되지 않는다.
+
+```sh
+python3 -m venv .venv-boundaries
+.venv-boundaries/bin/python -m pip install -r Tools/BoundaryData/requirements.txt
+.venv-boundaries/bin/python -m unittest discover -s Tools/BoundaryData -p 'test_*.py'
+.venv-boundaries/bin/python Tools/convert_sigungu_shapefile.py \
+  /다운로드경로/AL_D001_00_20260909.zip \
+  /임시경로/sigungu_boundaries_20260909.geojson \
+  --corrections Tools/BoundaryData/corrections_20260909.json \
+  --report /임시경로/validation_20260909.json
+```
+
+- ZIP 중 SIG만 메모리로 읽고 `.prj`의 좌표계와 `.cpg`의 인코딩을 사용한다.
+- `A1/A2` 및 기존 `SIG_CD/SIG_KOR_NM` 속성 체계를 지원한다.
+- 이름에서 시도 접두어만 제거한다. `화성시 효행구`처럼 시 이름은 보존한다.
+- 잘못된 도형은 polygon 부분만 복구하고 복구 면적 차이가 1%를 넘으면 중단한다.
+- 투영 좌표에서 공통 250m 격자로 정밀도를 줄인 후 WGS84 **경도, 위도** 순으로 변환한다.
+- 중복 코드, 빈 지역, 잘못된 좌표계·좌표 범위, 변환 후 유효하지 않은 도형은 출력 전에 거부한다.
+- 출처별 시군구 코드가 다를 수 있으므로 서버 데이터와는 이 원본 코드 체계를 명시적으로 맞춰야 한다.
+
 ## 작업 경계
 
 - 기존 #29 픽셀맵 위에서 후속 작업한다. PR #30은 아직 develop에 병합되지 않았다.
