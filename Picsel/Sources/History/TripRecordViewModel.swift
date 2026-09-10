@@ -100,8 +100,13 @@ final class TripRecordViewModel {
         trip.isDone = true
 
         // 픽셀맵이 이 코드로 칠할 칸을 찾는다. 좌표가 경계 밖이면 nil이 될 수 있다.
-        // TODO: UserPixel 연결은 다음 단계에서 붙인다.
-        trip.targetPixelCode = trip.pixelTile?.code
+        let tile = trip.pixelTile
+        trip.targetPixelCode = tile?.code
+
+        // 픽셀을 못 찾아도 기록 자체는 남긴다. 지도에만 안 뜰 뿐이다.
+        if let tile {
+            UserPixelStore.link(trip, to: tile, in: context)
+        }
 
         replacePhotos(of: trip, in: context)
 
