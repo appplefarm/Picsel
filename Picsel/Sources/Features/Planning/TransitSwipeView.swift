@@ -69,7 +69,14 @@ struct TransitSwipeView: View {
                         .padding(.top, 16)
                 }
                 
-                Text("왼쪽으로 넘기기 · 오른쪽으로 여행에 추가")
+                HStack {
+                    Text("← 안 갈래요")
+                    
+                    Spacer()
+                    
+                    Text("갈래요 →")
+                }
+                .padding(.horizontal, 40)
                     .font(.system(size: 11))
                     .foregroundColor(Color(white: 0.42))
             }
