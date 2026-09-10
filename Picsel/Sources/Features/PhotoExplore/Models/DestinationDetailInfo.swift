@@ -23,7 +23,7 @@ struct DestinationDetailInfo {
         locationName = destination.address
         self.distanceKilometers = distanceKilometers
         self.estimatedDurationMinutes = estimatedDurationMinutes
-        categoryName = "관광공모전 수상작"
+        categoryName = "관광사진"
     }
 
     var chips: [String] {
