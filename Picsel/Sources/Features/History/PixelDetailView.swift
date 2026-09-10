@@ -39,9 +39,9 @@ struct PixelDetailView: View {
                     .font(.title).bold()
                 
                 // TODO: 최종 목적지 (수상작 사진) 보여주기
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(width: 300, height: 200)
+//                RoundedRectangle(cornerRadius: 12)
+//                    .fill(Color.gray.opacity(0.2))
+//                    .frame(width: 300, height: 200)
 
                 TripMemoCard(
                     title: snapshot.title,

@@ -20,6 +20,8 @@ struct TripRecordView: View {
     /// 이 화면에서 기록할 여행입니다. 앞 화면에서 그대로 넘겨받습니다.
     let trip: Trip
 
+    @Environment(\.modelContext) private var modelContext
+
     @State private var viewModel = TripRecordViewModel()
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var isGalleryPresented = false
@@ -61,6 +63,8 @@ struct TripRecordView: View {
                 
                 Button {
                     focusedField = nil
+                    // 저장이 끝난 뒤에만 결과 화면으로 넘어갑니다.
+                    guard viewModel.save(to: trip, in: modelContext) else { return }
                     isPixelUnlockedPresented = true
                 } label: {
                     Text("인증하고 픽셀 채우기")

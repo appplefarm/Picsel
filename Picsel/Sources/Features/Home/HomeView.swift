@@ -180,8 +180,10 @@ struct HomeView: View {
     private var destinationButton: some View {
         NavigationLink {
             PhotoExploreView(
-                service: TourAPIPhotoDestinationService(configuration: .current)
+                service: PhotoDestinationServiceFactory.make(),
+                sourceNotice: PhotoDestinationServiceFactory.sourceNotice
             ) { destination in
+                guard destination.canSelectAsDestination else { return }
                 confirmedDestination = destination
             }
         } label: {
