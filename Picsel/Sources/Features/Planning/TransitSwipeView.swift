@@ -112,11 +112,25 @@ struct TransitSwipeView: View {
         }
         .onAppear {
             // 화면 진입 시 추천 장소 로드
-            // TODO: 목적지 좌표에서 시군구를 판별해 지역을 자동으로 정합니다.
-            //       RegionCodes.json은 포항시를 구 단위로 나누지 않으므로 북구·남구가 함께 조회됩니다.
             Task {
-                if let pohang = RegionCodeManager.shared.findRegion(by: "포항시") {
-                    await viewModel.fetchRecommendedPlaces(areaCode: pohang.areaCd, sigunguCode: pohang.sigunguCd)
+                // Trip에 저장된 최종 목적지를 기반으로 시군구를 판별합니다.
+                if let destination = viewModel.activeTrip.destinationStop {
+                    // 주소가 있다면 주소를, 없다면 이름을 우선적으로 사용하여 지역 코드 매칭
+                    let searchKeyword = destination.address ?? destination.name
+                    print("searchKeyword: \(searchKeyword)\ndestination.address: \(destination.address ?? "nil")\ndestination.name: \(destination.name)")
+                    if let region = RegionCodeManager.shared.findRegion(by: searchKeyword) {
+                        await viewModel.fetchRecommendedPlaces(areaCode: region.areaCd, sigunguCode: region.sigunguCd)
+                    } else {
+                        // 매칭 실패 시 기본값 (포항시)
+                        if let defaultRegion = RegionCodeManager.shared.findRegion(by: "포항시") {
+                            await viewModel.fetchRecommendedPlaces(areaCode: defaultRegion.areaCd, sigunguCode: defaultRegion.sigunguCd)
+                        }
+                    }
+                } else {
+                    // 목적지 정보가 없을 경우 안전하게 기본값 사용
+                    if let defaultRegion = RegionCodeManager.shared.findRegion(by: "포항시") {
+                        await viewModel.fetchRecommendedPlaces(areaCode: defaultRegion.areaCd, sigunguCode: defaultRegion.sigunguCd)
+                    }
                 }
             }
         }

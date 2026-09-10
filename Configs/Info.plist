@@ -4,12 +4,6 @@
 <dict>
 	<key>GOOGLE_MAPS_API_KEY</key>
 	<string>$(GOOGLE_MAPS_API_KEY)</string>
-	<key>NMFNcpKeyId</key>
-	<string>$(NAVER_MAPS_CLIENT_ID)</string>
-	<key>NAVER_MAPS_CLIENT_ID</key>
-	<string>$(NAVER_MAPS_CLIENT_ID)</string>
-	<key>NAVER_MAPS_CLIENT_SECRET</key>
-	<string>$(NAVER_MAPS_CLIENT_SECRET)</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>kakaomap</string>
@@ -17,6 +11,12 @@
 		<string>nmap</string>
 		<string>tmap</string>
 	</array>
+	<key>NAVER_MAPS_CLIENT_ID</key>
+	<string>$(NAVER_MAPS_CLIENT_ID)</string>
+	<key>NAVER_MAPS_CLIENT_SECRET</key>
+	<string>$(NAVER_MAPS_CLIENT_SECRET)</string>
+	<key>NMFNcpKeyId</key>
+	<string>$(NAVER_MAPS_CLIENT_ID)</string>
 	<key>TOUR_API_SERVICE_KEY_ENTRY</key>
 	<string>$(TOUR_API_SERVICE_KEY_ENTRY)</string>
 	<key>TOUR_API_SERVICE_KEY_WINNERS</key>
