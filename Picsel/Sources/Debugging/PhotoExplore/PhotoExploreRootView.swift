@@ -15,9 +15,7 @@ struct PhotoExploreRootView: View {
     @State private var selectedDestination: PhotoDestination?
 
     init(
-        service: any PhotoDestinationService = TourAPIPhotoDestinationService(
-            configuration: .current
-        )
+        service: any PhotoDestinationService = PhotoDestinationServiceFactory.make()
     ) {
         self.service = service
     }

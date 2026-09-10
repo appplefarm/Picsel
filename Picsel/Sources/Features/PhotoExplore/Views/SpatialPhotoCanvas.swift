@@ -150,7 +150,7 @@ struct SpatialPhotoCanvas: View {
 
     private var hint: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text("관광공모전 수상작 사진 \(SpatialPlaceItem.displayLimit)장을 둘러보세요")
+            Text("관광사진 \(viewModel.places.count)장을 둘러보세요")
                 .font(.subheadline)
             Text("스와이프하고 손가락으로 핀치해 깊이를 이동하세요")
                 .font(.caption)
