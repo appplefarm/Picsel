@@ -17,7 +17,7 @@ nonisolated struct BundledGeoJSONRegionRepository: AdministrativeRegionRepositor
 
     init(
         bundle: Bundle = .main,
-        resourceName: String = "sigungu_boundaries_2023"
+        resourceName: String = "sigungu_boundaries_20260909"
     ) {
         self.bundle = bundle
         self.resourceName = resourceName

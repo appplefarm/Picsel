@@ -25,6 +25,12 @@ enum AdministrativeRegionGrouper {
         "31": "울산광역시"
     ]
 
+    /// 2026년 원본에서는 광주 5개 구가 전남광주(12)에 속합니다.
+    /// 지도에서는 기존 광주 타일을 유지하되 전남의 시·군까지 합치지 않습니다.
+    nonisolated private static let gwangjuDistrictCodes: Set<String> = [
+        "12210", "12240", "12270", "12300", "12330"
+    ]
+
     nonisolated static func group(
         _ regions: [AdministrativeRegion]
     ) -> [AdministrativeRegion] {
@@ -46,6 +52,10 @@ enum AdministrativeRegionGrouper {
     nonisolated private static func group(
         for region: AdministrativeRegion
     ) -> Group {
+        if region.parentCode == "12", gwangjuDistrictCodes.contains(region.code) {
+            return Group(code: "29", name: "광주", parentCode: "12")
+        }
+
         if let parentCode = region.parentCode,
            let metropolitanName = metropolitanNames[parentCode] {
             return Group(
