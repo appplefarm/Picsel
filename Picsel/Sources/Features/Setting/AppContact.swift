@@ -6,9 +6,8 @@
 import UIKit
 
 enum AppContact {
-    static let supportEmail = "support@example.com"
+    static let supportEmail = "ehdtjs3658@naver.com"
     static let mailSubject = "[Picsel 문의]"
-
     static var supportMailURL: URL? {
         var components = URLComponents()
         components.scheme = "mailto"

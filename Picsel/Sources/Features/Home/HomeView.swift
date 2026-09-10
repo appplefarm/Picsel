@@ -7,8 +7,6 @@
 import SwiftUI
 
 struct HomeView: View {
-    let onLogout: () -> Void
-    let onWithdraw: () -> Void
     @State private var viewModel = HomeViewModel()
     @State private var confirmedDestination: PhotoDestination?
     @State private var isSettingsPresented = false
@@ -75,10 +73,7 @@ struct HomeView: View {
             .accessibilityLabel("설정")
         }
         .fullScreenCover(isPresented: $isSettingsPresented) {
-            SettingsView(
-                onLogout: onLogout,
-                onWithdraw: onWithdraw
-            )
+            SettingsView()
         }
     }
     
@@ -207,8 +202,5 @@ private enum HomeStyle {
 }
 
 #Preview {
-    HomeView(
-        onLogout: { },
-        onWithdraw: { }
-    )
+    HomeView()
 }

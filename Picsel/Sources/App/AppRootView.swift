@@ -15,10 +15,7 @@ struct AppRootView: View {
     var body: some View {
         Group {
             if hasCompletedOnboarding {
-                MainTabView(
-                    onLogout: logout,
-                    onWithdraw: withdrawAccount
-                )
+                MainTabView()
                     .transition(.opacity)
             } else {
                 OnboardingView {
@@ -30,25 +27,6 @@ struct AppRootView: View {
             }
         }
         .environment(router)
-    }
-
-    private func logout() {
-        // 앱 내부 로그인 상태만 해제합니다. 여행 기록 등 로컬 데이터는 보존합니다.
-        UserDefaults.standard.removeObject(forKey: "appleUserIdentifier")
-        UserDefaults.standard.set(false, forKey: "isLoggedIn")
-
-        withAnimation(.easeInOut(duration: 0.25)) {
-            hasCompletedOnboarding = false
-        }
-    }
-
-    private func withdrawAccount() {
-        UserDefaults.standard.removeObject(forKey: "appleUserIdentifier")
-        UserDefaults.standard.set(false, forKey: "isLoggedIn")
-
-        withAnimation(.easeInOut(duration: 0.25)) {
-            hasCompletedOnboarding = false
-        }
     }
 }
 
