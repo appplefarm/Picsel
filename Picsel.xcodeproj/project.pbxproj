@@ -373,7 +373,7 @@
 				639548FB302DE73A001B48E6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		639548FC302DE73A001B48E6 /* Build configuration list for PBXNativeTarget "Picsel" */ = {
 			isa = XCConfigurationList;
@@ -382,7 +382,7 @@
 				639548FE302DE73A001B48E6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 

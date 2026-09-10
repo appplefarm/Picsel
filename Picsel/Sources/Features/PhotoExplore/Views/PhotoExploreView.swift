@@ -10,14 +10,17 @@ import SwiftUI
 /// 관광사진 탐색 화면의 상태를 그리는 진입점입니다.
 struct PhotoExploreView: View {
     private let onConfirm: (PhotoDestination) -> Void
+    private let sourceNotice: String?
 
     @State private var viewModel: PhotoExploreViewModel
 
     init(
         service: any PhotoDestinationService,
+        sourceNotice: String? = nil,
         onConfirm: @escaping (PhotoDestination) -> Void
     ) {
         self.onConfirm = onConfirm
+        self.sourceNotice = sourceNotice
         _viewModel = State(
             initialValue: PhotoExploreViewModel(service: service)
         )
@@ -54,6 +57,16 @@ struct PhotoExploreView: View {
                     Button("다시 시도", action: viewModel.retry)
                     .buttonStyle(.borderedProminent)
                 }
+            }
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if let sourceNotice {
+                Text(sourceNotice)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background(.regularMaterial)
             }
         }
         .task(id: viewModel.loadRequest) {

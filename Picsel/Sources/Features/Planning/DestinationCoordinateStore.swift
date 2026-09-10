@@ -27,6 +27,7 @@ enum DestinationCoordinateStore {
     /// 2025 수상작 · 이가리 닻 전망대 (경북 포항시 북구 청하면)
     static let ancharPointOfIgari = Entry(
         name: "이가리 닻 전망대",
+//        address: "경상북도 포항시 북구 청하면 이가리",
         address: "경상북도 포항시 북구 청하면 이가리",
         latitude: 36.187_992_080_205_4,
         longitude: 129.379_004_542_389

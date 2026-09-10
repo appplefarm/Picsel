@@ -65,12 +65,14 @@ struct HomeView: View {
             viewModel.updateMaximumRadius(from: coordinate)
         }
         .navigationDestination(item: $confirmedDestination) { destination in
-            TransitSwipeView(
-                viewModel: TransitSwipeViewModel(
-                    trip: makeTrip(for: destination),
-                    destinationPhotoURL: destination.photoURL.flatMap(URL.init(string:))
+            if let trip = makeTrip(for: destination) {
+                TransitSwipeView(
+                    viewModel: TransitSwipeViewModel(
+                        trip: trip,
+                        destinationPhotoURL: destination.photoURL.flatMap(URL.init(string:))
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -205,44 +207,25 @@ struct HomeView: View {
         .buttonStyle(.plain)
     }
 
-    private func makeTrip(for destination: PhotoDestination) -> Trip {
+    private func makeTrip(for destination: PhotoDestination) -> Trip? {
+        guard destination.canSelectAsDestination,
+              let latitude = destination.latitude,
+              let longitude = destination.longitude else { return nil }
+
         let trip = Trip(title: "\(destination.name) 여행")
-        let destinationStop = makeDestinationStop(for: destination)
-
-        destinationStop.trip = trip
-        trip.stops.append(destinationStop)
-
-        return trip
-    }
-
-    /// 수상작 API에 좌표가 없는 동안에는 DestinationCoordinateStore로 보강합니다.
-    private func makeDestinationStop(for destination: PhotoDestination) -> RouteStop {
-        if let place = destination.placeDTO {
-            let stop = RouteStop(
-                placeId: place.id,
-                name: place.name,
-                latitude: place.latitude,
-                longitude: place.longitude,
-                stopType: "destination",
-                orderIndex: 0
-            )
-            stop.address = place.address
-            stop.regionCode = place.regionCode
-            return stop
-        }
-
-        let entry = DestinationCoordinateStore.entry(forContentID: destination.id)
         let stop = RouteStop(
             placeId: destination.id,
             name: destination.name,
-            latitude: entry.latitude,
-            longitude: entry.longitude,
+            latitude: latitude,
+            longitude: longitude,
             stopType: "destination",
             orderIndex: 0
         )
-        stop.address = destination.address ?? entry.address
+        stop.address = destination.address
         stop.regionCode = destination.regionCode
-        return stop
+        stop.trip = trip
+        trip.stops.append(stop)
+        return trip
     }
 }
 

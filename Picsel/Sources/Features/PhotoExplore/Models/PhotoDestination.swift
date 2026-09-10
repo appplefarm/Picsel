@@ -57,7 +57,7 @@ struct PhotoDestination: Identifiable, Hashable, Sendable {
 
     /// 주소와 좌표가 서버에서 보강된 후보만 공용 장소 모델로 변환합니다.
     var placeDTO: PlaceDTO? {
-        guard let address, let latitude, let longitude else { return nil }
+        guard canSelectAsDestination, let address, let latitude, let longitude else { return nil }
 
         return PlaceDTO(
             id: id,
@@ -69,5 +69,12 @@ struct PhotoDestination: Identifiable, Hashable, Sendable {
             detailDescription: detailDescription,
             regionCode: regionCode
         )
+    }
+
+    /// 미검증 좌표는 공급 계층에서 nil로 전달합니다. 사진 탐색과 경로 확정은 구분합니다.
+    var canSelectAsDestination: Bool {
+        guard let latitude, let longitude else { return false }
+        return latitude.isFinite && longitude.isFinite
+            && (-90...90).contains(latitude) && (-180...180).contains(longitude)
     }
 }

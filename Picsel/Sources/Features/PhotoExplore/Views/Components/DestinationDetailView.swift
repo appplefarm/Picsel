@@ -51,6 +51,14 @@ struct DestinationDetailView: View {
                     optionalDetails
                         .padding(.top, 10)
 
+                    if !destination.canSelectAsDestination {
+                        Text("위치 정보가 없거나 검증되지 않았어요. 사진은 볼 수 있지만 경로에는 추가할 수 없어요.")
+                            .font(.footnote)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: 326, alignment: .leading)
+                            .padding(.top, 12)
+                    }
+
                     Spacer(minLength: 24)
 
                     Text("이 사진을 목적지로 선택하면 출발지와 목적지 사이에서 들를 만한 경유지를 찾아드려요.")
@@ -59,9 +67,11 @@ struct DestinationDetailView: View {
                         .frame(maxWidth: 326, alignment: .leading)
 
                     Button("최종 목적지로 선택하기") {
+                        guard destination.canSelectAsDestination else { return }
                         dismiss()
                         onConfirm()
                     }
+                    .disabled(!destination.canSelectAsDestination)
                     .buttonStyle(.borderedProminent)
                     .buttonBorderShape(.roundedRectangle(radius: 16))
                     .tint(Color(.darkGray))
