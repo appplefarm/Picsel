@@ -6,7 +6,7 @@
 import UIKit
 
 enum AppContact {
-    static let supportEmail = "applefarm.ehdtjs3658@naver.com"
+    static let supportEmail = "ehdtjs3658@naver.com"
     static let privacyPolicyURL = URL(string: "https://appplefarm.github.io/picsel-policy/privacy/")
     static let supportURL = URL(string: "https://appplefarm.github.io/picsel-policy/support/")
     static let mailSubject = "[Picsel 문의]"

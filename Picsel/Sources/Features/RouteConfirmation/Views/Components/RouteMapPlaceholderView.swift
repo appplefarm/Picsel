@@ -7,18 +7,18 @@
 
 import SwiftUI
 
-/// 카카오맵 경로 컴포넌트가 연결될 자리입니다.
+/// 좌표가 없어 경로 지도를 표시할 수 없는 상태입니다.
 struct RouteMapPlaceholderView: View {
     var body: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
             .fill(Color(.secondarySystemBackground))
             .overlay {
-                Text("지도 사진 + 경로 (네비게이션처럼)")
+                Text("위치를 확인할 수 없음")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("경로 지도 준비 중")
+            .accessibilityLabel("위치를 확인할 수 없음")
     }
 }
 

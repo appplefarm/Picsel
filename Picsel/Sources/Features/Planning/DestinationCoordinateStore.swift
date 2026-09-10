@@ -33,11 +33,11 @@ enum DestinationCoordinateStore {
         longitude: 129.379_004_542_389
     )
 
-    /// 좌표가 아직 확보되지 않은 목적지에 사용할 임시 기본값입니다.
-    /// TODO: 좌표 파이프라인 완성 후 제거하고, 좌표가 없으면 목적지를 만들지 않도록 되돌립니다.
-    static let temporaryFallback = ancharPointOfIgari
-
-    static func entry(forContentID contentID: String) -> Entry {
-        entriesByContentID[contentID] ?? temporaryFallback
+    /// 좌표가 확인된 목적지만 반환합니다.
+    ///
+    /// 알 수 없는 장소를 임의의 좌표로 대체하면 잘못된 경로를 만들 수 있으므로,
+    /// 좌표가 없을 때는 호출자가 선택을 막거나 오류 상태를 표시합니다.
+    static func entry(forContentID contentID: String) -> Entry? {
+        entriesByContentID[contentID]
     }
 }

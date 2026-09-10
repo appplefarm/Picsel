@@ -75,6 +75,7 @@ struct PhotoDestination: Identifiable, Hashable, Sendable {
     var canSelectAsDestination: Bool {
         guard let latitude, let longitude else { return false }
         return latitude.isFinite && longitude.isFinite
+            && (latitude != 0 || longitude != 0)
             && (-90...90).contains(latitude) && (-180...180).contains(longitude)
     }
 }

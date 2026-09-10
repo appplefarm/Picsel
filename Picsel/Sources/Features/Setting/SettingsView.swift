@@ -20,9 +20,6 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     header
 
-                    serviceSection
-                        .padding(.top, 52)
-
                     informationSection
                         .padding(.top, 52)
 
@@ -71,22 +68,6 @@ private extension SettingsView {
             Text("Picsel을 나에게 맞게 관리해요")
                 .font(.system(size: 17))
                 .foregroundStyle(.secondary)
-        }
-    }
-
-    var serviceSection: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            sectionTitle("서비스 설정")
-
-            SettingsCard {
-                SettingsRow(
-                    icon: "location.fill",
-                    title: "네비게이션",
-                    description: "기본 길 안내 앱 선택"
-                ) {
-                    print("네비게이션 설정")
-                }
-            }
         }
     }
 
