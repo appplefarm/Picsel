@@ -32,7 +32,7 @@ struct VersionRow: View {
 
             Spacer()
 
-            Text("1.0.0")
+            Text(AppInfo.displayVersion)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(.secondary)
         }

@@ -76,6 +76,7 @@ struct WithdrawalSheetView: View {
         .alert("정말 탈퇴하시겠어요?", isPresented: $showConfirmAlert) {
             Button("취소", role: .cancel) { }
             Button("탈퇴하기", role: .destructive) {
+                // TODO: 회원탈퇴 데이터 정책 확정 후 실제 삭제 로직을 연결합니다.
                 onWithdraw()
             }
         } message: {

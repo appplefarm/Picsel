@@ -9,47 +9,64 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.openURL) private var openURL
 
     let onLogout: () -> Void
     let onWithdraw: () -> Void
 
     @State private var isShowingLogoutAlert = false
     @State private var showWithdrawalSheet = false
+    @State private var destination: SettingsDestination?
+    @State private var isShowingMailError = false
 
     var body: some View {
-        ZStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
+        NavigationStack {
+            ZStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
 
-                    header
+                        header
 
-                    serviceSection
-                        .padding(.top, 52)
+                        serviceSection
+                            .padding(.top, 52)
 
-                    informationSection
-                        .padding(.top, 52)
+                        informationSection
+                            .padding(.top, 52)
 
-                    accountSection
-                        .padding(.top, 52)
+                        accountSection
+                            .padding(.top, 52)
 
-                    Spacer(minLength: 50)
+                        Spacer(minLength: 50)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-            }
-            .background(Color.white)
+                .background(Color.white)
 
-            if isShowingLogoutAlert {
-                logoutOverlay
-                    .transition(.opacity)
+                if isShowingLogoutAlert {
+                    logoutOverlay
+                        .transition(.opacity)
+                }
+            }
+            .navigationDestination(item: $destination) { destination in
+                switch destination {
+                case .privacyPolicy:
+                    PrivacyPolicyView()
+                case .dataSource:
+                    DataSourceView()
+                }
+            }
+            .alert("메일 앱을 열 수 없어요", isPresented: $isShowingMailError) {
+                Button("확인", role: .cancel) { }
+            } message: {
+                Text("\(AppContact.supportEmail)로 직접 문의해주세요.")
             }
         }
         .animation(.easeInOut(duration: 0.2), value: isShowingLogoutAlert)
         .sheet(isPresented: $showWithdrawalSheet) {
             WithdrawalSheetView(
                 isPresented: $showWithdrawalSheet,
-                onWithdraw: withdrawAccount
+                onWithdraw: handleWithdrawalPlaceholder
             )
             .presentationDetents([.height(520)])
             .presentationDragIndicator(.visible)
@@ -118,7 +135,7 @@ private extension SettingsView {
     var informationSection: some View {
         VStack(alignment: .leading, spacing: 20) {
 
-            sectionTitle("정보 및 약관")
+            sectionTitle("정보")
 
             SettingsCard {
 
@@ -127,18 +144,7 @@ private extension SettingsView {
                     title: "개인정보 처리방침",
                     description: "개인정보 수집·이용 내역"
                 ) {
-                    print("개인정보 처리방침")
-                }
-
-                Divider()
-                    .padding(.leading, 16)
-
-                SettingsRow(
-                    icon: "doc",
-                    title: "서비스 이용약관",
-                    description: "서비스 이용약관과 운영 정책"
-                ) {
-                    print("서비스 이용약관")
+                    destination = .privacyPolicy
                 }
 
                 Divider()
@@ -146,10 +152,21 @@ private extension SettingsView {
 
                 SettingsRow(
                     icon: "chevron.left.forwardslash.chevron.right",
-                    title: "API 및 데이터 정보",
-                    description: "연동 서비스와 데이터 출처"
+                    title: "데이터 및 콘텐츠 출처",
+                    description: "연동 서비스와 콘텐츠 제공처"
                 ) {
-                    print("API 정보")
+                    destination = .dataSource
+                }
+
+                Divider()
+                    .padding(.leading, 16)
+
+                SettingsRow(
+                    icon: "envelope",
+                    title: "문의하기",
+                    description: "서비스 문의 및 문제 신고"
+                ) {
+                    openSupportMail()
                 }
 
                 Divider()
@@ -291,31 +308,30 @@ private extension SettingsView {
         onLogout()
     }
 
-    func withdrawAccount() {
-        do {
-            try deleteAllUserData()
-            UserDefaults.standard.removeObject(forKey: "appleUserIdentifier")
-            UserDefaults.standard.set(false, forKey: "isLoggedIn")
-            showWithdrawalSheet = false
-            onWithdraw()
-        } catch {
-            print("회원탈퇴 데이터 삭제 실패: \(error.localizedDescription)")
+    func handleWithdrawalPlaceholder() {
+        // TODO: 회원탈퇴 정책과 데이터 삭제 범위가 확정되면 실제 탈퇴 로직을 연결합니다.
+        showWithdrawalSheet = false
+    }
+
+    func openSupportMail() {
+        guard let url = AppContact.supportMailURL else {
+            isShowingMailError = true
+            return
+        }
+
+        openURL(url) { accepted in
+            if !accepted {
+                isShowingMailError = true
+            }
         }
     }
+}
 
-    func deleteAllUserData() throws {
-        try deleteAll(TripPhoto.self)
-        try deleteAll(RouteStop.self)
-        try deleteAll(Trip.self)
-        try deleteAll(UserPixel.self)
-        try modelContext.save()
-    }
+private enum SettingsDestination: Hashable, Identifiable {
+    case privacyPolicy
+    case dataSource
 
-    func deleteAll<T: PersistentModel>(_ modelType: T.Type) throws {
-        let descriptor = FetchDescriptor<T>()
-        let models = try modelContext.fetch(descriptor)
-        models.forEach { modelContext.delete($0) }
-    }
+    var id: Self { self }
 }
 
 #Preview {
