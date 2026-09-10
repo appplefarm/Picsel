@@ -83,7 +83,11 @@ struct TripRecordView: View {
             .onTapGesture { focusedField = nil }
         }
         .scrollDismissesKeyboard(.interactively)
-        .task { viewModel.prefillTitleIfNeeded(for: trip) }
+        .task {
+            viewModel.prefillTitleIfNeeded(for: trip)
+            // 저장할 때 경계 데이터 파싱으로 화면이 끊기지 않도록 미리 읽어 둡니다.
+            Task.detached(priority: .utility) { PixelRegionLocator.preload() }
+        }
         .onChange(of: pickerItems) { _, newItems in
             guard !newItems.isEmpty else { return }
             Task { await loadPhotos(from: newItems) }
