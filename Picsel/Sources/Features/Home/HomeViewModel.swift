@@ -6,17 +6,19 @@ final class HomeViewModel {
     /// 값이 클수록 가까운 거리 구간이 Slider에서 더 넓은 영역을 차지합니다.
     private let radiusSliderCurve = 3.0
 
-    /// 위치 권한이 없거나 시뮬레이터 위치가 없을 때 사용할 안전한 초기값입니다.
-    private(set) var fallbackCoordinate = CLLocationCoordinate2D(
-        latitude: 36.0190,
-        longitude: 129.3435
+    /// 1차 배포의 홈 지도 기준점입니다. 기기 현재 위치와 무관하게 고정합니다.
+    /// 포항공대 공식 안내 지도: https://psds.postech.ac.kr/location
+    let mapCenterCoordinate = CLLocationCoordinate2D(
+        latitude: 36.01215824592938,
+        longitude: 129.32234943929984
     )
+    let mapLocationName = "포항공대(고정)"
 
     /// 현재 위치에서 대한민국 4극점 중 가장 먼 곳까지의 직선거리입니다.
     /// 실제 극점이 범위 안에 포함되도록 km 단위로 올림합니다.
     private(set) var maximumRadiusKm = 710.0
     private(set) var farthestExtremePoint: KoreaExtremePoint?
-    var currentRadiusKm = 80.0
+    var currentRadiusKm = 32.0
 
     var radiusRange: ClosedRange<Double> { 0...maximumRadiusKm }
 
@@ -42,7 +44,7 @@ final class HomeViewModel {
     }
 
     init() {
-        updateMaximumRadius(from: fallbackCoordinate)
+        updateMaximumRadius(from: mapCenterCoordinate)
     }
 
     func updateMaximumRadius(from coordinate: CLLocationCoordinate2D) {

@@ -4,32 +4,14 @@
 //
 //  Created by DS on 8/31/26.
 //
-import CoreLocation
 import SwiftUI
 
 struct HomeView: View {
     let onLogout: () -> Void
     let onWithdraw: () -> Void
     @State private var viewModel = HomeViewModel()
-    @State private var locationManager = CurrentLocationManager()
     @State private var confirmedDestination: PhotoDestination?
     @State private var isSettingsPresented = false
-
-    private var mapCoordinate: CLLocationCoordinate2D {
-        locationManager.currentLocation?.coordinate ?? viewModel.fallbackCoordinate
-    }
-
-    private var mapLocationName: String {
-        if locationManager.currentLocation != nil {
-            return locationManager.localityName
-        }
-
-        if locationManager.isLocationAuthorized {
-            return "현재 위치 확인 중"
-        }
-
-        return "포항시 남구(기본 위치)"
-    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -43,9 +25,10 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: HomeStyle.mapHeight(for: proxy.size.height))
 
-                radiusSlider
-                    .padding(.horizontal, HomeStyle.horizontalPadding)
-                    .padding(.top, 16)
+                // 1차 배포는 반경 32km로 고정합니다. 반경 선택 재개 시 복원합니다.
+                // radiusSlider
+                //     .padding(.horizontal, HomeStyle.horizontalPadding)
+                //     .padding(.top, 16)
 
                 destinationButton
                     .padding(.horizontal, HomeStyle.horizontalPadding)
@@ -55,15 +38,6 @@ struct HomeView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .background(PicselColor.homeBackground.ignoresSafeArea())
-        .task {
-            // 실제 위치를 받기 전에도 포항 기본 좌표에 맞는 범위를 보여줍니다.
-            viewModel.updateMaximumRadius(from: mapCoordinate)
-            locationManager.requestCurrentLocation()
-        }
-        .onChange(of: locationManager.currentLocation?.timestamp) { _, _ in
-            guard let coordinate = locationManager.currentLocation?.coordinate else { return }
-            viewModel.updateMaximumRadius(from: coordinate)
-        }
         .navigationDestination(item: $confirmedDestination) { destination in
             if let trip = makeTrip(for: destination) {
                 TransitSwipeView(
@@ -112,7 +86,7 @@ struct HomeView: View {
     private var mapSection: some View {
         ZStack(alignment: .bottomLeading) {
             GoogleMapView(
-                coordinate: mapCoordinate,
+                coordinate: viewModel.mapCenterCoordinate,
                 radiusMeters: viewModel.currentRadiusMeters
             )
 
@@ -140,7 +114,7 @@ struct HomeView: View {
             Image(systemName: "mappin.and.ellipse")
                 .foregroundStyle(PicselColor.radiusGreen)
 
-            Text("\(mapLocationName) · 반경 \(Int(viewModel.currentRadiusKm))km")
+            Text("\(viewModel.mapLocationName) · 반경 \(Int(viewModel.currentRadiusKm))km")
                 .font(.footnote)
                 .fontWeight(.semibold)
                 .foregroundStyle(PicselColor.homeText)
