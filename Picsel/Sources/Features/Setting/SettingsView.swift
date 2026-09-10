@@ -12,7 +12,7 @@ struct SettingsView: View {
     @Environment(\.openURL) private var openURL
 
     @State private var destination: SettingsDestination?
-    @State private var isShowingMailError = false
+    @State private var isShowingLinkError = false
 
     var body: some View {
         NavigationStack {
@@ -34,16 +34,14 @@ struct SettingsView: View {
             .background(Color.white)
             .navigationDestination(item: $destination) { destination in
                 switch destination {
-                case .privacyPolicy:
-                    PrivacyPolicyView()
                 case .dataSource:
                     DataSourceView()
                 }
             }
-            .alert("메일 앱을 열 수 없어요", isPresented: $isShowingMailError) {
+            .alert("링크를 열 수 없어요", isPresented: $isShowingLinkError) {
                 Button("확인", role: .cancel) { }
             } message: {
-                Text("\(AppContact.supportEmail)로 직접 문의해주세요.")
+                Text("잠시 후 다시 시도하거나 \(AppContact.supportEmail)로 직접 문의해주세요.")
             }
         }
     }
@@ -100,10 +98,11 @@ private extension SettingsView {
                 SettingsRow(
                     icon: "checkmark.shield",
                     title: "개인정보 처리방침",
-                    description: "개인정보 수집·이용 내역"
+                    description: "최신 개인정보 수집·이용 내역 (웹)"
                 ) {
-                    destination = .privacyPolicy
+                    openContactLink(AppContact.privacyPolicyURL)
                 }
+                .accessibilityHint("웹 브라우저에서 개인정보 처리방침을 엽니다")
 
                 Divider()
                     .padding(.leading, 16)
@@ -120,11 +119,23 @@ private extension SettingsView {
                     .padding(.leading, 16)
 
                 SettingsRow(
+                    icon: "questionmark.circle",
+                    title: "고객지원",
+                    description: "자주 묻는 질문 및 이용 안내 (웹)"
+                ) {
+                    openContactLink(AppContact.supportURL)
+                }
+                .accessibilityHint("웹 브라우저에서 고객지원 페이지를 엽니다")
+
+                Divider()
+                    .padding(.leading, 16)
+
+                SettingsRow(
                     icon: "envelope",
                     title: "문의하기",
                     description: "서비스 문의 및 문제 신고"
                 ) {
-                    openSupportMail()
+                    openContactLink(AppContact.supportMailURL)
                 }
 
                 Divider()
@@ -141,22 +152,21 @@ private extension SettingsView {
             .foregroundStyle(Color.green)
     }
 
-    func openSupportMail() {
-        guard let url = AppContact.supportMailURL else {
-            isShowingMailError = true
+    func openContactLink(_ url: URL?) {
+        guard let url else {
+            isShowingLinkError = true
             return
         }
 
         openURL(url) { accepted in
             if !accepted {
-                isShowingMailError = true
+                isShowingLinkError = true
             }
         }
     }
 }
 
 private enum SettingsDestination: Hashable, Identifiable {
-    case privacyPolicy
     case dataSource
 
     var id: Self { self }
