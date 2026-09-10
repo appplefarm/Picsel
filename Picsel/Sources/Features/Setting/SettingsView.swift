@@ -9,39 +9,57 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
 
     let onLogout: () -> Void
     let onWithdraw: () -> Void
 
     @State private var isShowingLogoutAlert = false
     @State private var showWithdrawalSheet = false
+    @State private var destination: SettingsDestination?
+    @State private var isShowingMailError = false
 
     var body: some View {
-        ZStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
+        NavigationStack {
+            ZStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
 
-                    header
+                        header
 
-                    serviceSection
-                        .padding(.top, 52)
+                        serviceSection
+                            .padding(.top, 52)
 
-                    informationSection
-                        .padding(.top, 52)
+                        informationSection
+                            .padding(.top, 52)
 
-                    accountSection
-                        .padding(.top, 52)
+                        accountSection
+                            .padding(.top, 52)
 
-                    Spacer(minLength: 50)
+                        Spacer(minLength: 50)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-            }
-            .background(Color.white)
+                .background(Color.white)
 
-            if isShowingLogoutAlert {
-                logoutOverlay
-                    .transition(.opacity)
+                if isShowingLogoutAlert {
+                    logoutOverlay
+                        .transition(.opacity)
+                }
+            }
+            .navigationDestination(item: $destination) { destination in
+                switch destination {
+                case .privacyPolicy:
+                    PrivacyPolicyView()
+                case .dataSource:
+                    DataSourceView()
+                }
+            }
+            .alert("메일 앱을 열 수 없어요", isPresented: $isShowingMailError) {
+                Button("확인", role: .cancel) { }
+            } message: {
+                Text("\(AppContact.supportEmail)로 직접 문의해주세요.")
             }
         }
         .animation(.easeInOut(duration: 0.2), value: isShowingLogoutAlert)
@@ -126,7 +144,7 @@ private extension SettingsView {
                     title: "개인정보 처리방침",
                     description: "개인정보 수집·이용 내역"
                 ) {
-                    print("개인정보 처리방침")
+                    destination = .privacyPolicy
                 }
 
                 Divider()
@@ -137,7 +155,7 @@ private extension SettingsView {
                     title: "데이터 및 콘텐츠 출처",
                     description: "연동 서비스와 콘텐츠 제공처"
                 ) {
-                    print("데이터 및 콘텐츠 출처")
+                    destination = .dataSource
                 }
 
                 Divider()
@@ -148,7 +166,7 @@ private extension SettingsView {
                     title: "문의하기",
                     description: "서비스 문의 및 문제 신고"
                 ) {
-                    print("문의하기")
+                    openSupportMail()
                 }
 
                 Divider()
@@ -294,6 +312,26 @@ private extension SettingsView {
         // TODO: 회원탈퇴 정책과 데이터 삭제 범위가 확정되면 실제 탈퇴 로직을 연결합니다.
         showWithdrawalSheet = false
     }
+
+    func openSupportMail() {
+        guard let url = AppContact.supportMailURL else {
+            isShowingMailError = true
+            return
+        }
+
+        openURL(url) { accepted in
+            if !accepted {
+                isShowingMailError = true
+            }
+        }
+    }
+}
+
+private enum SettingsDestination: Hashable, Identifiable {
+    case privacyPolicy
+    case dataSource
+
+    var id: Self { self }
 }
 
 #Preview {
