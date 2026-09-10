@@ -19,13 +19,9 @@ final class VisitedPlacesConfirmViewModel {
     }
     
     var stops: [RouteStop] {
-        // 경로 순서대로 정렬된 리스트
-        trip.stops.sorted { 
-            // 원래는 orderedStops를 사용하지만 안전하게 대체
-            let idx0 = $0.isDestination ? Int.max : 0
-            let idx1 = $1.isDestination ? Int.max : 0
-            return idx0 < idx1
-        }
+        // 경유지 -> 최종 목적지 순서입니다.
+        // Trip+RouteOrder의 orderedStops가 같은 규칙을 이미 담고 있어 그대로 씁니다.
+        trip.orderedStops
     }
     
     func toggleVisited(for stopID: UUID) {

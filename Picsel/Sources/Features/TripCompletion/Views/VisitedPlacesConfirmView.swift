@@ -71,7 +71,7 @@ struct VisitedPlacesConfirmView: View {
         // 기존 진행 화면에서 쓰던 숨김 처리 유지
         .toolbar(.hidden, for: .tabBar)
         .navigationDestination(isPresented: $isShowingTripRecord) {
-            TripRecordView()
+            TripRecordView(trip: viewModel.trip)
                 .toolbar(.hidden, for: .tabBar)
         }
     }

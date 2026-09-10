@@ -118,9 +118,14 @@ struct TransitSwipeView: View {
             }
             .toolbar(.hidden, for: .tabBar)
         }
-        .navigationDestination(isPresented: $isShowingTripRecord) {
-            TripRecordView(trip: viewModel.activeTrip)
-                .toolbar(.hidden, for: .tabBar)
+        .navigationDestination(isPresented: $isShowingVisitedPlacesConfirm) {
+            VisitedPlacesConfirmView(
+                viewModel: VisitedPlacesConfirmViewModel(
+                    trip: viewModel.activeTrip,
+                    thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
+                )
+            )
+            .toolbar(.hidden, for: .tabBar)
         }
         .onAppear {
             // 화면 진입 시 추천 장소 로드
