@@ -14,23 +14,23 @@ struct HomeView: View {
     @State private var locationManager = CurrentLocationManager()
     @State private var confirmedDestination: PhotoDestination?
     @State private var isSettingsPresented = false
-
+    
     private var mapCoordinate: CLLocationCoordinate2D {
         locationManager.currentLocation?.coordinate ?? viewModel.fallbackCoordinate
     }
-
+    
     private var mapLocationName: String {
         if locationManager.currentLocation != nil {
             return locationManager.localityName
         }
-
+        
         if locationManager.isLocationAuthorized {
             return "현재 위치 확인 중"
         }
-
+        
         return "포항시 남구(기본 위치)"
     }
-
+    
     var body: some View {
         GeometryReader { proxy in
             VStack(spacing: 0) {
@@ -38,15 +38,15 @@ struct HomeView: View {
                     .frame(height: HomeStyle.headerHeight)
                     .padding(.horizontal, HomeStyle.horizontalPadding)
                     .padding(.bottom, 12)
-
+                
                 mapSection
                     .frame(maxWidth: .infinity)
                     .frame(height: HomeStyle.mapHeight(for: proxy.size.height))
-
+                
                 radiusSlider
                     .padding(.horizontal, HomeStyle.horizontalPadding)
                     .padding(.top, 16)
-
+                
                 destinationButton
                     .padding(.horizontal, HomeStyle.horizontalPadding)
                     .padding(.top, 20)
@@ -75,20 +75,20 @@ struct HomeView: View {
             }
         }
     }
-
+    
     private var headerSection: some View {
         ZStack(alignment: .topTrailing) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("여행을 떠나기 좋은 날이에요")
                     .font(.callout)
-
+                
                 Text("어디로 떠나볼까요?")
                     .font(.title)
                     .fontWeight(.bold)
             }
             .foregroundStyle(PicselColor.homeText)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-
+            
             Button(action: {
                 isSettingsPresented = true
             }) {
@@ -108,14 +108,14 @@ struct HomeView: View {
         }
     }
     
-
+    
     private var mapSection: some View {
         ZStack(alignment: .bottomLeading) {
             GoogleMapView(
                 coordinate: mapCoordinate,
                 radiusMeters: viewModel.currentRadiusMeters
             )
-
+            
             LinearGradient(
                 stops: [
                     .init(color: PicselColor.homeBackground, location: 0),
@@ -127,19 +127,19 @@ struct HomeView: View {
                 endPoint: .bottom
             )
             .allowsHitTesting(false)
-
+            
             locationBadge
                 .padding(.leading, HomeStyle.horizontalPadding)
                 .padding(.bottom, 10)
         }
         .clipped()
     }
-
+    
     private var locationBadge: some View {
         HStack(spacing: 6) {
             Image(systemName: "mappin.and.ellipse")
                 .foregroundStyle(PicselColor.radiusGreen)
-
+            
             Text("\(mapLocationName) · 반경 \(Int(viewModel.currentRadiusKm))km")
                 .font(.footnote)
                 .fontWeight(.semibold)
@@ -151,20 +151,20 @@ struct HomeView: View {
         .background(.white, in: .capsule)
         .shadow(color: .black.opacity(0.14), radius: 4)
     }
-
+    
     private var radiusSlider: some View {
         VStack(spacing: 2) {
             HStack(spacing: 12) {
                 Image(systemName: "minus.magnifyingglass")
-
+                
                 Slider(value: $viewModel.radiusSliderPosition, in: 0...1)
                     .tint(PicselColor.radiusGreen)
                     .accessibilityValue("반경 \(Int(viewModel.currentRadiusKm))킬로미터")
-
+                
                 Image(systemName: "plus.magnifyingglass")
             }
             .foregroundStyle(PicselColor.sliderIcon)
-
+            
             HStack {
                 ForEach(0..<5, id: \.self) { index in
                     Circle()
@@ -176,19 +176,21 @@ struct HomeView: View {
             .padding(.horizontal, 40)
         }
     }
-
+    
     private var destinationButton: some View {
         NavigationLink {
             PhotoExploreView(
-                service: TourAPIPhotoDestinationService(configuration: .current)
+                service: PhotoDestinationServiceFactory.make(),
+                sourceNotice: PhotoDestinationServiceFactory.sourceNotice
             ) { destination in
+                guard destination.canSelectAsDestination else { return }
                 confirmedDestination = destination
             }
         } label: {
             HStack(spacing: 14) {
                 Image(systemName: "photo")
                     .font(.title2)
-
+                
                 VStack(spacing: 3) {
                     Text("사진으로 목적지 고르기")
                         .font(.headline)
@@ -206,12 +208,12 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
     }
-
+    
     private func makeTrip(for destination: PhotoDestination) -> Trip? {
         guard destination.canSelectAsDestination,
               let latitude = destination.latitude,
               let longitude = destination.longitude else { return nil }
-
+        
         let trip = Trip(title: "\(destination.name) 여행")
         let stop = RouteStop(
             placeId: destination.id,
@@ -235,7 +237,7 @@ private enum HomeStyle {
     static let preferredMapHeight: CGFloat = 458
     static let minimumMapHeight: CGFloat = 330
     static let controlsHeight: CGFloat = 155
-
+    
     static func mapHeight(for availableHeight: CGFloat) -> CGFloat {
         min(preferredMapHeight, max(minimumMapHeight, availableHeight - headerHeight - controlsHeight))
     }

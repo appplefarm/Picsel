@@ -30,12 +30,6 @@ extension Trip {
         return TripRegionName.make(from: destinationStop?.address)
     }
 
-    /// 픽셀 판정까지 끝난 뒤 쓸 지역 이름입니다.
-    /// 경계 데이터에서 찾은 이름("포항시")을 우선하고, 못 찾으면 주소에서 뽑은 이름("포항")을 씁니다.
-    func resolvedRegionName(using tile: PixelTile?) -> String {
-        tile?.name ?? recordRegionName
-    }
-
     /// 기록에 남길 여행 날짜입니다. PicselMapRecord와 같은 우선순위를 씁니다.
     var recordDate: Date {
         endTime ?? startTime ?? createdAt
