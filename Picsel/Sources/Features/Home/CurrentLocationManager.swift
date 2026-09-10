@@ -9,20 +9,30 @@ final class CurrentLocationManager: NSObject {
     private(set) var currentLocation: CLLocation?
     private(set) var localityName = "현재 위치 확인 중"
     private(set) var errorMessage: String?
+    private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
+
+    var isLocationAuthorized: Bool {
+        authorizationStatus == .authorizedAlways
+            || authorizationStatus == .authorizedWhenInUse
+    }
 
     override init() {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        authorizationStatus = manager.authorizationStatus
     }
 
     func requestCurrentLocation() {
+        authorizationStatus = manager.authorizationStatus
+
         switch manager.authorizationStatus {
         case .notDetermined:
             manager.requestWhenInUseAuthorization()
         case .authorizedAlways, .authorizedWhenInUse:
             manager.requestLocation()
         case .denied, .restricted:
+            currentLocation = nil
             localityName = "위치 권한이 필요해요"
             errorMessage = "설정에서 위치 권한을 허용해 주세요."
         @unknown default:
@@ -63,10 +73,13 @@ final class CurrentLocationManager: NSObject {
 
 extension CurrentLocationManager: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        authorizationStatus = manager.authorizationStatus
+
         switch manager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
             manager.requestLocation()
         case .denied, .restricted:
+            currentLocation = nil
             localityName = "위치 권한이 필요해요"
             errorMessage = "설정에서 위치 권한을 허용해 주세요."
         default:

@@ -10,6 +10,20 @@ import SwiftUI
 /// 하이파이 시안에서 쓰는 색입니다.
 /// 화면마다 hex를 흩어 놓지 않도록 여기에 모아 둡니다.
 enum PicselColor {
+    /// 홈 화면 배경
+    static let homeBackground = Color(hex: 0xF5F6F5)
+    /// 홈 화면의 기본 글자
+    static let homeText = Color(hex: 0x202722)
+    /// 홈 CTA 배경
+    static let homeCTA = Color(hex: 0x00725D)
+    /// 지도 반경 원과 슬라이더 강조색
+    static let radiusGreen = Color(hex: 0x2C8C74)
+    /// 지도 반경 원 테두리
+    static let radiusBorder = Color(hex: 0x009C7B)
+    /// 슬라이더 양끝 아이콘
+    static let sliderIcon = Color(hex: 0x7C8580)
+    /// 슬라이더 눈금
+    static let sliderTick = Color(hex: 0xCED3D0)
     /// 주요 액션 버튼 (길찾기)
     static let actionGreen = Color(hex: 0x48C98B)
     /// 큰 완료 버튼
