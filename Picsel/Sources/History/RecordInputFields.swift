@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-/// 제목 입력. 지금 단계에서는 단순 TextField.
-/// (지역명 + 여행 자동 생성은 나중 이슈)
+/// 제목 입력.
+/// 화면 진입 시 "지역명 + 여행"이 기본값으로 채워지지만, 그대로 지우고 고칠 수 있다.
 struct TitleTextField: View {
     @Binding var text: String
     @FocusState.Binding var focusedField: TripRecordField?

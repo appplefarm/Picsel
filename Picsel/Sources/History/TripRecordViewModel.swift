@@ -27,6 +27,10 @@ final class TripRecordViewModel {
     let maxPhotoCount = 10
     let maxMemoCount = 150
 
+    /// 제목을 자동으로 채운 적이 있는지 기억한다.
+    /// 화면이 다시 나타날 때마다 사용자가 지운 제목을 되살리면 안 되기 때문이다.
+    private var hasPrefilledTitle = false
+
     // MARK: - 파생 상태
     /// "인증하고 픽셀 채우기" 버튼 활성화 조건
     var canSave: Bool {
@@ -36,6 +40,17 @@ final class TripRecordViewModel {
     /// 사진을 더 추가할 수 있는지 (+ 버튼 노출 여부)
     var canAddMorePhotos: Bool {
         pickedPhotos.count < maxPhotoCount
+    }
+
+    // MARK: - 제목 자동 채우기
+    /// 화면에 처음 들어왔을 때 제목을 "지역명 + 여행"으로 채운다.
+    /// 그대로 두고 저장해도 되고, 지우고 다시 써도 되는 기본값일 뿐이다.
+    func prefillTitleIfNeeded(for trip: Trip) {
+        guard !hasPrefilledTitle else { return }
+        hasPrefilledTitle = true
+
+        guard title.isEmpty else { return }
+        title = trip.suggestedRecordTitle
     }
 
     // MARK: - 사진 조작
@@ -57,15 +72,15 @@ final class TripRecordViewModel {
 
     // MARK: - 다음 화면으로 넘기기
     /// 작성한 내용을 결과/상세 화면으로 넘길 형태로 변환한다.
-    /// regionName, placeCount는 아직 Trip이 없어서 밖에서 받는다.
-    func makeSnapshot(regionName: String, placeCount: Int) -> TripRecordSnapshot {
+    /// 지역명·장소 수·날짜는 전부 Trip에서 가져온다.
+    func makeSnapshot(for trip: Trip) -> TripRecordSnapshot {
         TripRecordSnapshot(
-            regionName: regionName,
+            regionName: trip.recordRegionName,
             title: title,
             memo: memo,
-            travelDate: Date(),
+            travelDate: trip.recordDate,
             photoDataList: pickedPhotos.map(\.imageData),
-            placeCount: placeCount
+            placeCount: trip.recordedStops.count
         )
     }
 

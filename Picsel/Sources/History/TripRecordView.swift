@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import PhotosUI
 
 /// 이 화면에서 키보드 포커스를 가질 수 있는 입력 칸.
@@ -15,7 +16,10 @@ enum TripRecordField: Hashable {
 }
 
 struct TripRecordView: View {
-    
+
+    /// 이 화면에서 기록할 여행입니다. 앞 화면에서 그대로 넘겨받습니다.
+    let trip: Trip
+
     @State private var viewModel = TripRecordViewModel()
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var isGalleryPresented = false
@@ -79,6 +83,7 @@ struct TripRecordView: View {
             .onTapGesture { focusedField = nil }
         }
         .scrollDismissesKeyboard(.interactively)
+        .task { viewModel.prefillTitleIfNeeded(for: trip) }
         .onChange(of: pickerItems) { _, newItems in
             guard !newItems.isEmpty else { return }
             Task { await loadPhotos(from: newItems) }
@@ -91,10 +96,7 @@ struct TripRecordView: View {
             matching: .images
         )
         .navigationDestination(isPresented: $isPixelUnlockedPresented) {
-            // TODO: Trip 연결 후 regionName / placeCount를 실제 값으로 교체
-            PixelUnlockedView(
-                snapshot: viewModel.makeSnapshot(regionName: "영덕", placeCount: 3)
-            )
+            PixelUnlockedView(snapshot: viewModel.makeSnapshot(for: trip))
         }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
@@ -118,6 +120,10 @@ struct TripRecordView: View {
 
 #Preview {
     NavigationStack {
-        TripRecordView()
+        TripRecordView(trip: .previewSample)
     }
+    .modelContainer(
+        for: [Trip.self, RouteStop.self, TripPhoto.self, UserPixel.self],
+        inMemory: true
+    )
 }

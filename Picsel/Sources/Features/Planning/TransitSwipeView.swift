@@ -93,7 +93,7 @@ struct TransitSwipeView: View {
             .toolbar(.hidden, for: .tabBar)
         }
         .navigationDestination(isPresented: $isShowingTripRecord) {
-            TripRecordView()
+            TripRecordView(trip: viewModel.activeTrip)
                 .toolbar(.hidden, for: .tabBar)
         }
         .onAppear {
