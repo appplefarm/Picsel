@@ -19,7 +19,7 @@ struct TransitSwipeView: View {
             // MARK: - 상단 헤더
             VStack(alignment: .leading, spacing: 8) {
                 Text("경유지를 골라보세요")
-                    .font(.largeTitle)
+                    .font(.title)
                     .bold()
                 Text("목적지 부근에서 들르기 좋은 장소 10곳을 추천해드릴게요")
                     .font(.subheadline)

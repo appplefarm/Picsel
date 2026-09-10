@@ -37,9 +37,9 @@ struct SwipeCardView: View {
                     Color.gray.opacity(0.3)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .cornerRadius(10)
+            .frame(width: 334, height: 239) // 명시적으로 크기를 고정해 튀어나가는 현상 방지
             .clipped()
+            .cornerRadius(10)
             
             VStack {
                 Spacer()
