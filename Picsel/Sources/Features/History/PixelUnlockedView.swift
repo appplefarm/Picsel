@@ -6,13 +6,24 @@
 //  저장 직후 결과 화면.
 //
 
+import SwiftData
 import SwiftUI
 
 struct PixelUnlockedView: View {
 
     let snapshot: TripRecordSnapshot
 
+    /// 이번 여행으로 채운 칸입니다. 픽셀을 못 받은 여행이면 nil입니다.
+    let unlockedRegionCode: String?
+
     @Environment(AppRouter.self) private var router
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Query private var pixels: [UserPixel]
+
+    /// 전국 지도까지 펼쳐졌는지입니다.
+    @State private var isMapRevealed = false
+    /// 아래 버튼이 나타났는지입니다.
+    @State private var areActionsVisible = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -24,20 +35,13 @@ struct PixelUnlockedView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            // TODO: 픽셀맵 연결 시 실제 지도로 교체 (팀원 파트)
-            Group {
-                if let data = snapshot.representativePhotoData,
-                   let uiImage = UIImage(data: data) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    Color.gray.opacity(0.2)
-                }
-            }
+            PixelUnlockedMapView(
+                highlightedRegionCode: unlockedRegionCode,
+                unlockedRegionCodes: previouslyUnlockedRegionCodes,
+                isRevealed: isMapRevealed
+            )
             .frame(maxWidth: .infinity)
             .frame(height: 240)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
 
             TripSummaryCard(
                 thumbnailData: snapshot.representativePhotoData,
@@ -49,6 +53,51 @@ struct PixelUnlockedView: View {
 
             Spacer()
 
+            actionButtons
+        }
+        .padding(20)
+        .navigationBarBackButtonHidden(true)
+        .task { await playIntro() }
+    }
+
+    // MARK: - 연출
+
+    /// 채운 칸을 잠시 보여 준 뒤 전국으로 줌아웃하고, 마지막에 버튼을 띄웁니다.
+    private func playIntro() async {
+        // 이미 재생했다면 다시 하지 않습니다. (뒤로 갔다 돌아온 경우)
+        guard !isMapRevealed else { return }
+
+        // 강조할 칸이 없거나 사용자가 동작 줄이기를 켜 두었다면 결과만 바로 보여 줍니다.
+        guard unlockedRegionCode != nil, !reduceMotion else {
+            isMapRevealed = true
+            areActionsVisible = true
+            return
+        }
+
+        try? await Task.sleep(for: .milliseconds(Timing.holdOnPixel))
+        withAnimation(.easeInOut(duration: Timing.zoomOutSeconds)) {
+            isMapRevealed = true
+        }
+
+        try? await Task.sleep(for: .milliseconds(Timing.actionsDelay))
+        withAnimation(.easeOut(duration: 0.35)) {
+            areActionsVisible = true
+        }
+    }
+
+    private enum Timing {
+        /// 채운 칸 하나를 눈에 담을 시간
+        static let holdOnPixel = 700
+        /// 전국으로 빠지는 시간
+        static let zoomOutSeconds: Double = 1.1
+        /// 줌아웃이 끝난 뒤 버튼이 뜨기까지
+        static let actionsDelay = 1_150
+    }
+
+    // MARK: - 버튼
+
+    private var actionButtons: some View {
+        VStack(spacing: 12) {
             Button {
                 router.finishTripFlow(returningTo: .home)
             } label: {
@@ -77,14 +126,30 @@ struct PixelUnlockedView: View {
                     )
             }
         }
-        .padding(20)
-        .navigationBarBackButtonHidden(true)
+        // 자리는 그대로 두고 나타나기만 해서 레이아웃이 흔들리지 않습니다.
+        .opacity(areActionsVisible ? 1 : 0)
+        .allowsHitTesting(areActionsVisible)
+        .accessibilityHidden(!areActionsVisible)
+    }
+
+    /// 이번에 채운 칸을 뺀 나머지입니다.
+    /// 저장이 이미 끝난 뒤라 새 픽셀도 목록에 들어 있어, 강조 대상과 겹치지 않게 걸러 냅니다.
+    private var previouslyUnlockedRegionCodes: Set<String> {
+        var codes = Set(pixels.map { String($0.regionCode) })
+        if let unlockedRegionCode {
+            codes.remove(unlockedRegionCode)
+        }
+        return codes
     }
 }
 
 #Preview {
     NavigationStack {
-        PixelUnlockedView(snapshot: .sample)
+        PixelUnlockedView(snapshot: .sample, unlockedRegionCode: "4711")
     }
     .environment(AppRouter())
+    .modelContainer(
+        for: [Trip.self, RouteStop.self, TripPhoto.self, UserPixel.self],
+        inMemory: true
+    )
 }

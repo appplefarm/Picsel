@@ -104,7 +104,10 @@ struct TripRecordView: View {
             matching: .images
         )
         .navigationDestination(isPresented: $isPixelUnlockedPresented) {
-            PixelUnlockedView(snapshot: viewModel.makeSnapshot(for: trip))
+            PixelUnlockedView(
+                snapshot: viewModel.makeSnapshot(for: trip),
+                unlockedRegionCode: trip.targetPixelCode
+            )
         }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {

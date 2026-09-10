@@ -42,6 +42,10 @@ enum PicselColor {
     static let cardShadow = Color.black.opacity(0.1)
     /// 경로 목록 행 배경
     static let rowBackground = Color(hex: 0xFAFBFA)
+
+    /// 픽셀맵에서 아직 가보지 않은 칸
+    static let pixelLockedFill = Color(hex: 0xEFF1EF)
+    static let pixelLockedStroke = Color(hex: 0xD5DAD7)
     /// 경로 목록 행 테두리
     static let rowBorder = Color(hex: 0xECF2EF)
     /// 경로 요약 문구
