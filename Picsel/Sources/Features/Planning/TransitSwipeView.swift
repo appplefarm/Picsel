@@ -12,7 +12,7 @@ struct TransitSwipeView: View {
     @State var viewModel: TransitSwipeViewModel
     @State private var isShowingRouteConfirmation = false
     @State private var isShowingTripProgress = false
-    @State private var isShowingTripRecord = false
+    @State private var isShowingVisitedPlacesConfirm = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -109,12 +109,16 @@ struct TransitSwipeView: View {
                 trip: viewModel.activeTrip,
                 thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
             ) {
-                isShowingTripRecord = true
+                isShowingVisitedPlacesConfirm = true
             }
             .toolbar(.hidden, for: .tabBar)
         }
-        .navigationDestination(isPresented: $isShowingTripRecord) {
-            TripRecordView()
+        .navigationDestination(isPresented: $isShowingVisitedPlacesConfirm) {
+            let confirmVM = VisitedPlacesConfirmViewModel(
+                trip: viewModel.activeTrip,
+                thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
+            )
+            VisitedPlacesConfirmView(viewModel: confirmVM)
                 .toolbar(.hidden, for: .tabBar)
         }
         .onAppear {
