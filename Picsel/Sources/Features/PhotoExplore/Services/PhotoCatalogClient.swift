@@ -7,13 +7,12 @@
 
 import Foundation
 
-/// 사진 API 정보와 팀이 입력한 장소 정보를 함께 제공하는 서버의 읽기 인터페이스.
-/// 지금은 번들 JSON이 응답하며, 이후 CloudKit 구현으로 교체합니다.
+/// 사진과 장소 정보를 공급하는 읽기 인터페이스. 번들·서버 모두 같은 응답을 반환합니다.
 protocol PhotoCatalogClient: Sendable {
     func fetchCatalog() async throws -> PhotoCatalogResponse
 }
 
-/// 서버 담당자와 합의할 임시 응답 규격. 공용 PlaceDTO/SwiftData 모델과 분리합니다.
+/// 카탈로그 응답 규격. 서버 연결 시 이 규격으로 매핑하며 공용 저장 모델은 유지합니다.
 struct PhotoCatalogResponse: Codable, Sendable {
     let schemaVersion: Int
     let photos: [PhotoCatalogPhoto]

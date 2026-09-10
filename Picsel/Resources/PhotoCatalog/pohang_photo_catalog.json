@@ -93,21 +93,6 @@
     },
     {
       "source": "tourPhotoGallery",
-      "photoID": "3543624",
-      "photoTitle": "내연산",
-      "photoURL": "https://tong.visitkorea.or.kr/cms2/website/24/3543624.jpg",
-      "thumbnailURL": "https://tong.visitkorea.or.kr/cms2/website/24/3543624.jpg",
-      "placeName": "내연산",
-      "address": "경상북도 포항시 북구",
-      "sourceRegionCode": "47",
-      "shootingMonth": "202506",
-      "latitude": 36.2786758,
-      "longitude": 129.2899056,
-      "regionCode": null,
-      "locationConfirmed": false
-    },
-    {
-      "source": "tourPhotoGallery",
       "photoID": "3414865",
       "photoTitle": "오도리주상절리2",
       "photoURL": "https://tong.visitkorea.or.kr/cms2/website/65/3414865.jpg",

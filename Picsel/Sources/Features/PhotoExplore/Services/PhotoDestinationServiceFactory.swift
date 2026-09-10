@@ -7,30 +7,34 @@
 
 import Foundation
 
-/// 앱의 데이터 공급처 선택은 이곳에서만 합니다. Release는 기존 TourAPI를 유지합니다.
+/// 1차 출시는 번들 카탈로그를 사용합니다. 서버 연결 시 기본 Client만 교체합니다.
 enum PhotoDestinationServiceFactory {
-    static func make() -> any PhotoDestinationService {
+    static func make(bundle: Bundle = .main) -> any PhotoDestinationService {
 #if DEBUG
         switch source {
-        case "tourAPI": break
+        case "tourAPI":
+            return TourAPIPhotoDestinationService(configuration: .current)
         case "empty":
-            return CatalogPhotoDestinationService(client: BundledPhotoCatalogClient(scenario: .empty))
+            return CatalogPhotoDestinationService(client: DebugPhotoCatalogClient(bundle: bundle, scenario: .empty))
         case "failure":
-            return CatalogPhotoDestinationService(client: BundledPhotoCatalogClient(scenario: .failure))
-        default:
-            return CatalogPhotoDestinationService(client: BundledPhotoCatalogClient())
+            return CatalogPhotoDestinationService(client: DebugPhotoCatalogClient(bundle: bundle, scenario: .failure))
+        case "slow":
+            return CatalogPhotoDestinationService(client: DebugPhotoCatalogClient(bundle: bundle, delay: .seconds(2)))
+        default: break
         }
 #endif
-        return TourAPIPhotoDestinationService(configuration: .current)
+        return CatalogPhotoDestinationService(client: BundledPhotoCatalogClient(bundle: bundle))
     }
 
     static var sourceNotice: String? {
 #if DEBUG
-        if source != "tourAPI" {
-            return "포항 목업 · 위치·반경 필터 미적용"
+        switch source {
+        case "tourAPI": return "TourAPI 테스트 · 위치 정보 미연결"
+        case "empty", "failure", "slow": return "Debug · 카탈로그 응답 테스트"
+        default: break
         }
 #endif
-        return nil
+        return "포항 관광사진 · 설정 반경과 무관하게 제공됩니다"
     }
 
 #if DEBUG

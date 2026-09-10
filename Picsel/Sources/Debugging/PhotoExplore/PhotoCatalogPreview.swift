@@ -8,7 +8,7 @@
 import SwiftUI
 
 #if DEBUG
-/// 10장 공간 배치와 별개로, 서버 역할의 20개 원본 응답을 확인하는 Preview입니다.
+/// 출시 카탈로그 19개와 미검증 1개를 합쳐 상세 화면의 확정 차단을 확인합니다.
 private struct PhotoCatalogPreview: View {
     @State private var photos: [PhotoCatalogPhoto] = []
     @State private var errorMessage: String?
@@ -36,7 +36,10 @@ private struct PhotoCatalogPreview: View {
             }
             .navigationTitle("포항 응답 \(photos.count)개")
             .task {
-                do { photos = try await BundledPhotoCatalogClient().fetchCatalog().photos }
+                do {
+                    photos = try await DebugPhotoCatalogClient(scenario: .validation, delay: .zero)
+                        .fetchCatalog().photos
+                }
                 catch { errorMessage = error.localizedDescription }
             }
             .sheet(item: $selectedPhoto) { photo in
@@ -48,15 +51,15 @@ private struct PhotoCatalogPreview: View {
     }
 }
 
-#Preview("포항 목업 · 원본 응답 20개") {
+#Preview("포항 · 미검증 포함 응답 20개") {
     PhotoCatalogPreview()
 }
 
-#Preview("포항 목업 · 사진 탐색") {
+#Preview("포항 · 출시 카탈로그 탐색") {
     NavigationStack {
         PhotoExploreView(
             service: CatalogPhotoDestinationService(client: BundledPhotoCatalogClient()),
-            sourceNotice: "포항 목업 · 위치·반경 필터 미적용"
+            sourceNotice: PhotoDestinationServiceFactory.sourceNotice
         ) { _ in }
     }
 }

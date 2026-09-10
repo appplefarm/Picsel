@@ -195,7 +195,7 @@ struct HomeView: View {
                     Text("사진으로 목적지 고르기")
                         .font(.headline)
                         .fontWeight(.bold)
-                    Text("반경 안의 사진들을 둘러보세요")
+                    Text("포항의 관광사진들을 둘러보세요")
                         .font(.caption)
                 }
             }

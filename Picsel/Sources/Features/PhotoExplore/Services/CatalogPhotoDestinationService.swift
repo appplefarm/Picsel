@@ -30,9 +30,12 @@ struct CatalogPhotoDestinationService: PhotoDestinationService {
             }
         }
 
-        // 이번 목업은 응답 순서대로 표시합니다. 거리 필터·랜덤 추출은 담당 작업에서 연결합니다.
-        // 미검증 사진도 탐색에는 포함하고, 목적지 확정만 제한합니다.
-        return response.photos.prefix(limit).map(\.destination)
+        // 확정할 수 없는 장소를 먼저 제외한 뒤 표시 개수를 제한합니다.
+        // 거리 필터·랜덤 추천과 무관하게 서버 공급으로 바뀌어도 같은 검증을 적용합니다.
+        return Array(response.photos.lazy
+            .map(\.destination)
+            .filter(\.canSelectAsDestination)
+            .prefix(limit))
     }
 
     enum CatalogError: LocalizedError {
