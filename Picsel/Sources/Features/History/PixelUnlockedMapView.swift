@@ -10,7 +10,7 @@ import SwiftUI
 /// 픽셀 획득 화면에 보여 줄 전국 픽셀맵입니다.
 ///
 /// 픽셀맵 탭의 지도(AdministrativeRegionMapView)와 같은 경계·격자를 쓰지만,
-/// 확대·선택 같은 상호작용이 없고 색만 다릅니다.
+/// 확대·선택 같은 상호작용이 없고 색과 연출이 다릅니다.
 /// 그래서 그 화면의 타일 컴포넌트를 쓰지 않고 도형만 재사용합니다.
 struct PixelUnlockedMapView: View {
 
@@ -20,48 +20,64 @@ struct PixelUnlockedMapView: View {
     /// 이전에 채워 둔 칸들입니다.
     let unlockedRegionCodes: Set<String>
 
-    private let regions: [AdministrativeRegion]
-    private let projection: AdministrativeMapProjection
-
-    /// 격자를 얼마나 잘게 나눌지입니다. 픽셀맵 탭과 같은 값을 씁니다.
-    private let pixelResolution = 128
+    /// 전국이 다 보이는 상태인지입니다.
+    ///
+    /// false면 새로 채운 칸 하나만 확대해서 보여 주고,
+    /// true로 바뀔 때 줌아웃하며 나머지 지역이 함께 나타납니다.
+    let isRevealed: Bool
 
     init(
         highlightedRegionCode: String?,
         unlockedRegionCodes: Set<String> = [],
-        regions: [AdministrativeRegion] = PixelRegionLocator.allRegions
+        isRevealed: Bool = true
     ) {
         self.highlightedRegionCode = highlightedRegionCode
         self.unlockedRegionCodes = unlockedRegionCodes
-        self.regions = regions
-        self.projection = AdministrativeMapProjection(regions: regions)
+        self.isRevealed = isRevealed
     }
 
     var body: some View {
-        ZStack {
-            ForEach(regions) { region in
-                tile(for: region)
+        GeometryReader { proxy in
+            let camera = camera(in: proxy.size)
+
+            ZStack {
+                ForEach(PixelMapGeometryCache.tiles) { tile in
+                    tileView(for: tile)
+                }
             }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .scaleEffect(camera.scale)
+            .offset(camera.offset)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // 확대된 지도가 프레임 밖으로 넘치지 않게 합니다.
+        .clipped()
         .accessibilityElement()
         .accessibilityLabel(accessibilityLabel)
     }
 
+    // MARK: - 카메라
+
+    private func camera(in size: CGSize) -> PixelMapCamera {
+        guard !isRevealed,
+              let highlightedRegionCode,
+              let focused = PixelMapCamera.focused(
+                  onRegionCode: highlightedRegionCode,
+                  in: size
+              )
+        else { return .whole }
+
+        return focused
+    }
+
     // MARK: - 타일
 
-    private func tile(for region: AdministrativeRegion) -> some View {
-        let geometry = AdministrativeRegionTileGeometry(
-            region: region,
-            projection: projection,
-            pixelResolution: pixelResolution
-        )
-        let state = state(of: region)
+    private func tileView(for tile: PixelMapTile) -> some View {
+        let state = state(of: tile.region)
 
-        return PixelTileShape(geometry: geometry)
+        return PixelTileShape(geometry: tile.geometry)
             .fill(state.fillColor, style: FillStyle(eoFill: true, antialiased: false))
             .overlay {
-                AdministrativeBoundaryOutlineShape(geometry: geometry)
+                AdministrativeBoundaryOutlineShape(geometry: tile.geometry)
                     .stroke(
                         state.strokeColor,
                         style: StrokeStyle(
@@ -71,6 +87,8 @@ struct PixelUnlockedMapView: View {
                         )
                     )
             }
+            // 처음에는 새로 채운 칸만 보이고, 줌아웃하며 나머지가 드러납니다.
+            .opacity(state == .highlighted || isRevealed ? 1 : 0)
             // 새로 채운 칸이 다른 칸에 가리지 않게 맨 위로 올립니다.
             .zIndex(state == .highlighted ? 1 : 0)
     }
@@ -131,10 +149,21 @@ private struct PixelTileShape: Shape {
     }
 }
 
-#Preview("포항 획득") {
+#Preview("확대 상태") {
     PixelUnlockedMapView(
         highlightedRegionCode: "4711",
-        unlockedRegionCodes: ["11", "50130"]
+        unlockedRegionCodes: ["11", "50130"],
+        isRevealed: false
+    )
+    .frame(height: 320)
+    .padding()
+}
+
+#Preview("전국") {
+    PixelUnlockedMapView(
+        highlightedRegionCode: "4711",
+        unlockedRegionCodes: ["11", "50130"],
+        isRevealed: true
     )
     .frame(height: 320)
     .padding()

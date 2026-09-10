@@ -17,7 +17,13 @@ struct PixelUnlockedView: View {
     let unlockedRegionCode: String?
 
     @Environment(AppRouter.self) private var router
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query private var pixels: [UserPixel]
+
+    /// 전국 지도까지 펼쳐졌는지입니다.
+    @State private var isMapRevealed = false
+    /// 아래 버튼이 나타났는지입니다.
+    @State private var areActionsVisible = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -31,7 +37,8 @@ struct PixelUnlockedView: View {
 
             PixelUnlockedMapView(
                 highlightedRegionCode: unlockedRegionCode,
-                unlockedRegionCodes: previouslyUnlockedRegionCodes
+                unlockedRegionCodes: previouslyUnlockedRegionCodes,
+                isRevealed: isMapRevealed
             )
             .frame(maxWidth: .infinity)
             .frame(height: 240)
@@ -46,6 +53,51 @@ struct PixelUnlockedView: View {
 
             Spacer()
 
+            actionButtons
+        }
+        .padding(20)
+        .navigationBarBackButtonHidden(true)
+        .task { await playIntro() }
+    }
+
+    // MARK: - 연출
+
+    /// 채운 칸을 잠시 보여 준 뒤 전국으로 줌아웃하고, 마지막에 버튼을 띄웁니다.
+    private func playIntro() async {
+        // 이미 재생했다면 다시 하지 않습니다. (뒤로 갔다 돌아온 경우)
+        guard !isMapRevealed else { return }
+
+        // 강조할 칸이 없거나 사용자가 동작 줄이기를 켜 두었다면 결과만 바로 보여 줍니다.
+        guard unlockedRegionCode != nil, !reduceMotion else {
+            isMapRevealed = true
+            areActionsVisible = true
+            return
+        }
+
+        try? await Task.sleep(for: .milliseconds(Timing.holdOnPixel))
+        withAnimation(.easeInOut(duration: Timing.zoomOutSeconds)) {
+            isMapRevealed = true
+        }
+
+        try? await Task.sleep(for: .milliseconds(Timing.actionsDelay))
+        withAnimation(.easeOut(duration: 0.35)) {
+            areActionsVisible = true
+        }
+    }
+
+    private enum Timing {
+        /// 채운 칸 하나를 눈에 담을 시간
+        static let holdOnPixel = 700
+        /// 전국으로 빠지는 시간
+        static let zoomOutSeconds: Double = 1.1
+        /// 줌아웃이 끝난 뒤 버튼이 뜨기까지
+        static let actionsDelay = 1_150
+    }
+
+    // MARK: - 버튼
+
+    private var actionButtons: some View {
+        VStack(spacing: 12) {
             Button {
                 router.finishTripFlow(returningTo: .home)
             } label: {
@@ -74,8 +126,10 @@ struct PixelUnlockedView: View {
                     )
             }
         }
-        .padding(20)
-        .navigationBarBackButtonHidden(true)
+        // 자리는 그대로 두고 나타나기만 해서 레이아웃이 흔들리지 않습니다.
+        .opacity(areActionsVisible ? 1 : 0)
+        .allowsHitTesting(areActionsVisible)
+        .accessibilityHidden(!areActionsVisible)
     }
 
     /// 이번에 채운 칸을 뺀 나머지입니다.
