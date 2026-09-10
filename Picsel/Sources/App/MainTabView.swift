@@ -8,18 +8,13 @@ import SwiftUI
 
 struct MainTabView: View {
     @Environment(AppRouter.self) private var router
-    let onLogout: () -> Void
-    let onWithdraw: () -> Void
 
     var body: some View {
         @Bindable var router = router
 
         TabView(selection: $router.selectedTab) {
             NavigationStack {
-                HomeView(
-                    onLogout: onLogout,
-                    onWithdraw: onWithdraw
-                )
+                HomeView()
             }
             // 여행 흐름을 마치면 이 값이 바뀌면서 스택이 첫 화면으로 되돌아갑니다.
             .id(router.homeStackID)
@@ -41,10 +36,7 @@ struct MainTabView: View {
 }
 
 #Preview {
-    MainTabView(
-      onLogout: { },
-      onWithdraw: { }
-    )
+    MainTabView()
     .environment(AppRouter())
     .modelContainer(for: [Trip.self, RouteStop.self, TripPhoto.self, UserPixel.self], inMemory: true)
 }
