@@ -4,14 +4,18 @@
 //
 //  Created by DS on 9/10/26.
 //
+import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
 
     let onLogout: () -> Void
+    let onWithdraw: () -> Void
 
     @State private var isShowingLogoutAlert = false
+    @State private var showWithdrawalSheet = false
 
     var body: some View {
         ZStack {
@@ -42,6 +46,15 @@ struct SettingsView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: isShowingLogoutAlert)
+        .sheet(isPresented: $showWithdrawalSheet) {
+            WithdrawalSheetView(
+                isPresented: $showWithdrawalSheet,
+                onWithdraw: withdrawAccount
+            )
+            .presentationDetents([.height(520)])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(28)
+        }
     }
 }
 
@@ -178,7 +191,7 @@ private extension SettingsView {
                 
                 // 회원탈퇴 버튼
                 Button {
-                    print("회원탈퇴 클릭")
+                    showWithdrawalSheet = true
                 } label: {
                     Text("회원탈퇴")
                         .font(.system(size: 16, weight: .semibold))
@@ -277,12 +290,38 @@ private extension SettingsView {
         isShowingLogoutAlert = false
         onLogout()
     }
+
+    func withdrawAccount() {
+        do {
+            try deleteAllUserData()
+            UserDefaults.standard.removeObject(forKey: "appleUserIdentifier")
+            UserDefaults.standard.set(false, forKey: "isLoggedIn")
+            showWithdrawalSheet = false
+            onWithdraw()
+        } catch {
+            print("회원탈퇴 데이터 삭제 실패: \(error.localizedDescription)")
+        }
+    }
+
+    func deleteAllUserData() throws {
+        try deleteAll(TripPhoto.self)
+        try deleteAll(RouteStop.self)
+        try deleteAll(Trip.self)
+        try deleteAll(UserPixel.self)
+        try modelContext.save()
+    }
+
+    func deleteAll<T: PersistentModel>(_ modelType: T.Type) throws {
+        let descriptor = FetchDescriptor<T>()
+        let models = try modelContext.fetch(descriptor)
+        models.forEach { modelContext.delete($0) }
+    }
 }
 
 #Preview {
     SettingsView(
-        onLogout: {
-            print("로그아웃")
-        }
+        onLogout: { print("로그아웃") },
+        onWithdraw: { print("회원탈퇴") }
     )
+    .modelContainer(for: [Trip.self, RouteStop.self, TripPhoto.self, UserPixel.self], inMemory: true)
 }
