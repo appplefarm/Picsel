@@ -10,6 +10,7 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(\.modelContext) private var modelContext
 
     let onLogout: () -> Void
     let onWithdraw: () -> Void
@@ -18,6 +19,7 @@ struct SettingsView: View {
     @State private var showWithdrawalSheet = false
     @State private var destination: SettingsDestination?
     @State private var isShowingMailError = false
+    @State private var isShowingWithdrawalError = false
 
     var body: some View {
         NavigationStack {
@@ -60,6 +62,11 @@ struct SettingsView: View {
                 Button("확인", role: .cancel) { }
             } message: {
                 Text("\(AppContact.supportEmail)로 직접 문의해주세요.")
+            }
+            .alert("회원탈퇴를 완료할 수 없어요", isPresented: $isShowingWithdrawalError) {
+                Button("확인", role: .cancel) { }
+            } message: {
+                Text("저장된 여행 데이터를 삭제하는 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.")
             }
         }
         .animation(.easeInOut(duration: 0.2), value: isShowingLogoutAlert)
@@ -305,12 +312,42 @@ private extension SettingsView {
 
     func logout() {
         isShowingLogoutAlert = false
-        onLogout()
+        dismissThenRun(onLogout)
     }
 
     func handleWithdrawalPlaceholder() {
-        // TODO: 회원탈퇴 정책과 데이터 삭제 범위가 확정되면 실제 탈퇴 로직을 연결합니다.
-        showWithdrawalSheet = false
+        do {
+            try deleteLocalUserData()
+            showWithdrawalSheet = false
+            dismissThenRun(onWithdraw)
+        } catch {
+            isShowingWithdrawalError = true
+        }
+    }
+
+    func dismissThenRun(_ action: @escaping () -> Void) {
+        dismiss()
+
+        // SettingsView는 HomeView의 fullScreenCover로 표시됩니다.
+        // 루트 로그인 상태를 먼저 바꾸면 설정 화면이 남아 있다가 뒤로 간 뒤에야
+        // 로그인 화면이 보일 수 있으므로, modal dismiss 애니메이션 후 루트를 전환합니다.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            action()
+        }
+    }
+
+    func deleteLocalUserData() throws {
+        try deleteAll(TripPhoto.self)
+        try deleteAll(RouteStop.self)
+        try deleteAll(Trip.self)
+        try deleteAll(UserPixel.self)
+        try modelContext.save()
+    }
+
+    func deleteAll<T: PersistentModel>(_ modelType: T.Type) throws {
+        let descriptor = FetchDescriptor<T>()
+        let models = try modelContext.fetch(descriptor)
+        models.forEach { modelContext.delete($0) }
     }
 
     func openSupportMail() {
