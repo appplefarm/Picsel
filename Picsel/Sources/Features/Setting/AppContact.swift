@@ -8,6 +8,7 @@ import UIKit
 enum AppContact {
     static let supportEmail = "support@example.com"
     static let mailSubject = "[Picsel 문의]"
+    static let appleSignInSupportURL = URL(string: "https://support.apple.com/102571")
 
     static var supportMailURL: URL? {
         var components = URLComponents()

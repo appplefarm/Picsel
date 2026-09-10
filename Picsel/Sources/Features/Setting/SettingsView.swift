@@ -20,6 +20,7 @@ struct SettingsView: View {
     @State private var destination: SettingsDestination?
     @State private var isShowingMailError = false
     @State private var isShowingWithdrawalError = false
+    @State private var isShowingWithdrawalCompletion = false
 
     var body: some View {
         NavigationStack {
@@ -67,6 +68,18 @@ struct SettingsView: View {
                 Button("확인", role: .cancel) { }
             } message: {
                 Text("저장된 여행 데이터를 삭제하는 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.")
+            }
+            .alert("앱 데이터가 삭제되었습니다", isPresented: $isShowingWithdrawalCompletion) {
+                Button("Apple 지원 보기") {
+                    openAppleSignInSupport()
+                    dismissThenRun(onWithdraw)
+                }
+
+                Button("로그인 화면으로 이동", role: .cancel) {
+                    dismissThenRun(onWithdraw)
+                }
+            } message: {
+                Text("Apple 계정 연결도 해제하려면 설정 > 사용자 이름 > Apple로 로그인 > Picsel에서 사용을 중단해주세요.\n\n연결 해제를 하지 않아도 Picsel 앱 데이터 삭제는 완료되었습니다.")
             }
         }
         .animation(.easeInOut(duration: 0.2), value: isShowingLogoutAlert)
@@ -319,7 +332,9 @@ private extension SettingsView {
         do {
             try deleteLocalUserData()
             showWithdrawalSheet = false
-            dismissThenRun(onWithdraw)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                isShowingWithdrawalCompletion = true
+            }
         } catch {
             isShowingWithdrawalError = true
         }
@@ -361,6 +376,14 @@ private extension SettingsView {
                 isShowingMailError = true
             }
         }
+    }
+
+    func openAppleSignInSupport() {
+        guard let url = AppContact.appleSignInSupportURL else {
+            return
+        }
+
+        openURL(url)
     }
 }
 

@@ -43,14 +43,6 @@ struct OnboardingView: View {
                 .frame(height: 56)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .accessibilityHint("Apple 계정으로 인증하고 Picsel을 시작합니다")
-                
-                Text("계속하면 서비스 이용약관 및 개인정보 처리방침에 동의하게 됩니다.")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 6)
-                    .padding(.top, 32)
-                    .padding(.bottom, 50)
             }
             .padding(.horizontal, 21)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
