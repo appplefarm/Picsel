@@ -8,56 +8,77 @@
 import SwiftUI
 import PhotosUI
 
+/// 이 화면에서 키보드 포커스를 가질 수 있는 입력 칸.
+enum TripRecordField: Hashable {
+    case title
+    case memo
+}
+
 struct TripRecordView: View {
     
     @State private var viewModel = TripRecordViewModel()
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var isGalleryPresented = false
     @State private var isPixelUnlockedPresented = false
+    @FocusState private var focusedField: TripRecordField?
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            Text("오늘 여행의 마무리")
-                .font(.title)
-                .fontWeight(.bold)
-            
-            Text("이번 여행은 어떠셨나요?\n나만의 여행 제목과 내용을 간단히 작성해 픽셀에 보관해보세요")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            
-            TitleTextField(text: $viewModel.title)
-            
-            MemoTextEditor(text: $viewModel.memo, maxCount: viewModel.maxMemoCount)
-            
-            PhotoThumbnailStrip(
-                photos: viewModel.pickedPhotos,
-                canAddMore: viewModel.canAddMorePhotos,
-                onAddTapped: { isGalleryPresented = true },
-                onDelete: { viewModel.removePhoto($0) }
-            )
-            
-            Spacer()
-            
-            Text("여행 제목과 내용은 픽셀 상세에 저장돼요.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            
-            Button {
-                isPixelUnlockedPresented = true
-            } label: {
-                Text("인증하고 픽셀 채우기")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(viewModel.canSave ? Color.black : Color.gray.opacity(0.3))
-                    )
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                Text("오늘 여행의 마무리")
+                    .font(.title)
+                    .fontWeight(.bold)
+                
+                Text("이번 여행은 어떠셨나요?\n나만의 여행 제목과 내용을 간단히 작성해 픽셀에 보관해보세요")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                
+                TitleTextField(
+                    text: $viewModel.title,
+                    focusedField: $focusedField
+                )
+                
+                MemoTextEditor(
+                    text: $viewModel.memo,
+                    focusedField: $focusedField,
+                    maxCount: viewModel.maxMemoCount
+                )
+                
+                PhotoThumbnailStrip(
+                    photos: viewModel.pickedPhotos,
+                    canAddMore: viewModel.canAddMorePhotos,
+                    onAddTapped: { isGalleryPresented = true },
+                    onDelete: { viewModel.removePhoto($0) }
+                )
+                
+                Text("여행 제목과 내용은 픽셀 상세에 저장돼요.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                
+                Button {
+                    focusedField = nil
+                    isPixelUnlockedPresented = true
+                } label: {
+                    Text("인증하고 픽셀 채우기")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 18)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(viewModel.canSave ? Color.black : Color.gray.opacity(0.3))
+                        )
+                }
+                .disabled(!viewModel.canSave)
             }
-            .disabled(!viewModel.canSave)
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            // 입력 칸 바깥을 탭하면 키보드를 내린다.
+            // .contentShape가 없으면 VStack의 빈 여백은 탭 판정에 잡히지 않는다.
+            .contentShape(Rectangle())
+            .onTapGesture { focusedField = nil }
         }
-        .padding(20)
+        .scrollDismissesKeyboard(.interactively)
         .onChange(of: pickerItems) { _, newItems in
             guard !newItems.isEmpty else { return }
             Task { await loadPhotos(from: newItems) }
@@ -74,6 +95,12 @@ struct TripRecordView: View {
             PixelUnlockedView(
                 snapshot: viewModel.makeSnapshot(regionName: "영덕", placeCount: 3)
             )
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("완료") { focusedField = nil }
+            }
         }
     }
     
@@ -94,4 +121,3 @@ struct TripRecordView: View {
         TripRecordView()
     }
 }
-

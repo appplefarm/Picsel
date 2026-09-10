@@ -11,6 +11,7 @@ import SwiftUI
 /// (지역명 + 여행 자동 생성은 나중 이슈)
 struct TitleTextField: View {
     @Binding var text: String
+    @FocusState.Binding var focusedField: TripRecordField?
     var placeholder: String = "지역명 + 여행"
     
     var body: some View {
@@ -25,6 +26,9 @@ struct TitleTextField: View {
                     RoundedRectangle(cornerRadius: 18)
                         .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                 )
+                .focused($focusedField, equals: .title)
+                .submitLabel(.next)
+                .onSubmit { focusedField = .memo }
         }
     }
 }
@@ -32,6 +36,7 @@ struct TitleTextField: View {
 /// 내용 입력. 글자수 카운트(0/150)를 같이 보여준다.
 struct MemoTextEditor: View {
     @Binding var text: String
+    @FocusState.Binding var focusedField: TripRecordField?
     let maxCount: Int
     
     var body: some View {
@@ -64,6 +69,7 @@ struct MemoTextEditor: View {
                             text = String(newValue.prefix(maxCount))
                         }
                     }
+                    .focused($focusedField, equals: .memo)
                 
                 // Character Counter (오른쪽 아래)
                 VStack {
@@ -87,11 +93,12 @@ struct MemoTextEditor: View {
     struct PreviewWrapper: View {
         @State private var title = ""
         @State private var memo = ""
+        @FocusState private var focusedField: TripRecordField?
         
         var body: some View {
             VStack(spacing: 24) {
-                TitleTextField(text: $title)
-                MemoTextEditor(text: $memo, maxCount: 150)
+                TitleTextField(text: $title, focusedField: $focusedField)
+                MemoTextEditor(text: $memo, focusedField: $focusedField, maxCount: 150)
             }
             .padding()
         }
