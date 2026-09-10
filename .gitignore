@@ -63,9 +63,25 @@ fastlane/test_output
 
 *.DS_Store
 
-# Local API secrets
-Configs/Secrets.xcconfig
+# Local API secrets (keep Secrets.example.xcconfig tracked)
+**/Secrets.xcconfig
+.env
+.env.*
+!.env.example
 
-# Local API keys
-**/Secrets.xcconfig
-**/Secrets.xcconfig
+# Local signing credentials and provisioning profiles
+*.p12
+*.pfx
+*.key
+*.mobileprovision
+*.provisionprofile
+
+# Local build products
+DerivedData/
+*.xcarchive
+
+# Python caches and local data exports
+__pycache__/
+*.py[cod]
+.venv/
+/outputs/
