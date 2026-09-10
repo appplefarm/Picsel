@@ -23,12 +23,13 @@ final class TourAPIManager {
         let urlString = """
         \(baseURL)\
         ?serviceKey=\(serviceKey)\
-        &numOfRows=30\
+        &numOfRows=100\
         &pageNo=1\
         &MobileOS=IOS\
         &MobileApp=Picsel\
         &areaCode=\(areaCode)\
         &sigunguCode=\(sigunguCode)\
+        &contentTypeId=12\
         &arrange=A\
         &_type=json
         """
@@ -42,7 +43,7 @@ final class TourAPIManager {
         guard let items = decodedData.response.body.items.item else { return [] }
 
         // 사진으로 목적지를 고르는 서비스라 대표 이미지가 없는 장소는 제외합니다.
-        // 응답에서 걸러낸 뒤 필요한 개수만 남기려고 numOfRows를 넉넉히 요청합니다.
+        // 응답에서 걸러낸 뒤 랜덤으로 섞어서 필요한 개수만 뽑아냅니다.
         return items
             .compactMap { item -> PlaceDTO? in
                 guard let photoURL = Self.secureImageURL(from: item.firstimage) else {
@@ -60,6 +61,7 @@ final class TourAPIManager {
                     regionCode: nil
                 )
             }
+            .shuffled()
             .prefix(Self.recommendationCount)
             .map { $0 }
     }

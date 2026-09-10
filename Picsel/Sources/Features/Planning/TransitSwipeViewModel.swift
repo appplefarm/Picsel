@@ -14,6 +14,7 @@ final class TransitSwipeViewModel {
     var activeTrip: Trip
     
     var candidates: [PlaceDTO] = []       // API로 받아올 추천 장소 최대 10곳
+    var totalFetchedCount: Int = 0        // 10장 중 몇장째인지 계산하기 위한 전체 개수
     var selectedPlaces: [PlaceDTO] = []   // 오른쪽으로 스와이프(선택)한 장소들
     var isLoading: Bool = false
 
@@ -39,6 +40,7 @@ final class TransitSwipeViewModel {
             // UI 스레드(Main Actor)에서 상태 업데이트
             await MainActor.run {
                 self.candidates = fetchedData
+                self.totalFetchedCount = fetchedData.count
                 self.isLoading = false
             }
         } catch {
