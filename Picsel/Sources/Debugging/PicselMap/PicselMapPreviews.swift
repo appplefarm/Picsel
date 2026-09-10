@@ -8,22 +8,40 @@
 #if DEBUG
 import SwiftUI
 
-#Preview("PicselMap · 선택 지역 161개") {
-    PicselMapPreview()
-}
+/// 실제 픽셀맵에 샘플 기록과 탭 배치를 제공하는 프리뷰 전용 컨테이너입니다.
+struct PicselMapPreview: View {
+    @State private var selectedTab = 1
 
-private struct PicselMapPreview: View {
     var body: some View {
+        TabView(selection: $selectedTab) {
+            // 홈의 지도 SDK 초기화와 위치 권한 요청은 프리뷰에서 실행하지 않습니다.
+            ContentUnavailableView("홈 탭", systemImage: "house.fill")
+                .tabItem {
+                    Label("홈", systemImage: "house.fill")
+                }
+                .tag(0)
+
+            NavigationStack {
+                map
+            }
+            .tabItem {
+                Label("픽셀맵", systemImage: "mappin.and.ellipse")
+            }
+            .tag(1)
+        }
+        .tint(.primary)
+    }
+
+    @ViewBuilder
+    private var map: some View {
         switch PicselMapPrototypeData.loadResult {
         case .success(let regions):
-            NavigationStack {
-                PicselMapView(
-                    regions: regions,
-                    unlockedRegionCodes: PicselMapPrototypeData.unlockedRegionCodes,
-                    records: PicselMapPrototypeData.records,
-                    pixelResolution: 128
-                )
-            }
+            PicselMapView(
+                regions: regions,
+                unlockedRegionCodes: PicselMapPrototypeData.unlockedRegionCodes,
+                records: PicselMapPrototypeData.records,
+                pixelResolution: 128
+            )
 
         case .failure(let error):
             ContentUnavailableView(
@@ -34,6 +52,7 @@ private struct PicselMapPreview: View {
         }
     }
 }
+
 #Preview("지도 서브뷰 · 단독 재사용") {
     @Previewable @State var selectedCode: String?
 

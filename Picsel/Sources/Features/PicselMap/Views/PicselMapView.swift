@@ -184,3 +184,9 @@ struct PicselMapView: View {
         return index + 1
     }
 }
+
+#if DEBUG
+#Preview("픽셀맵 · 탭 포함") {
+    PicselMapPreview()
+}
+#endif
