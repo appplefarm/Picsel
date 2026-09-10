@@ -84,27 +84,16 @@ struct HomeView: View {
     
 
     private var mapSection: some View {
-        ZStack(alignment: .bottomLeading) {
+        ZStack(alignment: .topLeading) {
             GoogleMapView(
                 coordinate: viewModel.mapCenterCoordinate,
                 radiusMeters: viewModel.currentRadiusMeters
             )
 
-            LinearGradient(
-                stops: [
-                    .init(color: PicselColor.homeBackground, location: 0),
-                    .init(color: .clear, location: 0.14),
-                    .init(color: .clear, location: 0.82),
-                    .init(color: PicselColor.homeBackground, location: 1)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .allowsHitTesting(false)
-
+            // Google 로고·저작권 표시가 있는 하단에는 배지나 그라데이션을 덮지 않습니다.
             locationBadge
                 .padding(.leading, HomeStyle.horizontalPadding)
-                .padding(.bottom, 10)
+                .padding(.top, 10)
         }
         .clipped()
     }

@@ -168,16 +168,16 @@ struct RouteConfirmationView: View {
     }
 
     private var routeLoadingOverlay: some View {
-        ZStack {
-            Color.white.opacity(0.6)
-
-            VStack(spacing: 8) {
-                ProgressView()
-                Text("경로를 계산하고 있어요")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+        VStack(spacing: 8) {
+            ProgressView()
+            Text("경로를 계산하고 있어요")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
+        .padding(16)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        // 전체 지도를 딤 처리하면 NAVER 로고가 가려집니다. 중앙 안내만 표시합니다.
+        .allowsHitTesting(false)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("경로를 계산하고 있어요")
     }

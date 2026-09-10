@@ -48,6 +48,11 @@ struct DestinationDetailView: View {
                         maxHeight: 310
                     )
 
+                    if ContentSources.isTourismPhoto(destination.photoURL) {
+                        ContentSourceLink(title: ContentSources.tourismCredit)
+                            .foregroundStyle(.white)
+                    }
+
                     optionalDetails
                         .padding(.top, 10)
 

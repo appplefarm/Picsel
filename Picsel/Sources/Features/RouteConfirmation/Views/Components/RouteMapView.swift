@@ -26,8 +26,7 @@ struct RouteMapMarker: Equatable {
 /// 경로 화면의 지도입니다.
 ///
 /// 홈 화면은 Google 지도를 쓰지만, Google은 국내에서 자동차 길찾기를 제공하지 않아
-/// 경로 화면만 네이버 지도로 그립니다. 경로 데이터와 지도를 같은 업체로 맞추면
-/// 좌표가 어긋나지 않고 약관 문제도 없습니다.
+/// 경로 데이터는 NAVER 지도에 표시합니다. 이용약관과 로고·법적 고지 조건은 별도로 준수합니다.
 struct RouteMapView: UIViewRepresentable {
 
     /// 경로 선입니다. 계산 전이면 비어 있습니다.
@@ -46,6 +45,9 @@ struct RouteMapView: UIViewRepresentable {
         mapView.showCompass = false
         mapView.showScaleBar = false
         mapView.showIndoorLevelPicker = false
+        // 로고를 통해 법적 공지와 오픈소스 라이선스를 열 수 있어야 합니다.
+        mapView.mapView.logoInteractionEnabled = true
+        mapView.mapView.logoMargin = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
 
         return mapView
     }

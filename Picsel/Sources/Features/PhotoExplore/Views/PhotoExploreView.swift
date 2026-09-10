@@ -69,6 +69,14 @@ struct PhotoExploreView: View {
                     .background(.regularMaterial)
             }
         }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if case let .loaded(destinations) = viewModel.phase,
+               destinations.contains(where: { ContentSources.isTourismPhoto($0.photoURL) }) {
+                ContentSourceLink(title: ContentSources.tourismCredit)
+                    .frame(maxWidth: .infinity)
+                    .background(.regularMaterial)
+            }
+        }
         .task(id: viewModel.loadRequest) {
             await viewModel.load()
         }

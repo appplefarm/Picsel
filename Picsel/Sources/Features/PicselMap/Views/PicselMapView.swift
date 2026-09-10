@@ -54,8 +54,13 @@ struct PicselMapView: View {
                     .font(.footnote)
             }
 
-            map
-                .frame(minHeight: 280, maxHeight: .infinity)
+            VStack(spacing: 0) {
+                map
+                    .frame(minHeight: 280, maxHeight: .infinity)
+
+                ContentSourceLink(title: ContentSources.boundaryCredit)
+                    .foregroundStyle(.secondary)
+            }
 
             recentPixelSection
         }
