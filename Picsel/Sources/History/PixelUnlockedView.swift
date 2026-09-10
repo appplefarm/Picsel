@@ -12,7 +12,7 @@ struct PixelUnlockedView: View {
 
     let snapshot: TripRecordSnapshot
 
-    @State private var isPixelDetailPresented = false
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -50,7 +50,7 @@ struct PixelUnlockedView: View {
             Spacer()
 
             Button {
-                // TODO: 홈 탭으로 이동 (탭 구조 붙은 뒤 연결)
+                router.finishTripFlow(returningTo: .home)
             } label: {
                 Text("홈으로")
                     .font(.headline)
@@ -64,7 +64,7 @@ struct PixelUnlockedView: View {
             .foregroundStyle(.primary)
 
             Button {
-                isPixelDetailPresented = true
+                router.finishTripFlow(returningTo: .picselMap)
             } label: {
                 Text("픽셀맵 확인하기")
                     .font(.headline)
@@ -79,9 +79,6 @@ struct PixelUnlockedView: View {
         }
         .padding(20)
         .navigationBarBackButtonHidden(true)
-        .navigationDestination(isPresented: $isPixelDetailPresented) {
-            PixelDetailView(snapshot: snapshot)
-        }
     }
 }
 
@@ -89,4 +86,5 @@ struct PixelUnlockedView: View {
     NavigationStack {
         PixelUnlockedView(snapshot: .sample)
     }
+    .environment(AppRouter())
 }

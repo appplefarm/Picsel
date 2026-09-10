@@ -6,9 +6,12 @@
 //
 
 
+import SwiftData
 import SwiftUI
 
 struct TransitSwipeView: View {
+    @Environment(\.modelContext) private var modelContext
+
     @State var viewModel: TransitSwipeViewModel
     @State private var isShowingRouteConfirmation = false
     @State private var isShowingTripProgress = false
@@ -100,6 +103,8 @@ struct TransitSwipeView: View {
                 trip: viewModel.activeTrip,
                 thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
             ) { _ in
+                // 여행이 실제로 시작되는 시점입니다. 여기서부터는 앱이 꺼져도 남아야 합니다.
+                viewModel.startTrip(in: modelContext)
                 isShowingTripProgress = true
             }
                 .toolbar(.hidden, for: .tabBar)
@@ -113,12 +118,8 @@ struct TransitSwipeView: View {
             }
             .toolbar(.hidden, for: .tabBar)
         }
-        .navigationDestination(isPresented: $isShowingVisitedPlacesConfirm) {
-            let confirmVM = VisitedPlacesConfirmViewModel(
-                trip: viewModel.activeTrip,
-                thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
-            )
-            VisitedPlacesConfirmView(viewModel: confirmVM)
+        .navigationDestination(isPresented: $isShowingTripRecord) {
+            TripRecordView(trip: viewModel.activeTrip)
                 .toolbar(.hidden, for: .tabBar)
         }
         .onAppear {

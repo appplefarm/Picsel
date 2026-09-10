@@ -68,6 +68,8 @@ final class TransitSwipeViewModel {
         // 확인 화면에서 되돌아와 다시 확정해도 기존 경유지가 중복되지 않게 교체합니다.
         for stop in activeTrip.stops where !stop.isDestination {
             stop.trip = nil
+            // 여행이 이미 저장된 뒤라면, 떼어낸 장소가 DB에 떠돌지 않게 함께 지웁니다.
+            stop.modelContext?.delete(stop)
         }
         activeTrip.stops.removeAll { !$0.isDestination }
 
@@ -100,5 +102,29 @@ final class TransitSwipeViewModel {
         }
 
         thumbnailURLsByStopID = thumbnails
+    }
+
+    // MARK: - 여행 시작 (SwiftData 등록)
+
+    /// 여행을 SwiftData에 등록하고 시작 시각을 남깁니다.
+    ///
+    /// 여기서 저장해 두지 않으면 실제 여행 중(몇 시간)에 앱이 메모리에서 내려갈 때
+    /// 목적지·경유지·경로가 통째로 사라집니다.
+    /// 목적지를 눌러보기만 한 여행이 쌓이지 않도록, 경로를 확정한 이 시점에 넣습니다.
+    func startTrip(in context: ModelContext) {
+        if activeTrip.startTime == nil {
+            activeTrip.startTime = Date()
+        }
+
+        // 뒤로 갔다가 다시 들어와도 두 번 등록되지 않게 확인합니다.
+        guard activeTrip.modelContext == nil else { return }
+
+        context.insert(activeTrip)
+
+        do {
+            try context.save()
+        } catch {
+            print("여행 저장에 실패했습니다: \(error.localizedDescription)")
+        }
     }
 }
