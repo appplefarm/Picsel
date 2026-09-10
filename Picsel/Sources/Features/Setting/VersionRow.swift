@@ -8,6 +8,10 @@
 import SwiftUI
 
 struct VersionRow: View {
+    private var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
+    }
+
     var body: some View {
         HStack(spacing: 16) {
             
@@ -32,7 +36,7 @@ struct VersionRow: View {
 
             Spacer()
 
-            Text("1.0.0")
+            Text(appVersion)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(.secondary)
         }

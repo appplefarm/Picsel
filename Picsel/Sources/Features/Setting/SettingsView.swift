@@ -9,7 +9,6 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
 
     let onLogout: () -> Void
     let onWithdraw: () -> Void
@@ -49,7 +48,7 @@ struct SettingsView: View {
         .sheet(isPresented: $showWithdrawalSheet) {
             WithdrawalSheetView(
                 isPresented: $showWithdrawalSheet,
-                onWithdraw: withdrawAccount
+                onWithdraw: handleWithdrawalPlaceholder
             )
             .presentationDetents([.height(520)])
             .presentationDragIndicator(.visible)
@@ -118,7 +117,7 @@ private extension SettingsView {
     var informationSection: some View {
         VStack(alignment: .leading, spacing: 20) {
 
-            sectionTitle("정보 및 약관")
+            sectionTitle("정보")
 
             SettingsCard {
 
@@ -134,22 +133,22 @@ private extension SettingsView {
                     .padding(.leading, 16)
 
                 SettingsRow(
-                    icon: "doc",
-                    title: "서비스 이용약관",
-                    description: "서비스 이용약관과 운영 정책"
+                    icon: "chevron.left.forwardslash.chevron.right",
+                    title: "데이터 및 콘텐츠 출처",
+                    description: "연동 서비스와 콘텐츠 제공처"
                 ) {
-                    print("서비스 이용약관")
+                    print("데이터 및 콘텐츠 출처")
                 }
 
                 Divider()
                     .padding(.leading, 16)
 
                 SettingsRow(
-                    icon: "chevron.left.forwardslash.chevron.right",
-                    title: "API 및 데이터 정보",
-                    description: "연동 서비스와 데이터 출처"
+                    icon: "envelope",
+                    title: "문의하기",
+                    description: "서비스 문의 및 문제 신고"
                 ) {
-                    print("API 정보")
+                    print("문의하기")
                 }
 
                 Divider()
@@ -291,30 +290,9 @@ private extension SettingsView {
         onLogout()
     }
 
-    func withdrawAccount() {
-        do {
-            try deleteAllUserData()
-            UserDefaults.standard.removeObject(forKey: "appleUserIdentifier")
-            UserDefaults.standard.set(false, forKey: "isLoggedIn")
-            showWithdrawalSheet = false
-            onWithdraw()
-        } catch {
-            print("회원탈퇴 데이터 삭제 실패: \(error.localizedDescription)")
-        }
-    }
-
-    func deleteAllUserData() throws {
-        try deleteAll(TripPhoto.self)
-        try deleteAll(RouteStop.self)
-        try deleteAll(Trip.self)
-        try deleteAll(UserPixel.self)
-        try modelContext.save()
-    }
-
-    func deleteAll<T: PersistentModel>(_ modelType: T.Type) throws {
-        let descriptor = FetchDescriptor<T>()
-        let models = try modelContext.fetch(descriptor)
-        models.forEach { modelContext.delete($0) }
+    func handleWithdrawalPlaceholder() {
+        // TODO: 회원탈퇴 정책과 데이터 삭제 범위가 확정되면 실제 탈퇴 로직을 연결합니다.
+        showWithdrawalSheet = false
     }
 }
 
