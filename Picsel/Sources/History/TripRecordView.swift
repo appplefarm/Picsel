@@ -126,6 +126,7 @@ struct TripRecordView: View {
     NavigationStack {
         TripRecordView(trip: .previewSample)
     }
+    .environment(AppRouter())
     .modelContainer(
         for: [Trip.self, RouteStop.self, TripPhoto.self, UserPixel.self],
         inMemory: true
