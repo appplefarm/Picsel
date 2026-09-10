@@ -54,14 +54,28 @@ struct TransitSwipeView: View {
                     }
                 }
             }
-            
-            Spacer()
+            .padding(.bottom, 30) // 카드 스택과 텍스트 사이 간격 (기존 Spacer 대체)
             
             // MARK: - 스와이프 안내 문구 및 버튼
-            Text("왼쪽으로 넘기기 · 오른쪽으로 여행에 추가")
-                .font(.footnote)
-                .foregroundColor(.gray)
-                .padding(.bottom, 20)
+            let currentIndex = viewModel.totalFetchedCount - viewModel.candidates.count + 1
+            let displayIndex = min(currentIndex, viewModel.totalFetchedCount)
+            
+            VStack(spacing: 16) {
+                if viewModel.totalFetchedCount > 0 && !viewModel.candidates.isEmpty {
+                    Text("\(Text("\(displayIndex)").font(.system(size: 15, weight: .bold))) / \(viewModel.totalFetchedCount)")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(Color(red: 125/255, green: 160/255, blue: 142/255))
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+                }
+                
+                Text("왼쪽으로 넘기기 · 오른쪽으로 여행에 추가")
+                    .font(.system(size: 11))
+                    .foregroundColor(Color(white: 0.42))
+            }
+            .padding(.bottom, 10)
+            
+            Spacer()
             
             // MARK: - 하단 확정 바
             SwipeBottomBar(
@@ -106,5 +120,22 @@ struct TransitSwipeView: View {
                 }
             }
         }
+    }
+}
+
+#Preview {
+    let dummyTrip = Trip(title: "포항 당일치기")
+    let viewModel = TransitSwipeViewModel(trip: dummyTrip)
+    
+    // 더미 데이터 주입 (미리보기용)
+    viewModel.candidates = [
+        PlaceDTO(id: "1", name: "영일대 해수욕장", address: "경상북도 포항시 북구", latitude: 36.0, longitude: 129.0, photoURL: "https://tong.visitkorea.or.kr/cms/resource/66/2908766_image2_1.jpg", detailDescription: nil, regionCode: nil),
+        PlaceDTO(id: "2", name: "호미곶 해맞이광장", address: "경상북도 포항시 남구", latitude: 36.1, longitude: 129.1, photoURL: "https://tong.visitkorea.or.kr/cms/resource/66/2908766_image2_1.jpg", detailDescription: nil, regionCode: nil),
+        PlaceDTO(id: "3", name: "구룡포 일본인가옥거리", address: "경상북도 포항시 남구", latitude: 36.2, longitude: 129.2, photoURL: "https://tong.visitkorea.or.kr/cms/resource/66/2908766_image2_1.jpg", detailDescription: nil, regionCode: nil)
+    ]
+    viewModel.totalFetchedCount = 10
+    
+    return NavigationStack {
+        TransitSwipeView(viewModel: viewModel)
     }
 }
