@@ -13,7 +13,7 @@ struct MainTabView: View {
                 HomeView()
             }
             .tabItem {
-                Label("홈", systemImage: "house.fill")
+                Label("지도", systemImage: "house.fill")
             }
 
             NavigationStack {

@@ -41,8 +41,8 @@ private struct GoogleMapRepresentable: UIViewRepresentable {
         mapView.settings.zoomGestures = false
         mapView.settings.rotateGestures = false
         mapView.settings.tiltGestures = false
-        // 권한 승인 후 실제 기기 위치는 Google Maps의 파란 점 하나로 표시합니다.
-        mapView.isMyLocationEnabled = true
+        // SwiftUI 중앙 핀 하나만 사용하므로 Google Maps의 파란 점은 숨깁니다.
+        mapView.isMyLocationEnabled = false
         mapView.settings.myLocationButton = false
 
         context.coordinator.previousCoordinate = coordinate
@@ -61,7 +61,6 @@ private struct GoogleMapRepresentable: UIViewRepresentable {
         let coordinateChanged = coordinator.previousCoordinate.map {
             $0.latitude != coordinate.latitude || $0.longitude != coordinate.longitude
         } ?? true
-
         guard radiusChanged || coordinateChanged else { return }
 
         // Slider 드래그 중 animate를 반복하면 애니메이션이 누적됩니다.
@@ -117,22 +116,35 @@ private struct GoogleMapRepresentable: UIViewRepresentable {
 
 private struct FixedRadiusOverlay: View {
     var body: some View {
-        Circle()
-            .fill(Color.black.opacity(0.10))
-            .overlay {
-                Circle().stroke(Color.black.opacity(0.38), lineWidth: 1)
-            }
-            .frame(
-                width: HomeMapStyle.radiusCircleDiameter,
-                height: HomeMapStyle.radiusCircleDiameter
-            )
+        ZStack {
+            Circle()
+                .fill(PicselColor.radiusGreen.opacity(0.15))
+                .overlay {
+                    Circle().stroke(PicselColor.radiusBorder, lineWidth: 1)
+                }
+                .frame(
+                    width: HomeMapStyle.radiusCircleDiameter,
+                    height: HomeMapStyle.radiusCircleDiameter
+                )
+
+            Circle()
+                .fill(.white)
+                .overlay {
+                    Circle().stroke(PicselColor.radiusGreen, lineWidth: 1)
+                }
+                .frame(width: 21, height: 21)
+
+            Circle()
+                .fill(PicselColor.radiusGreen)
+                .frame(width: 13, height: 13)
+        }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
 }
 
 private enum HomeMapStyle {
-    static let radiusCircleDiameter: CGFloat = 251
+    static let radiusCircleDiameter: CGFloat = 270
     static let initialZoom: Float = 8
     static let minimumZoom = 0.0
     static let maximumZoom = 21.0
