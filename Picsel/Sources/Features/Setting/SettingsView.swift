@@ -9,27 +9,39 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
 
+    let onLogout: () -> Void
+
+    @State private var isShowingLogoutAlert = false
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
+        ZStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
 
-                header
+                    header
 
-                serviceSection
-                    .padding(.top, 52)
+                    serviceSection
+                        .padding(.top, 52)
 
-                informationSection
-                    .padding(.top, 52)
+                    informationSection
+                        .padding(.top, 52)
 
-                accountSection
-                    .padding(.top, 52)
+                    accountSection
+                        .padding(.top, 52)
 
-                Spacer(minLength: 50)
+                    Spacer(minLength: 50)
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 20)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 20)
+            .background(Color.white)
+
+            if isShowingLogoutAlert {
+                logoutOverlay
+                    .transition(.opacity)
+            }
         }
-        .background(Color.white)
+        .animation(.easeInOut(duration: 0.2), value: isShowingLogoutAlert)
     }
 }
 
@@ -153,7 +165,7 @@ private extension SettingsView {
             HStack(spacing: 12) {
                 // 로그아웃 버튼
                 Button {
-                    print("로그아웃 클릭")
+                    isShowingLogoutAlert = true
                 } label: {
                     Text("로그아웃")
                         .font(.system(size: 16, weight: .semibold))
@@ -185,6 +197,92 @@ private extension SettingsView {
     }
 }
 
+private extension SettingsView {
+
+    var logoutOverlay: some View {
+        ZStack {
+
+            Color.black.opacity(0.22)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    isShowingLogoutAlert = false
+                }
+
+            VStack(spacing: 0) {
+
+                Image(systemName: "rectangle.portrait.and.arrow.right")
+                    .font(.system(size: 28))
+                    .foregroundStyle(.green)
+                    .frame(width: 64, height: 64)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.green.opacity(0.1))
+                    )
+
+                Text("로그아웃할까요?")
+                    .font(.system(size: 26, weight: .bold))
+                    .padding(.top, 20)
+
+                Text("언제든지 다시 로그인할 수 있어요.")
+                    .font(.system(size: 17))
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 14)
+
+                HStack(spacing: 14) {
+
+                    Button {
+                        isShowingLogoutAlert = false
+                    } label: {
+                        Text("취소")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 60)
+                            .background(
+                                RoundedRectangle(cornerRadius: 18)
+                                    .fill(Color(.systemGray6))
+                            )
+                    }
+
+                    Button {
+                        logout()
+                    } label: {
+                        Text("로그아웃")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.red)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 60)
+                            .background(
+                                RoundedRectangle(cornerRadius: 18)
+                                    .fill(Color.red.opacity(0.08))
+                            )
+                    }
+                }
+                .padding(.top, 26)
+            }
+            .padding(.horizontal, 32)
+            .padding(.vertical, 36)
+            .frame(maxWidth: 500)
+            .background(
+                RoundedRectangle(cornerRadius: 32)
+                    .fill(Color(.systemBackground))
+            )
+            .padding(.horizontal, 40)
+        }
+    }
+}
+private extension SettingsView {
+
+    func logout() {
+        isShowingLogoutAlert = false
+        onLogout()
+    }
+}
+
 #Preview {
-    SettingsView()
+    SettingsView(
+        onLogout: {
+            print("로그아웃")
+        }
+    )
 }

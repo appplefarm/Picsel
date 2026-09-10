@@ -12,7 +12,7 @@ struct AppRootView: View {
     var body: some View {
         Group {
             if hasCompletedOnboarding {
-                MainTabView()
+                MainTabView(onLogout: logout)
                     .transition(.opacity)
             } else {
                 OnboardingView {
@@ -22,6 +22,15 @@ struct AppRootView: View {
                 }
                 .transition(.opacity)
             }
+        }
+    }
+
+    private func logout() {
+        // 앱 내부 로그인 상태만 해제합니다. 여행 기록 등 로컬 데이터는 보존합니다.
+        UserDefaults.standard.removeObject(forKey: "appleUserIdentifier")
+
+        withAnimation(.easeInOut(duration: 0.25)) {
+            hasCompletedOnboarding = false
         }
     }
 }

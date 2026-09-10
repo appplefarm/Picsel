@@ -8,6 +8,7 @@ import CoreLocation
 import SwiftUI
 
 struct HomeView: View {
+    let onLogout: () -> Void
     @State private var viewModel = HomeViewModel()
     @State private var locationManager = CurrentLocationManager()
     @State private var confirmedDestination: PhotoDestination?
@@ -97,7 +98,7 @@ struct HomeView: View {
             .accessibilityLabel("설정")
         }
         .fullScreenCover(isPresented: $isSettingsPresented) {
-            SettingsView()
+            SettingsView(onLogout: onLogout)
         }
     }
     
@@ -254,5 +255,5 @@ private enum HomeStyle {
 }
 
 #Preview {
-    HomeView()
+    HomeView(onLogout: { })
 }

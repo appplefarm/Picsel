@@ -7,10 +7,12 @@ import SwiftData
 import SwiftUI
 
 struct MainTabView: View {
+    let onLogout: () -> Void
+
     var body: some View {
         TabView {
             NavigationStack {
-                HomeView()
+                HomeView(onLogout: onLogout)
             }
             .tabItem {
                 Label("지도", systemImage: "house.fill")
@@ -28,6 +30,6 @@ struct MainTabView: View {
 }
 
 #Preview {
-    MainTabView()
+    MainTabView(onLogout: { })
         .modelContainer(for: [Trip.self, RouteStop.self, TripPhoto.self, UserPixel.self], inMemory: true)
 }
