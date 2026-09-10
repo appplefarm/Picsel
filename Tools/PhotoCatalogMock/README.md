@@ -1,4 +1,7 @@
-# 포항 사진 카탈로그 목업 (#31 일부)
+# 포항 사진 카탈로그 목업 (#38 · #31 일부)
+
+목업 연결 작업은 [#38](https://github.com/appplefarm/Picsel/issues/38)에서 관리한다.
+기존 #31의 위치·반경 검색 전체 범위를 완료하거나 닫는 작업은 아니다.
 
 ## 테스트 범위
 
@@ -67,6 +70,17 @@ JSON 리소스 자체는 현재 번들에 포함된다. Debug 경로로만 읽�
 - URL/ID 중복·지원하지 않는 스키마는 오류, 빈 응답은 빈 결과, 좌표 문제는 해당 사진의 확정 제한으로 구분한다.
 - 거리 필터 담당자는 전체 응답에서 후보를 필터링한 뒤 최대 10개를 선택하도록 어댑터를 확장한다. 이번 `prefix(limit)`는 목업의 결정적 순서 검증용이다.
 - 좌표가 확인된 사진은 기존 공용 `PlaceDTO`로 변환할 수 있다. 주소만 없는 경우에도 유효한 좌표로 `RouteStop`은 생성할 수 있다.
+
+### 서버 전환 시 정리
+
+1. 실제 서버 Client가 `PhotoCatalogClient`를 구현하도록 하고, 서버 데이터를 현재 응답 타입에 매핑한다. 서버 담당자와 응답 규격을 먼저 합의한다.
+2. `PhotoDestinationServiceFactory`에서 실제 Client를 주입한다. 목업을 완전히 제거한다면 `PICSEL_PHOTO_SOURCE` 분기와 목업 안내 문구도 정리한다.
+3. 목업 전용 `BundledPhotoCatalogClient.swift`, `PhotoCatalogPreview.swift`, `Resources/Mocks/pohang_photo_catalog.json`을 제거한다. JSON은 현재 Release 번들에도 포함되므로 소스만이 아니라 빌드 산출물에서도 제거 여부를 확인한다.
+4. 응답 인터페이스·변환/검증 서비스·ViewModel·공용 모델은 유지한다. 다른 데이터로도 쓰는 일반 디버깅 진입점은 일괄 삭제하지 않는다.
+5. `Tools/PhotoCatalogMock`의 포항 전용 데이터 검사는 교체하되 중복 ID·좌표 오류·로딩 상태 테스트는 서버 전환 후에도 유지한다.
+
+공용 `RouteStop`은 현재 `placeId`를 인자로 받지만 저장하지 않으며 사진 URL도 별도로 전달한다.
+원본 사진 ID의 영구 보존과 여행 저장/복원은 공용 모델 담당자와 협의할 후속 작업이고 이번 목업 구현에 포함하지 않는다.
 
 ## 회귀 테스트
 
