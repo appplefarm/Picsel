@@ -11,9 +11,9 @@ extension Trip {
 
     /// 기록에 남길 방문 장소입니다.
     ///
-    /// 진행 화면에 방문 체크 UI가 없어서 `RouteStop.isVisited`를 true로 바꾸는 코드가 아직 없습니다.
-    /// 그 사이에는 계획한 장소를 모두 다녀온 것으로 봅니다.
-    /// TODO: 방문 체크가 붙으면 `orderedStops.filter(\.isVisited)`만 남깁니다.
+    /// 방문 여부는 VisitedPlacesConfirmView에서 사용자가 확정합니다.
+    /// 그 화면은 한 곳도 체크하지 않으면 다음으로 넘어갈 수 없으므로 결과가 비는 일이 없습니다.
+    /// 비어 있다면 그 화면을 거치지 않은 여행(과거 데이터·프리뷰)이므로 계획 전체를 씁니다.
     var recordedStops: [RouteStop] {
         let visited = orderedStops.filter(\.isVisited)
         return visited.isEmpty ? orderedStops : visited

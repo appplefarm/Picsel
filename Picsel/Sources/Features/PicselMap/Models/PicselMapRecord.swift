@@ -26,15 +26,16 @@ struct PicselMapRecord: Identifiable {
               let regionCode = trip.pixel.map({ String($0.regionCode) }) ?? trip.targetPixelCode,
               !regionCode.isEmpty else { return nil }
 
-        let visitedStops = trip.stops.filter(\.isVisited)
+        // 기록 화면과 같은 기준을 써야 같은 여행이 화면마다 다르게 보이지 않습니다.
+        let visitedStops = trip.recordedStops
         self.init(
             id: trip.id,
             regionCode: regionCode,
             snapshot: TripRecordSnapshot(
-                regionName: trip.pixel?.regionName ?? "여행 지역",
+                regionName: trip.recordRegionName,
                 title: trip.title,
                 memo: trip.memo,
-                travelDate: trip.endTime ?? trip.startTime ?? trip.createdAt,
+                travelDate: trip.recordDate,
                 photoDataList: trip.photos.sorted { $0.orderIndex < $1.orderIndex }.map(\.imageData),
                 placeCount: visitedStops.count
             ),
