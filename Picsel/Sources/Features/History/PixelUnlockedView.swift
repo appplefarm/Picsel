@@ -6,13 +6,18 @@
 //  저장 직후 결과 화면.
 //
 
+import SwiftData
 import SwiftUI
 
 struct PixelUnlockedView: View {
 
     let snapshot: TripRecordSnapshot
 
+    /// 이번 여행으로 채운 칸입니다. 픽셀을 못 받은 여행이면 nil입니다.
+    let unlockedRegionCode: String?
+
     @Environment(AppRouter.self) private var router
+    @Query private var pixels: [UserPixel]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -24,20 +29,12 @@ struct PixelUnlockedView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            // TODO: 픽셀맵 연결 시 실제 지도로 교체 (팀원 파트)
-            Group {
-                if let data = snapshot.representativePhotoData,
-                   let uiImage = UIImage(data: data) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    Color.gray.opacity(0.2)
-                }
-            }
+            PixelUnlockedMapView(
+                highlightedRegionCode: unlockedRegionCode,
+                unlockedRegionCodes: previouslyUnlockedRegionCodes
+            )
             .frame(maxWidth: .infinity)
             .frame(height: 240)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
 
             TripSummaryCard(
                 thumbnailData: snapshot.representativePhotoData,
@@ -80,11 +77,25 @@ struct PixelUnlockedView: View {
         .padding(20)
         .navigationBarBackButtonHidden(true)
     }
+
+    /// 이번에 채운 칸을 뺀 나머지입니다.
+    /// 저장이 이미 끝난 뒤라 새 픽셀도 목록에 들어 있어, 강조 대상과 겹치지 않게 걸러 냅니다.
+    private var previouslyUnlockedRegionCodes: Set<String> {
+        var codes = Set(pixels.map { String($0.regionCode) })
+        if let unlockedRegionCode {
+            codes.remove(unlockedRegionCode)
+        }
+        return codes
+    }
 }
 
 #Preview {
     NavigationStack {
-        PixelUnlockedView(snapshot: .sample)
+        PixelUnlockedView(snapshot: .sample, unlockedRegionCode: "4711")
     }
     .environment(AppRouter())
+    .modelContainer(
+        for: [Trip.self, RouteStop.self, TripPhoto.self, UserPixel.self],
+        inMemory: true
+    )
 }

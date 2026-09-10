@@ -49,6 +49,10 @@ nonisolated enum PixelRegionLocator {
         }
     }()
 
+    /// 읽어 둔 경계 데이터입니다.
+    /// 픽셀 획득 화면이 지도를 그릴 때 같은 데이터를 다시 파싱하지 않고 재사용합니다.
+    static var allRegions: [AdministrativeRegion] { regions }
+
     /// 경계 데이터를 미리 읽어 둡니다.
     /// 저장 버튼을 눌렀을 때 파싱 때문에 끊기지 않도록 화면 진입 시 호출합니다.
     static func preload() {
