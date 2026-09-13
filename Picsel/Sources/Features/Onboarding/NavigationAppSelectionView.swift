@@ -10,14 +10,45 @@ import SwiftUI
 /// 선택값은 여행 진행 화면의 `preferredNavigationApp`과 같은 키에 저장되어
 /// 이후 길찾기 실행 시 별도의 변환 없이 그대로 사용됩니다.
 struct NavigationAppSelectionView: View {
-    @AppStorage("preferredNavigationApp")
-    private var selectedApp: NavigationApp = .kakaoMap
+    enum Presentation {
+        case onboarding
+        case settings
+    }
 
+    @AppStorage("preferredNavigationApp")
+    private var storedApp: NavigationApp = .kakaoMap
+
+    @State private var selectedApp: NavigationApp = .kakaoMap
+
+    let presentation: Presentation
     let onContinue: () -> Void
 
     private let apps: [NavigationApp] = [.kakaoMap, .tmap, .naverMap]
 
+    init(
+        presentation: Presentation = .onboarding,
+        onContinue: @escaping () -> Void
+    ) {
+        self.presentation = presentation
+        self.onContinue = onContinue
+    }
+
+    @ViewBuilder
     var body: some View {
+        switch presentation {
+        case .onboarding:
+            onboardingContent
+
+        case .settings:
+            settingsContent
+                .navigationTitle("네비게이션")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(Color.white, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+        }
+    }
+
+    private var onboardingContent: some View {
         GeometryReader { proxy in
             let isCompactHeight = proxy.size.height < 760
 
@@ -30,13 +61,38 @@ struct NavigationAppSelectionView: View {
 
                 Spacer(minLength: 24)
 
-                continueButton
+                saveButton(title: "다음")
                     .padding(.bottom, proxy.safeAreaInsets.bottom + (isCompactHeight ? 12 : 48))
             }
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(Color.white.ignoresSafeArea())
         }
+        .onAppear(perform: loadStoredSelection)
+    }
+
+    private var settingsContent: some View {
+        GeometryReader { proxy in
+            VStack(alignment: .leading, spacing: 0) {
+                Text("길 안내에 사용할 기본 앱을 선택해주세요.\n여행 중 언제든 다시 변경할 수 있어요.")
+                    .font(.system(size: 14))
+                    .foregroundStyle(PicselColor.settingsSecondaryText)
+                    .lineSpacing(7)
+                    .padding(.top, 20)
+
+                appList
+                    .padding(.top, proxy.size.height < 700 ? 40 : 84)
+
+                Spacer(minLength: 24)
+
+                saveButton(title: "선택 저장")
+                    .padding(.bottom, proxy.safeAreaInsets.bottom + 28)
+            }
+            .padding(.horizontal, 24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Color.white.ignoresSafeArea())
+        }
+        .onAppear(perform: loadStoredSelection)
     }
 
     private var header: some View {
@@ -66,9 +122,9 @@ struct NavigationAppSelectionView: View {
         }
     }
 
-    private var continueButton: some View {
-        Button(action: onContinue) {
-            Text("다음")
+    private func saveButton(title: String) -> some View {
+        Button(action: saveSelection) {
+            Text(title)
                 .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(PicselColor.onPrimary)
                 .frame(maxWidth: .infinity)
@@ -87,7 +143,16 @@ struct NavigationAppSelectionView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
-        .accessibilityHint("선택한 길찾기 앱을 저장하고 홈 화면으로 이동합니다")
+        .accessibilityHint("선택한 길찾기 앱을 기본 앱으로 저장합니다")
+    }
+
+    private func loadStoredSelection() {
+        selectedApp = storedApp
+    }
+
+    private func saveSelection() {
+        storedApp = selectedApp
+        onContinue()
     }
 }
 

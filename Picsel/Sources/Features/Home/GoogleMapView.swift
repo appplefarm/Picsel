@@ -34,6 +34,9 @@ private struct GoogleMapRepresentable: UIViewRepresentable {
             zoom: HomeMapStyle.initialZoom
         )
         let mapView = GMSMapView(frame: .zero, camera: camera)
+        mapView.mapType = .normal
+        mapView.overrideUserInterfaceStyle = .light
+        mapView.mapStyle = HomeMapStyle.mapStyle
         // 반경 원의 중심과 실제 현재 위치가 어긋나지 않도록
         // 지도 카메라는 사용자가 직접 이동하지 못하게 고정합니다.
         // 확대/축소는 아래 Slider 값으로만 제어합니다.
@@ -118,9 +121,9 @@ private struct FixedRadiusOverlay: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(PicselColor.radiusGreen.opacity(0.15))
+                .fill(PicselColor.radiusGreen.opacity(0.09))
                 .overlay {
-                    Circle().stroke(PicselColor.radiusBorder, lineWidth: 1)
+                    Circle().stroke(PicselColor.radiusBorder, lineWidth: 1.5)
                 }
                 .frame(
                     width: HomeMapStyle.radiusCircleDiameter,
@@ -151,4 +154,36 @@ private enum HomeMapStyle {
     static let minimumCameraRadiusMeters = 1_000.0
     static let earthCircumferenceMeters = 40_075_016.686
     static let googleWorldWidthPoints = 256.0
+
+    /// 홈 시안의 저채도 밝은 지도 톤입니다.
+    /// 행정구역 및 도시명은 Google Maps의 기본 라벨을 사용합니다.
+    static let mapStyle: GMSMapStyle? = {
+        let json = """
+        [
+          {"elementType":"geometry","stylers":[{"color":"#F5F6F5"}]},
+          {"elementType":"labels.text.fill","stylers":[{"color":"#505953"}]},
+          {"elementType":"labels.text.stroke","stylers":[{"color":"#FFFFFF"},{"weight":2}]},
+          {"featureType":"administrative","elementType":"geometry.stroke","stylers":[{"color":"#BCC4BF"},{"weight":1}]},
+          {"featureType":"administrative.locality","elementType":"labels.text.fill","stylers":[{"visibility":"on"},{"color":"#303934"}]},
+          {"featureType":"administrative.locality","elementType":"labels.text.stroke","stylers":[{"color":"#FFFFFF"},{"weight":3}]},
+          {"featureType":"administrative.neighborhood","elementType":"labels.text.fill","stylers":[{"visibility":"on"},{"color":"#505B54"}]},
+          {"featureType":"administrative.neighborhood","elementType":"labels.text.stroke","stylers":[{"color":"#FFFFFF"},{"weight":2}]},
+          {"featureType":"administrative.province","elementType":"labels.text.fill","stylers":[{"visibility":"on"},{"color":"#465049"}]},
+          {"featureType":"administrative.province","elementType":"labels.text.stroke","stylers":[{"color":"#FFFFFF"},{"weight":3}]},
+          {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#F5F6F5"}]},
+          {"featureType":"landscape.natural","elementType":"geometry","stylers":[{"color":"#F0F3F1"}]},
+          {"featureType":"poi","stylers":[{"visibility":"off"}]},
+          {"featureType":"poi.park","elementType":"geometry","stylers":[{"visibility":"on"},{"color":"#E3ECE6"}]},
+          {"featureType":"road","elementType":"geometry","stylers":[{"color":"#D9DEDB"}]},
+          {"featureType":"road","elementType":"geometry.stroke","stylers":[{"color":"#C9D0CC"}]},
+          {"featureType":"road","elementType":"labels","stylers":[{"visibility":"off"}]},
+          {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#C8D0CC"}]},
+          {"featureType":"road.highway","elementType":"labels","stylers":[{"visibility":"on"}]},
+          {"featureType":"transit","stylers":[{"visibility":"off"}]},
+          {"featureType":"water","elementType":"geometry","stylers":[{"color":"#E8EFEC"}]},
+          {"featureType":"water","elementType":"labels","stylers":[{"visibility":"off"}]}
+        ]
+        """
+        return try? GMSMapStyle(jsonString: json)
+    }()
 }
