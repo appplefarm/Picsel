@@ -69,6 +69,7 @@ final class RouteStop {
     var isDestination: Bool
     
     // 진행 상황 및 순서 통제
+    var orderIndex: Int
     // TODO: 뺄까 했지만 일단 냅둠
     var isVisited: Bool         // 방문 성공 여부
     
@@ -80,6 +81,7 @@ final class RouteStop {
         self.latitude = latitude
         self.longitude = longitude
         self.isDestination = (stopType == "destination")
+        self.orderIndex = orderIndex
         self.isVisited = false
     }
 }

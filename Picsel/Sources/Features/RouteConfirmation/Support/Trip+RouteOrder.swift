@@ -14,7 +14,7 @@ extension Trip {
     /// 목적지는 여행 생성 시점에 가장 먼저 추가되고 경유지는 그 뒤에 붙습니다.
     /// 화면과 경로 계산은 항상 "목적지가 마지막"이어야 하므로 이 계산 속성을 통해 접근합니다.
     var orderedStops: [RouteStop] {
-        stops.filter { !$0.isDestination } + stops.filter(\.isDestination)
+        stops.sorted { $0.orderIndex < $1.orderIndex }
     }
 
     /// 최종 목적지입니다. 아직 선택되지 않았다면 nil입니다.

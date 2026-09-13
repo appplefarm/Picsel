@@ -103,6 +103,9 @@ final class RouteConfirmationViewModel {
             waypoints = Array(remaining.dropFirst())
         } else {
             // 목적지 하나뿐인데 출발지도 없으면 그릴 경로가 없습니다.
+            // 잔상(이전 경로 선)이 남지 않도록 초기화해 줍니다.
+            directions = nil
+            lastRequestSignature = nil
             return
         }
 
@@ -116,6 +119,10 @@ final class RouteConfirmationViewModel {
 
         isLoadingDirections = true
         directionsErrorMessage = nil
+        
+        // 새 경로를 계산하는 동안 이전 경로의 잔상이 지도에 남지 않도록 비워둡니다.
+        directions = nil
+        
         defer { isLoadingDirections = false }
 
         do {
@@ -200,11 +207,17 @@ final class RouteConfirmationViewModel {
             stop.trip = nil
         }
 
-        for stop in routeStops {
+        for (index, stop) in routeStops.enumerated() {
             stop.trip = trip
+            stop.orderIndex = index
         }
 
         trip.stops = routeStops
+
+        // 편집된 순서/삭제 결과에 맞춰 지도 API(경로)를 다시 그려줍니다.
+        Task {
+            await loadDirections(origin: lastOrigin)
+        }
     }
 
     func removeStops(at offsets: IndexSet) {
