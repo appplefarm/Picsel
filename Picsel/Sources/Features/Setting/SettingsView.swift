@@ -52,6 +52,8 @@ struct SettingsView: View {
                     }
                 case .privacyPolicy:
                     PrivacyPolicyView()
+                case .serviceTerms:
+                    ServiceTermsView()
                 case .dataSource:
                     DataSourceView()
                 }
@@ -93,6 +95,17 @@ private extension SettingsView {
                     description: "개인정보 수집·이용 내역"
                 ) {
                     destination = .privacyPolicy
+                }
+
+                Divider()
+                    .padding(.horizontal, 10)
+
+                SettingsRow(
+                    icon: "doc.text",
+                    title: "서비스 이용약관",
+                    description: "서비스 이용 조건과 운영 정책"
+                ) {
+                    destination = .serviceTerms
                 }
 
                 Divider()
@@ -148,6 +161,7 @@ private extension SettingsView {
 private enum SettingsDestination: Hashable, Identifiable {
     case navigationApp
     case privacyPolicy
+    case serviceTerms
     case dataSource
 
     var id: Self { self }
