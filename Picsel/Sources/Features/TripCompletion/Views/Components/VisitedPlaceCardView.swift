@@ -46,7 +46,7 @@ struct VisitedPlaceCardView: View {
                             .font(.system(size: 12))
                             .foregroundStyle(Color(red: 47/255, green: 172/255, blue: 102/255))
                         
-                        Text(stop.address ?? "주소 미상")
+                        Text(ShortAddress.make(from: stop.address) ?? "주소 미상")
                             .font(.system(size: 12))
                             .foregroundStyle(Color(red: 47/255, green: 172/255, blue: 102/255))
                             .lineLimit(1)
