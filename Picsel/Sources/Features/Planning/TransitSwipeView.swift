@@ -39,6 +39,7 @@ struct TransitSwipeView: View {
                 if viewModel.candidates.isEmpty && !viewModel.isLoading {
                     Text("모든 추천 장소를 확인했습니다.")
                         .foregroundColor(.gray)
+                        .frame(width: 334, height: 239) // 카드 사이즈와 동일한 빈 공간 유지 (하단 UI 고정용)
                 } else {
                     ForEach(Array(viewModel.candidates.enumerated().reversed()), id: \.element.id) { index, place in
                         let angle = (index == 1) ? 3.0 : (index == 2) ? -2.0 : 0.0
