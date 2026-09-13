@@ -7,7 +7,6 @@ import SwiftUI
 
 struct OnboardingView: View {
     let onCompletion: () -> Void
-
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isShowingSlogan = false
     @State private var hasFinishedPresentation = false

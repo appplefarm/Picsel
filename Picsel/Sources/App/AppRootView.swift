@@ -41,11 +41,8 @@ struct AppRootView: View {
 
             case .content:
                 if hasSelectedNavigationApp {
-                    MainTabView(
-                        onLogout: restartOnboarding,
-                        onWithdraw: restartOnboarding
-                    )
-                    .transition(.opacity)
+                    MainTabView()
+                        .transition(.opacity)
                 } else {
                     NavigationAppSelectionView {
                         withAnimation(.easeInOut(duration: 0.3)) {
@@ -57,12 +54,6 @@ struct AppRootView: View {
             }
         }
         .environment(router)
-    }
-
-    private func restartOnboarding() {
-        withAnimation(.easeInOut(duration: 0.25)) {
-            launchPhase = .onboarding
-        }
     }
 }
 

@@ -15,14 +15,6 @@ struct PrivacyPolicyView: View {
                     .lineSpacing(4)
 
                 PolicySection(
-                    title: "Apple 로그인",
-                    items: [
-                        "Picsel은 Sign in with Apple 인증 과정에서 Apple이 제공하는 사용자 식별자(credential.user)를 사용합니다.",
-                        "이름, 이메일 등의 추가 개인정보는 별도로 저장하지 않습니다."
-                    ]
-                )
-
-                PolicySection(
                     title: "여행 및 픽셀 데이터",
                     items: [
                         "사용자의 여행 기록, 방문 기록 및 픽셀 정보는 iCloud의 CloudKit Private Database에 저장될 수 있습니다.",
@@ -53,14 +45,6 @@ struct PrivacyPolicyView: View {
                     items: [
                         "모든 사용자가 볼 수 있는 공용 사진 또는 콘텐츠는 CloudKit Public Database를 통해 제공될 수 있습니다.",
                         "개인 여행 데이터와 공용 콘텐츠 저장 영역은 분리합니다."
-                    ]
-                )
-
-                PolicySection(
-                    title: "계정 삭제",
-                    items: [
-                        "사용자는 설정 > 계정 관리 > 회원탈퇴를 통해 계정 삭제를 요청할 수 있습니다.",
-                        "회원탈퇴 시 Picsel이 관리하는 사용자의 개인 여행 데이터 및 픽셀 데이터 삭제 흐름을 제공할 예정입니다."
                     ]
                 )
 
