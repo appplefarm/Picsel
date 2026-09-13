@@ -12,7 +12,7 @@ struct VisitedPlacesConfirmView: View {
                 Text("\(viewModel.trip.title)을 마칠까요?")
                     .font(.system(size: 24, weight: .bold))
                 
-                Text("다녀온 장소들을 확인하고 여정을 확정지어보세요")
+                Text("방문한 장소는 완료를 체크해주세요")
                     .font(.system(size: 14))
                     .foregroundStyle(.gray)
             }
@@ -32,9 +32,15 @@ struct VisitedPlacesConfirmView: View {
                     // reverseIndex: 맨 위 카드가 0, 그 아래가 1, 2...
                     let reverseIndex = viewModel.displayStops.count - 1 - index
                     
-                    // 뒤에 있는 카드일수록 위로 올라가고 살짝 작아지는 시각적 효과 (피그마 반영)
-                    let yOffset = CGFloat(reverseIndex) * -35.0
-                    let scale = 1.0 - (CGFloat(reverseIndex) * 0.04)
+                    // 뒤로 밀려나는 카드의 인덱스가 너무 커지면 scale이 음수가 되어 카드가 뒤집히는 버그 방지
+                    // 최대 3번째 장 위치(안 보이는 곳)까지만 크기와 위치 변화를 허용합니다.
+                    let clampedIndex = min(reverseIndex, 3)
+                    
+                    let yOffset = CGFloat(clampedIndex) * -55.0
+                    let scale = 1.0 - (CGFloat(clampedIndex) * 0.12)
+                    
+                    // 우측으로 회전 (3도씩)
+                    let rotationAngle = Double(clampedIndex) * 3.0
                     
                     VisitedPlaceCardView(
                         stop: stop,
@@ -47,9 +53,11 @@ struct VisitedPlacesConfirmView: View {
                             viewModel.sendTopCardToBack()
                         }
                     )
-                    .padding(.horizontal, 30)
+                    // 회전 시 bounding box 팽창으로 전체 레이아웃이 망가지는 것을 막기 위해 명시적 크기 고정
+                    .frame(width: 334)
                     .scaleEffect(scale, anchor: .bottom)
                     .offset(y: yOffset)
+                    .rotationEffect(.degrees(rotationAngle), anchor: .bottom)
                     // 최상단 카드와 그 아래 2장(총 3장)까지만 보여줌
                     .opacity(reverseIndex < 3 ? 1 : 0)
                     // 맨 위에 있는 카드만 터치/스와이프 가능하도록 활성화
@@ -57,7 +65,7 @@ struct VisitedPlacesConfirmView: View {
                     .animation(.spring(), value: index) // 순서가 바뀔 때 자연스럽게 애니메이션
                 }
             }
-            .padding(.bottom, 30)
+            .padding(.bottom, 20)
             
             // MARK: - 순서 안내 텍스트 (e.g. 2 / 10)
             if let topCard = viewModel.displayStops.last,
