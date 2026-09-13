@@ -6,8 +6,13 @@
 import SwiftUI
 
 struct AppRootView: View {
-    @AppStorage("hasCompletedOnboarding")
-    private var hasCompletedOnboarding = false
+    private enum LaunchPhase {
+        case splash
+        case onboarding
+        case content
+    }
+
+    @State private var launchPhase: LaunchPhase = .splash
 
     @AppStorage("hasSelectedNavigationApp")
     private var hasSelectedNavigationApp = false
@@ -17,47 +22,46 @@ struct AppRootView: View {
 
     var body: some View {
         Group {
-            if hasCompletedOnboarding && hasSelectedNavigationApp {
-                MainTabView(
-                    onLogout: logout,
-                    onWithdraw: withdrawAccount
-                )
-                    .transition(.opacity)
-            } else if hasCompletedOnboarding {
-                NavigationAppSelectionView {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        hasSelectedNavigationApp = true
+            switch launchPhase {
+            case .splash:
+                SplashView()
+                    .task {
+                        try? await Task.sleep(for: .seconds(0.8))
+                        guard !Task.isCancelled else { return }
+                        launchPhase = .onboarding
                     }
-                }
-                .transition(.opacity)
-            } else {
+
+            case .onboarding:
                 OnboardingView {
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        hasCompletedOnboarding = true
+                        launchPhase = .content
                     }
                 }
                 .transition(.opacity)
+
+            case .content:
+                if hasSelectedNavigationApp {
+                    MainTabView(
+                        onLogout: restartOnboarding,
+                        onWithdraw: restartOnboarding
+                    )
+                    .transition(.opacity)
+                } else {
+                    NavigationAppSelectionView {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            hasSelectedNavigationApp = true
+                        }
+                    }
+                    .transition(.opacity)
+                }
             }
         }
         .environment(router)
     }
 
-    private func logout() {
-        // 앱 내부 로그인 상태만 해제합니다. 여행 기록 등 로컬 데이터는 보존합니다.
-        UserDefaults.standard.removeObject(forKey: "appleUserIdentifier")
-        UserDefaults.standard.set(false, forKey: "isLoggedIn")
-
+    private func restartOnboarding() {
         withAnimation(.easeInOut(duration: 0.25)) {
-            hasCompletedOnboarding = false
-        }
-    }
-
-    private func withdrawAccount() {
-        UserDefaults.standard.removeObject(forKey: "appleUserIdentifier")
-        UserDefaults.standard.set(false, forKey: "isLoggedIn")
-
-        withAnimation(.easeInOut(duration: 0.25)) {
-            hasCompletedOnboarding = false
+            launchPhase = .onboarding
         }
     }
 }
