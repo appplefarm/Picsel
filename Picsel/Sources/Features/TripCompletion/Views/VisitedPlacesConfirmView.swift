@@ -33,8 +33,8 @@ struct VisitedPlacesConfirmView: View {
                     let reverseIndex = viewModel.displayStops.count - 1 - index
                     
                     // 뒤에 있는 카드일수록 위로 올라가고 살짝 작아지는 시각적 효과 (피그마 반영)
-                    let yOffset = CGFloat(reverseIndex) * -20.0
-                    let scale = 1.0 - (CGFloat(reverseIndex) * 0.05)
+                    let yOffset = CGFloat(reverseIndex) * -35.0
+                    let scale = 1.0 - (CGFloat(reverseIndex) * 0.04)
                     
                     VisitedPlaceCardView(
                         stop: stop,

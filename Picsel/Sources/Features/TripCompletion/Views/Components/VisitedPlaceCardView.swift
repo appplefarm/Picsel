@@ -30,6 +30,8 @@ struct VisitedPlaceCardView: View {
             }
             .frame(height: 220)
             .clipped()
+            // 미완료(비활성화) 시 사진 흑백 처리
+            .grayscale(isSelected ? 0.0 : 1.0)
             
             // 하단 텍스트 및 토글 버튼 영역
             HStack {
@@ -58,20 +60,19 @@ struct VisitedPlaceCardView: View {
                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     toggleSelection()
                 }) {
-                    HStack(spacing: 4) {
-                        if isSelected {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 12, weight: .bold))
-                        }
-                        Text("완료")
-                            .font(.system(size: 14, weight: .bold))
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .foregroundStyle(.white)
-                    // TODO: 기본색(회색) / 활성색(녹색) 디테일 컬러 적용
-                    .background(isSelected ? Color(red: 47/255, green: 172/255, blue: 102/255) : Color.gray)
-                    .clipShape(Capsule())
+                    Text("완료")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(isSelected ? .white : Color(white: 0.7))
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(isSelected ? Color(red: 47/255, green: 172/255, blue: 102/255) : Color.white)
+                        )
+                        .overlay(
+                            Capsule()
+                                .stroke(isSelected ? Color.clear : Color(white: 0.8), lineWidth: 1)
+                        )
                 }
                 .buttonStyle(.plain)
             }
