@@ -11,10 +11,6 @@ import GoogleMaps
 
 @main
 struct PicselApp: App {
-    
-    @AppStorage("isLoggedIn")
-    private var isLoggedIn = false
-    
     init() {
         guard let apiKey = Bundle.main.object(
             forInfoDictionaryKey: "GOOGLE_MAPS_API_KEY"
