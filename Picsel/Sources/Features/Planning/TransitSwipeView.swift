@@ -78,6 +78,7 @@ struct TransitSwipeView: View {
                     
                     Spacer()
                     
+                    
                     Text("갈래요 →")
                 }
                 .padding(.horizontal, 40)
