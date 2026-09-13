@@ -83,7 +83,7 @@ final class TransitSwipeViewModel {
                 latitude: place.latitude,
                 longitude: place.longitude,
                 stopType: "waypoint",
-                orderIndex: index // 선택한 순서대로 인덱스 부여
+                orderIndex: index // 선택한 순서대로 인덱스 부여 (0, 1, 2...)
             )
             newStop.address = place.address
             newStop.regionCode = place.regionCode
@@ -91,6 +91,11 @@ final class TransitSwipeViewModel {
             // 양방향 연결
             newStop.trip = activeTrip
             activeTrip.stops.append(newStop)
+            
+            // 기존에 orderIndex가 0이었던 목적지는 맨 마지막으로 밀려나야 하므로 업데이트
+            if let dest = activeTrip.destinationStop {
+                dest.orderIndex = selectedPlaces.count
+            }
 
             if let photoURL = place.photoURL, let url = URL(string: photoURL) {
                 thumbnails[newStop.id] = url
