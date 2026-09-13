@@ -7,45 +7,48 @@ import SwiftUI
 
 struct OnboardingView: View {
     let onCompletion: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isShowingSlogan = false
+    @State private var hasFinishedPresentation = false
 
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                Spacer()
-                    .frame(height: geometry.size.height * 0.40)
+        GeometryReader { proxy in
+            ZStack(alignment: .topLeading) {
+                OnboardingStyle.backgroundGradient
+                    .ignoresSafeArea()
 
-                Text("Picsel")
-                    .font(.largeTitle)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity)
+                OnboardingLogo()
+                    .padding(.top, proxy.size.height * 0.38)
 
-                Text("사진으로 고르고,\n경로로 떠나고,\n픽셀로 남겨요.")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-                    .multilineTextAlignment(.leading)
-                    .padding(.top, 76)
-
-                Spacer(minLength: 24)
-
-                Button(action: onCompletion) {
-                    Text("시작하기")
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(.black)
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .accessibilityHint("Picsel 홈 화면으로 이동합니다")
+                Text("사진으로 고르고,\n여행을 떠나고,\n픽셀로 남겨요.")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(OnboardingStyle.subtitleColor)
+                    .lineSpacing(10)
+                    .padding(.leading, proxy.size.width * 0.345)
+                    .padding(.top, proxy.size.height * 0.515)
+                    .opacity(isShowingSlogan ? 1 : 0)
+                    .offset(y: reduceMotion || isShowingSlogan ? 0 : 18)
             }
-            .padding(.horizontal, 21)
-            .padding(.bottom, 50)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .background(Color(.systemBackground))
+        .accessibilityElement(children: .combine)
+        .task {
+            guard !hasFinishedPresentation else { return }
+            await Task.yield()
+
+            if reduceMotion {
+                isShowingSlogan = true
+            } else {
+                withAnimation(.easeOut(duration: 0.55)) {
+                    isShowingSlogan = true
+                }
+            }
+
+            try? await Task.sleep(for: .seconds(1.6))
+            guard !Task.isCancelled else { return }
+
+            hasFinishedPresentation = true
+            onCompletion()
+        }
     }
 }
 
