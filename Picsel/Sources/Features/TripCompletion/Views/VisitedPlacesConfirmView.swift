@@ -86,13 +86,8 @@ struct VisitedPlacesConfirmView: View {
                 } label: {
                     Text("여행 완료하기")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 60)
-                        // TODO: 디자인 템플릿의 Primary Color 적용
-                        .background(Color(red: 22/255, green: 140/255, blue: 90/255))
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
+                .buttonStyle(.primaryGradient)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 24)
             }

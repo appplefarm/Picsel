@@ -81,13 +81,8 @@ struct TripProgressView: View {
         Button(action: onFinishTrip) {
             Text("여행 마치기")
                 .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(PicselColor.onPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: Metric.finishButtonHeight)
-                .background(PicselColor.primaryGreen)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.primaryGradient)
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 8)

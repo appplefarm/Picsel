@@ -69,14 +69,8 @@ struct TripRecordView: View {
                 } label: {
                     Text("인증하고 픽셀 채우기")
                         .font(.headline)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 18)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(viewModel.canSave ? Color.black : Color.gray.opacity(0.3))
-                        )
                 }
+                .buttonStyle(.primaryGradient)
                 .disabled(!viewModel.canSave)
             }
             .padding(20)
