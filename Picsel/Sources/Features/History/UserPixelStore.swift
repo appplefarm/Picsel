@@ -45,8 +45,11 @@ enum UserPixelStore {
 
     // MARK: - 조회 / 생성
 
-    /// regionCode는 @Attribute(.unique)라 같은 코드로 두 번 만들 수 없습니다.
-    /// 그래서 먼저 찾아보고 없을 때만 새로 만듭니다.
+    /// 같은 지역의 픽셀을 찾아 방문 횟수를 올립니다.
+    ///
+    /// CloudKit이 유니크 제약을 지원하지 않아 regionCode의 @Attribute(.unique)를 뺐습니다.
+    /// 그래서 같은 코드의 픽셀이 둘 이상 존재할 수 있고(두 기기에서 같은 지역을 각각 저장한 경우),
+    /// 발견하면 하나로 합칩니다.
     private static func existingPixel(
         withCode regionCode: Int,
         in context: ModelContext
@@ -55,10 +58,38 @@ enum UserPixelStore {
             predicate: #Predicate { $0.regionCode == regionCode }
         )
 
-        guard let found = try? context.fetch(descriptor).first else { return nil }
+        guard let matches = try? context.fetch(descriptor),
+              let survivor = matches.first
+        else { return nil }
 
-        found.totalVisits += 1
-        return found
+        mergeDuplicates(Array(matches.dropFirst()), into: survivor, in: context)
+
+        survivor.totalVisits += 1
+        return survivor
+    }
+
+    /// 중복된 픽셀을 하나로 합칩니다.
+    ///
+    /// UserPixel.trips에 걸린 삭제 규칙이 cascade라서,
+    /// 여행을 먼저 옮겨 두지 않고 픽셀을 지우면 그 여행 기록까지 함께 사라집니다.
+    private static func mergeDuplicates(
+        _ duplicates: [UserPixel],
+        into survivor: UserPixel,
+        in context: ModelContext
+    ) {
+        guard !duplicates.isEmpty else { return }
+
+        for duplicate in duplicates {
+            for trip in duplicate.trips {
+                trip.pixel = survivor
+            }
+            duplicate.trips.removeAll()
+
+            survivor.totalVisits += duplicate.totalVisits
+            context.delete(duplicate)
+        }
+
+        print("중복된 픽셀 \(duplicates.count)개를 \(survivor.regionName)에 합쳤습니다.")
     }
 
     private static func makePixel(
