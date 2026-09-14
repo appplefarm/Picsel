@@ -11,13 +11,21 @@ import SwiftUI
 
 /// 지도에 세울 장소 표시입니다.
 struct RouteMapMarker: Equatable {
+
+    /// 경로에서 이 장소가 맡은 역할입니다. 마커 모양과 이름 표시 여부를 정합니다.
+    enum Kind: Hashable {
+        case origin
+        case waypoint
+        case destination
+    }
+
     let coordinate: CLLocationCoordinate2D
     let title: String
-    let isDestination: Bool
+    let kind: Kind
 
     static func == (lhs: RouteMapMarker, rhs: RouteMapMarker) -> Bool {
         lhs.title == rhs.title
-            && lhs.isDestination == rhs.isDestination
+            && lhs.kind == rhs.kind
             && lhs.coordinate.latitude == rhs.coordinate.latitude
             && lhs.coordinate.longitude == rhs.coordinate.longitude
     }
@@ -89,13 +97,20 @@ struct RouteMapView: UIViewRepresentable {
         coordinator.markerOverlays = markers.map { item in
             let marker = NMFMarker()
             marker.position = Self.latLng(from: item.coordinate)
+            marker.iconImage = RouteMapMarkerIcon.image(for: item.kind)
+
+            // 기본 마커는 핀이라 아래 끝이 기준점입니다.
+            // 원은 가운데가 실제 좌표에 놓여야 합니다.
+            marker.anchor = MapStyle.circleAnchor
+
             marker.captionText = item.title
-            marker.captionTextSize = MapStyle.captionTextSize
-            marker.iconTintColor = item.isDestination
-                ? MapStyle.destinationTint
-                : MapStyle.waypointTint
-            // 목적지가 다른 마커에 가려지지 않도록 위로 올립니다.
-            marker.zIndex = item.isDestination ? 1 : 0
+            marker.captionTextSize = MapStyle.captionTextSize(for: item.kind)
+            marker.captionColor = MapStyle.captionColor
+            marker.captionHaloColor = MapStyle.captionHaloColor
+            // 글자가 겹치면 덜 중요한 쪽부터 숨습니다. 순서는 zIndex를 따릅니다.
+            marker.isHideCollidedCaptions = true
+
+            marker.zIndex = MapStyle.zIndex(for: item.kind)
             marker.mapView = mapView
             return marker
         }
@@ -133,7 +148,7 @@ struct RouteMapView: UIViewRepresentable {
     /// CLLocationCoordinate2D는 Equatable이 아니라 비교용 문자열을 만들어 씁니다.
     private func makeSignature() -> String {
         let markerPart = markers
-            .map { "\($0.title)@\($0.coordinate.latitude),\($0.coordinate.longitude)" }
+            .map { "\($0.title)@\($0.coordinate.latitude),\($0.coordinate.longitude)#\($0.kind)" }
             .joined(separator: "|")
         // 경로는 좌표가 수천 개라 전부 비교하지 않고 개수와 양 끝만 봅니다.
         let pathPart = "\(path.count)-\(path.first?.latitude ?? 0)-\(path.last?.latitude ?? 0)"
@@ -157,22 +172,48 @@ struct RouteMapView: UIViewRepresentable {
 private enum MapStyle {
     static let singlePointZoom: Double = 13
     static let fitPadding: CGFloat = 40
-    static let pathWidth: CGFloat = 6
-    static let pathOutlineWidth: CGFloat = 1
-    static let pathColor = UIColor.label
-    static let pathOutlineColor = UIColor.systemBackground
-    static let captionTextSize: CGFloat = 11
-    static let destinationTint = UIColor.label
-    static let waypointTint = UIColor.systemGray2
+
+    // 경로 선
+    static let pathWidth: CGFloat = 5
+    static let pathOutlineWidth: CGFloat = 1.5
+    static let pathColor = UIColor(PicselColor.actionGreen)
+    /// 지도의 도로·건물 위에서 선이 묻히지 않도록 흰 테두리를 둡니다.
+    static let pathOutlineColor = UIColor.white
+    static let captionColor = UIColor(PicselColor.placeName)
+
+    // 마커
+    /// 원형 아이콘은 가운데가 기준점입니다.
+    static let circleAnchor = CGPoint(x: 0.5, y: 0.5)
+    static let captionHaloColor = UIColor.white
+
+    /// 경유지 이름은 한 단계 작게 두어 출발지·목적지가 먼저 읽히게 합니다.
+    static func captionTextSize(for kind: RouteMapMarker.Kind) -> CGFloat {
+        kind == .waypoint ? 11 : 12
+    }
+
+//    static func captionColor(for kind: RouteMapMarker.Kind) -> UIColor {
+//        kind == .waypoint
+//            ? UIColor(PicselColor.travelMinutes)
+//            : UIColor(PicselColor.placeName)
+//    }
+
+    /// 목적지가 경유지에 가려지지 않도록 순서를 정합니다.
+    static func zIndex(for kind: RouteMapMarker.Kind) -> Int {
+        switch kind {
+        case .waypoint: 0
+        case .origin: 1
+        case .destination: 2
+        }
+    }
 }
 
 #if DEBUG
 #Preview("경로 지도") {
-    let stops: [(String, Double, Double, Bool)] = [
-        ("호미곶 해맞이광장", 36.076_2, 129.567_3, false),
-        ("구룡포 일본인가옥거리", 35.989_6, 129.554_9, false),
-        ("월포해수욕장", 36.157_8, 129.396_1, false),
-        ("이가리 닻 전망대", 36.187_992, 129.379_005, true)
+    let stops: [(String, Double, Double, RouteMapMarker.Kind)] = [
+        ("호미곶 해맞이광장", 36.076_2, 129.567_3, .origin),
+        ("구룡포 일본인가옥거리", 35.989_6, 129.554_9, .waypoint),
+        ("월포해수욕장", 36.157_8, 129.396_1, .waypoint),
+        ("이가리 닻 전망대", 36.187_992, 129.379_005, .destination)
     ]
 
     return RouteMapView(
@@ -182,7 +223,7 @@ private enum MapStyle {
             RouteMapMarker(
                 coordinate: CLLocationCoordinate2D(latitude: $0.1, longitude: $0.2),
                 title: $0.0,
-                isDestination: $0.3
+                kind: $0.3
             )
         }
     )
