@@ -60,13 +60,22 @@ final class RouteConfirmationViewModel {
 
     /// 지도에 세울 장소 표시입니다. 좌표가 아직 없는 장소는 제외합니다.
     var mapMarkers: [RouteMapMarker] {
-        locatedStops.map { stop in
+        locatedStops.enumerated().map { index, stop in
             RouteMapMarker(
                 coordinate: coordinate(of: stop),
                 title: stop.name,
-                isDestination: stop.isDestination
+                kind: markerKind(for: stop, at: index)
             )
         }
+    }
+
+    /// 경로에서 이 장소가 맡은 역할입니다.
+    ///
+    /// 현재 위치에서 출발하는 경로라면 첫 장소도 들르는 곳이므로 경유지로 봅니다.
+    private func markerKind(for stop: RouteStop, at index: Int) -> RouteMapMarker.Kind {
+        if stop.isDestination { return .destination }
+        if index == 0, !directionsStartFromCurrentLocation { return .origin }
+        return .waypoint
     }
 
     /// 지도에 그릴 경로 선입니다. 계산 전이면 비어 있습니다.

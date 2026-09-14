@@ -54,9 +54,9 @@ struct RouteConfirmationView: View {
                     )
                     .listRowInsets(
                         EdgeInsets(
-                            top: 4,
+                            top: 0,
                             leading: editMode.isEditing ? 20 : 24,
-                            bottom: 4,
+                            bottom: 0,
                             trailing: 24
                         )
                     )
@@ -67,6 +67,7 @@ struct RouteConfirmationView: View {
                 }
                 .onDelete(perform: deleteStops)
                 .onMove(perform: moveStops)
+                .padding(.top, 4)
             }
         }
         .listStyle(.plain)
