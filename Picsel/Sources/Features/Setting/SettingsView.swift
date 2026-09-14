@@ -113,8 +113,8 @@ private extension SettingsView {
 
                 SettingsRow(
                     icon: "chevron.left.forwardslash.chevron.right",
-                    title: "데이터 및 콘텐츠 출처",
-                    description: "연동 서비스와 콘텐츠 제공처"
+                    title: "API 및 데이터 정보",
+                    description: "연동 서비스와 데이터 출처"
                 ) {
                     destination = .dataSource
                 }
