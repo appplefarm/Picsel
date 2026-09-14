@@ -69,6 +69,10 @@ enum PicselColor {
     static let editLabel = Color(hex: 0x738376)
     /// 구간 이동 시간
     static let travelMinutes = Color(hex: 0x858585)
+
+    /// 사진 탐색 로딩 화면
+    static let photoLoadingWaveTint = Color(hex: 0x43C994)
+    static let photoLoadingText = Color(hex: 0x639580)
 }
 
 extension Color {

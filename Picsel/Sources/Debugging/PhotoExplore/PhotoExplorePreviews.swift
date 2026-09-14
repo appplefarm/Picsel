@@ -8,8 +8,32 @@
 import SwiftUI
 
 #if DEBUG
+#Preview("Photo Explore Loading") {
+    PhotoExploreLoadingView()
+        .preferredColorScheme(.light)
+}
+
+#Preview("Photo Explore Loading · Paused") {
+    PhotoExploreLoadingView()
+        .environment(\.scenePhase, .inactive)
+        .preferredColorScheme(.light)
+}
+
+#Preview("Photo Explore Loading · Large Text") {
+    PhotoExploreLoadingView()
+        .environment(\.scenePhase, .inactive)
+        .environment(\.dynamicTypeSize, .accessibility3)
+        .preferredColorScheme(.light)
+}
+
 #Preview("Photo Explore") {
     PhotoExploreRootView(service: PreviewPhotoDestinationService())
+}
+
+#Preview("Photo Explore · Loading → Explore") {
+    PhotoExploreRootView(
+        service: PreviewPhotoDestinationService(loadingDelay: .seconds(3))
+    )
 }
 
 #Preview("Photo Explore Content") {

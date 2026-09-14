@@ -11,6 +11,8 @@ import SwiftUI
 /// SwiftUI 입력을 ViewModel과 RealityKit 렌더러에 연결하는 화면입니다.
 struct SpatialPhotoCanvas: View {
     private let onConfirm: (PhotoDestination) -> Void
+    /// 전달하면 부모가 목록 조회와 공간 준비를 묶어 로딩 화면을 표시합니다.
+    private let onSceneLoadingChange: ((Bool) -> Void)?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -26,9 +28,11 @@ struct SpatialPhotoCanvas: View {
 
     init(
         destinations: [PhotoDestination],
+        onSceneLoadingChange: ((Bool) -> Void)? = nil,
         onConfirm: @escaping (PhotoDestination) -> Void
     ) {
         self.onConfirm = onConfirm
+        self.onSceneLoadingChange = onSceneLoadingChange
         _viewModel = State(
             initialValue: SpatialPhotoCanvasViewModel(
                 places: SpatialPlaceItem.compose(from: destinations)
@@ -101,7 +105,13 @@ struct SpatialPhotoCanvas: View {
                     )
                 }
             }
-            .overlay(alignment: .topLeading) { hint }
+            .overlay(alignment: .topLeading) {
+                if viewModel.canInteract { hint }
+            }
+            .onChange(of: viewModel.scenePhase, initial: true) { _, phase in
+                onSceneLoadingChange?(phase == .loading)
+            }
+            .toolbar(viewModel.scenePhase == .loading ? .hidden : .visible, for: .navigationBar)
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Button("화면 맞춤", systemImage: "scope") {
@@ -165,9 +175,9 @@ struct SpatialPhotoCanvas: View {
     private var sceneStatusOverlay: some View {
         switch viewModel.scenePhase {
         case .loading:
-            ProgressView("사진 공간을 준비하는 중…")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(.regularMaterial)
+            if onSceneLoadingChange == nil {
+                PhotoExploreLoadingView()
+            }
 
         case .failed:
             ContentUnavailableView {
