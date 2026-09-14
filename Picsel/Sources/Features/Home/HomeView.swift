@@ -105,7 +105,7 @@ struct HomeView: View {
     
 
     private var mapSection: some View {
-        ZStack(alignment: .bottomLeading) {
+        ZStack(alignment: .topLeading) {
             GoogleMapView(
                 coordinate: mapCoordinate,
                 radiusMeters: viewModel.currentRadiusMeters
@@ -114,8 +114,8 @@ struct HomeView: View {
             LinearGradient(
                 stops: [
                     .init(color: PicselColor.homeBackground, location: 0),
-                    .init(color: .clear, location: 0.14),
-                    .init(color: .clear, location: 0.82),
+                    .init(color: .clear, location: 0.10),
+                    .init(color: .clear, location: 0.90),
                     .init(color: PicselColor.homeBackground, location: 1)
                 ],
                 startPoint: .top,
@@ -125,7 +125,7 @@ struct HomeView: View {
 
             locationBadge
                 .padding(.leading, HomeStyle.horizontalPadding)
-                .padding(.bottom, 10)
+                .padding(.top, 18)
         }
         .clipped()
     }

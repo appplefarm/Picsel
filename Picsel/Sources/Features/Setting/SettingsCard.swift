@@ -16,12 +16,12 @@ struct SettingsCard<Content: View>: View {
         }
         .background(Color.white)
         .clipShape(
-            RoundedRectangle(cornerRadius: 18)
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
         )
         .overlay {
-            RoundedRectangle(cornerRadius: 18)
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
                 .stroke(
-                    Color.green.opacity(0.2),
+                    PicselColor.settingsBorder,
                     lineWidth: 1
                 )
         }

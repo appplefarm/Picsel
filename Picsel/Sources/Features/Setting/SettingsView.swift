@@ -17,25 +17,43 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    header
-
+                VStack(alignment: .leading, spacing: 35) {
                     serviceSection
-                        .padding(.top, 52)
-
                     informationSection
-                        .padding(.top, 52)
-
-                    Spacer(minLength: 50)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
+                .padding(.horizontal, 35)
+                .padding(.top, 48)
+                .padding(.bottom, 40)
             }
-            .background(Color.white)
-            .navigationDestination(item: $destination) { destination in
-                switch destination {
+            .background(PicselColor.settingsBackground.ignoresSafeArea())
+            .navigationTitle("설정")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(PicselColor.settingsBackground, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .fontWeight(.semibold)
+                    }
+                    .buttonStyle(.bordered)
+                    .buttonBorderShape(.circle)
+                    .tint(PicselColor.homeText)
+                    .accessibilityLabel("설정 닫기")
+                }
+            }
+            .navigationDestination(item: $destination) { route in
+                switch route {
+                case .navigationApp:
+                    NavigationAppSelectionView(presentation: .settings) {
+                        destination = nil
+                    }
                 case .privacyPolicy:
                     PrivacyPolicyView()
+                case .serviceTerms:
+                    ServiceTermsView()
                 case .dataSource:
                     DataSourceView()
                 }
@@ -50,34 +68,8 @@ struct SettingsView: View {
 }
 
 private extension SettingsView {
-    var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top) {
-                Text("설정")
-                    .font(.system(size: 32, weight: .bold))
-
-                Spacer()
-
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 25, weight: .medium))
-                        .foregroundStyle(.black)
-                        .frame(width: 52, height: 52)
-                        .background(Circle().fill(Color(.systemGray6)))
-                }
-                .accessibilityLabel("설정 닫기")
-            }
-
-            Text("Picsel을 나에게 맞게 관리해요")
-                .font(.system(size: 17))
-                .foregroundStyle(.secondary)
-        }
-    }
-
     var serviceSection: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 17) {
             sectionTitle("서비스 설정")
 
             SettingsCard {
@@ -86,14 +78,14 @@ private extension SettingsView {
                     title: "네비게이션",
                     description: "기본 길 안내 앱 선택"
                 ) {
-                    print("네비게이션 설정")
+                    destination = .navigationApp
                 }
             }
         }
     }
 
     var informationSection: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 26) {
             sectionTitle("정보")
 
             SettingsCard {
@@ -106,18 +98,29 @@ private extension SettingsView {
                 }
 
                 Divider()
-                    .padding(.leading, 16)
+                    .padding(.horizontal, 10)
+
+                SettingsRow(
+                    icon: "doc.text",
+                    title: "서비스 이용약관",
+                    description: "서비스 이용 조건과 운영 정책"
+                ) {
+                    destination = .serviceTerms
+                }
+
+                Divider()
+                    .padding(.horizontal, 10)
 
                 SettingsRow(
                     icon: "chevron.left.forwardslash.chevron.right",
-                    title: "데이터 및 콘텐츠 출처",
-                    description: "연동 서비스와 콘텐츠 제공처"
+                    title: "API 및 데이터 정보",
+                    description: "연동 서비스와 데이터 출처"
                 ) {
                     destination = .dataSource
                 }
 
                 Divider()
-                    .padding(.leading, 16)
+                    .padding(.horizontal, 10)
 
                 SettingsRow(
                     icon: "envelope",
@@ -128,7 +131,7 @@ private extension SettingsView {
                 }
 
                 Divider()
-                    .padding(.leading, 16)
+                    .padding(.horizontal, 10)
 
                 VersionRow()
             }
@@ -137,8 +140,8 @@ private extension SettingsView {
 
     func sectionTitle(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: 18, weight: .semibold))
-            .foregroundStyle(Color.green)
+            .font(.system(size: 15, weight: .medium))
+            .foregroundStyle(PicselColor.settingsSectionTitle)
     }
 
     func openSupportMail() {
@@ -156,7 +159,9 @@ private extension SettingsView {
 }
 
 private enum SettingsDestination: Hashable, Identifiable {
+    case navigationApp
     case privacyPolicy
+    case serviceTerms
     case dataSource
 
     var id: Self { self }

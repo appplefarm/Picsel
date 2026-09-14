@@ -6,114 +6,221 @@
 import SwiftUI
 
 struct DataSourceView: View {
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text("Picsel에서 사용하는 지도, 길찾기, 관광 콘텐츠 제공처를 안내합니다. 세부 라이선스는 확인되는 항목부터 순차적으로 반영합니다.")
-                    .font(.system(size: 16))
-                    .foregroundStyle(.secondary)
-                    .lineSpacing(4)
+        ZStack {
+            PicselColor.settingsBackground
+                .ignoresSafeArea()
 
-                SourceSection(
-                    title: "지도 및 길찾기",
-                    items: [
-                        SourceItem(name: "Google Maps Platform", purpose: "홈 화면 지도 및 위치 기반 UI 제공"),
-                        SourceItem(name: "NAVER 지도", purpose: "길찾기 및 경로 안내 기능 제공")
-                    ]
-                )
+            VStack(spacing: 0) {
+                closeBar
 
-                SourceSection(
-                    title: "관광 정보",
-                    items: [
-                        SourceItem(name: "한국관광공사 관광 데이터", purpose: "국내 관광지 및 여행지 정보 제공"),
-                        SourceItem(name: "공공데이터포털", purpose: "국내 관광/풍경 관련 공공데이터 활용")
-                    ]
-                )
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 28) {
+                        header
 
-                SourceSection(
-                    title: "사진 및 콘텐츠",
-                    items: [
-                        SourceItem(name: "관광공모전 선정작", purpose: "사진 기반 여행지 탐색 콘텐츠 제공"),
-                        SourceItem(name: "공공데이터 기반 국내 관광/풍경 이미지", purpose: "관광 콘텐츠 보강")
-                    ]
-                )
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("라이선스 안내")
-                        .font(.system(size: 18, weight: .bold))
-
-                    Text("세부 출처 및 라이선스 정보 확인 후 반영 예정")
-                        .font(.system(size: 15))
-                        .foregroundStyle(.secondary)
+                        ForEach(Array(DataSourceContent.sections.enumerated()), id: \.offset) { _, section in
+                            DataSourceSectionView(section: section)
+                        }
+                    }
+                    .padding(.horizontal, 27)
+                    .padding(.top, 66)
+                    .padding(.bottom, 48)
                 }
-                .padding(18)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.systemGray6).opacity(0.55))
-                .clipShape(RoundedRectangle(cornerRadius: 18))
+                .scrollIndicators(.hidden)
+                .background(Color.white)
+                .clipShape(
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: 30,
+                        topTrailingRadius: 30
+                    )
+                )
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 24)
         }
-        .background(Color.white)
-        .navigationTitle("데이터 및 콘텐츠 출처")
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
-private struct SourceSection: View {
-    let title: String
-    let items: [SourceItem]
+private extension DataSourceView {
+    var closeBar: some View {
+        HStack {
+            Button(action: dismiss.callAsFunction) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(PicselColor.homeText)
+                    .frame(width: 36, height: 36)
+                    .background(.ultraThinMaterial, in: Circle())
+                    .shadow(color: .black.opacity(0.08), radius: 8, y: 3)
+            }
+            .accessibilityLabel("API 및 데이터 정보 닫기")
+
+            Spacer()
+        }
+        .padding(.horizontal, 8)
+        .frame(height: 52)
+    }
+
+    var header: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("API 및 데이터 정보")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundStyle(Color(hex: 0x303B37))
+
+            Text("시행일: \(DataSourceContent.effectiveDate) | Picsel")
+                .font(.system(size: 12))
+                .foregroundStyle(Color(hex: 0x8D9795))
+                .padding(.top, 8)
+
+            Text("Picsel은 정확하고 다양한 여행 정보를 제공하기 위해 공공데이터와 외부 서비스의 API를 활용합니다.")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(Color(hex: 0x688276))
+                .lineSpacing(4)
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(hex: 0xE7F3EE))
+                .clipShape(RoundedRectangle(cornerRadius: 18))
+                .padding(.top, 30)
+        }
+    }
+}
+
+private struct DataSourceSectionView: View {
+    let section: DataSourceSection
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(title)
-                .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(Color.primary)
+        VStack(alignment: .leading, spacing: 10) {
+            Text(section.title)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color(hex: 0x2B3431))
 
-            VStack(spacing: 0) {
-                ForEach(items) { item in
-                    SourceItemRow(item: item)
+            ForEach(section.paragraphs, id: \.self) { paragraph in
+                Text(paragraph)
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color(hex: 0x475651))
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
 
-                    if item.id != items.last?.id {
-                        Divider()
-                            .padding(.leading, 14)
+            if !section.items.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(section.items, id: \.self) { item in
+                        HStack(alignment: .top, spacing: 8) {
+                            Text("•")
+                                .frame(width: 7, alignment: .trailing)
+
+                            Text(item)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color(hex: 0x475651))
+                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 18))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18)
-                    .stroke(Color.green.opacity(0.18), lineWidth: 1)
+
+            ForEach(section.footerParagraphs, id: \.self) { paragraph in
+                Text(paragraph)
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color(hex: 0x475651))
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
 }
 
-private struct SourceItemRow: View {
-    let item: SourceItem
+private enum DataSourceContent {
+    static let effectiveDate = "2026년 9월 16일"
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(item.name)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color.primary)
-
-            Text(item.purpose)
-                .font(.system(size: 14))
-                .foregroundStyle(.secondary)
-                .lineSpacing(3)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-    }
+    static let sections: [DataSourceSection] = [
+        DataSourceSection(
+            title: "한국관광공사 관광사진 정보",
+            paragraphs: [],
+            items: [
+                "제공 기관: 한국관광공사",
+                "활용 목적: 사진을 활용한 여행지 탐색 및 추천",
+                "제공 정보: 관광사진, 촬영 장소, 작품 정보, 지역 정보 등",
+                "출처: 한국관광공사 관광사진 공모전 및 TourAPI"
+            ],
+            footerParagraphs: [
+                "일부 사진과 정보의 저작권은 한국관광공사 또는 해당 저작자에게 있습니다. Picsel은 제공 기관이 정한 이용 조건과 출처 표기 기준을 따릅니다."
+            ]
+        ),
+        DataSourceSection(
+            title: "관광지 및 지역 정보",
+            paragraphs: [],
+            items: [
+                "제공 기관: 한국관광공사 및 공공데이터포털",
+                "활용 목적: 여행지 검색, 장소 정보 제공 및 추천",
+                "제공 정보: 장소명, 주소, 좌표, 관광 정보, 이미지 등"
+            ],
+            footerParagraphs: [
+                "제공 기관의 데이터 변경 또는 갱신 시점에 따라 실제 정보와 차이가 있을 수 있습니다."
+            ]
+        ),
+        DataSourceSection(
+            title: "지도 및 경로 API",
+            paragraphs: [],
+            items: [
+                "Google Maps Platform: 홈 화면 지도와 현재 위치 기반 반경 표시",
+                "NAVER Cloud Directions API: 출발지·경유지·목적지를 이용한 자동차 경로 계산"
+            ],
+            footerParagraphs: [
+                "지도 표시와 경로 계산 과정에는 각 서비스 제공자의 이용약관과 개인정보 처리방침이 적용됩니다."
+            ]
+        ),
+        DataSourceSection(
+            title: "외부 지도 및 내비게이션",
+            paragraphs: [
+                "Picsel은 이용자가 선택한 지도 또는 내비게이션 앱으로 길 안내를 연결합니다."
+            ],
+            items: [
+                "네이버지도",
+                "카카오맵",
+                "티맵"
+            ],
+            footerParagraphs: [
+                "길 안내를 시작하면 목적지의 장소명과 좌표가 선택한 외부 앱으로 전달될 수 있습니다. 이후 정보 처리는 해당 서비스의 이용약관과 개인정보 처리방침을 따릅니다."
+            ]
+        ),
+        DataSourceSection(
+            title: "Apple 기술",
+            paragraphs: [
+                "Picsel은 iOS 기능 제공을 위해 아래 Apple 기술을 사용합니다. 기기 권한은 iPhone 설정에서 언제든지 변경할 수 있습니다."
+            ],
+            items: [
+                "PhotosUI 사진 선택기: 이용자가 선택한 사진 불러오기",
+                "CoreLocation 위치 서비스: 현재 위치와 행정구역 확인",
+                "SwiftData: 여행 기록, 선택 사진 및 픽셀 정보의 기기 내 저장"
+            ]
+        ),
+        DataSourceSection(
+            title: "데이터 정확성 안내",
+            paragraphs: [
+                "외부 기관이 제공하는 데이터는 갱신 시점, 현장 상황 또는 제공 기관의 정책에 따라 실제 정보와 다를 수 있습니다.",
+                "Picsel은 장소의 운영 시간, 요금, 출입 가능 여부 및 교통 상황을 보장하지 않습니다. 여행 전에 해당 장소의 공식 채널을 통해 최신 정보를 확인해 주세요."
+            ]
+        ),
+        DataSourceSection(
+            title: "문의",
+            paragraphs: [
+                "API, 데이터 출처 또는 저작권과 관련된 문의는 아래 연락처로 보내주세요."
+            ],
+            items: [
+                "이메일: \(AppContact.supportEmail)",
+                "운영 주체: Picsel 운영팀"
+            ]
+        )
+    ]
 }
 
-private struct SourceItem: Identifiable {
-    let id = UUID()
-    let name: String
-    let purpose: String
+private struct DataSourceSection {
+    let title: String
+    let paragraphs: [String]
+    var items: [String] = []
+    var footerParagraphs: [String] = []
 }
 
 #Preview {

@@ -50,6 +50,14 @@ enum PicselColor {
     static let navigationBorder = Color(hex: 0xE3E8E0)
     static let navigationButtonHighlight = Color(hex: 0x149873)
 
+    /// 설정 화면
+    static let settingsBackground = Color(hex: 0xDEE7E2)
+    static let settingsSectionTitle = Color(hex: 0x114D36)
+    static let settingsSecondaryText = Color(hex: 0x5D6B63)
+    static let settingsIcon = Color(hex: 0x31B98C)
+    static let settingsIconBackground = Color(hex: 0xE6F7EE)
+    static let settingsBorder = Color(hex: 0xDAE6DE)
+
     /// 픽셀맵에서 아직 가보지 않은 칸
     static let pixelLockedFill = Color(hex: 0xEFF1EF)
     static let pixelLockedStroke = Color(hex: 0xD5DAD7)
