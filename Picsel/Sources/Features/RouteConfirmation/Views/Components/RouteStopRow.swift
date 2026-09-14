@@ -240,57 +240,8 @@ private enum RouteStopRowPreviewData {
     static let minutes = [12, 8, 23]
 }
 
-/// 비교용으로 남겨 둔 이전 배치입니다. 점선 오른쪽에 시간을 두던 방식입니다.
-private struct LegacyTravelSegmentRow: View {
-    let stop: RouteStop
-    let minutes: Int
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 12) {
-                VerticalDashedLine()
-                    .stroke(
-                        PicselColor.timelineLine,
-                        style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [4, 6])
-                    )
-                    .frame(width: 22)
-
-                Text("\(minutes)분")
-                    .font(.system(size: 11))
-                    .foregroundStyle(PicselColor.travelMinutes)
-            }
-            .frame(height: 26)
-
-            HStack(spacing: 12) {
-                Circle()
-                    .fill(PicselColor.actionGreen)
-                    .frame(width: 22, height: 22)
-
-                HStack(spacing: 17) {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color(.systemGray5))
-                        .frame(width: 48, height: 48)
-
-                    Text(stop.name)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(PicselColor.subtitle)
-                        .lineLimit(1)
-
-                    Spacer(minLength: 0)
-                }
-                .padding(10)
-                .background(PicselColor.rowBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(PicselColor.rowBorder, lineWidth: 1)
-                }
-            }
-        }
-    }
-}
-
-#Preview("새 방식 · 선 위 캡슐") {
+#Preview {
     let stops = RouteStopRowPreviewData.makeStops()
 
     return VStack(spacing: 0) {
@@ -307,17 +258,4 @@ private struct LegacyTravelSegmentRow: View {
     .padding(24)
 }
 
-#Preview("이전 방식 · 선 옆 텍스트") {
-    let stops = RouteStopRowPreviewData.makeStops()
-
-    return VStack(spacing: 0) {
-        ForEach(Array(stops.enumerated()), id: \.element.id) { index, stop in
-            LegacyTravelSegmentRow(
-                stop: stop,
-                minutes: RouteStopRowPreviewData.minutes[index]
-            )
-        }
-    }
-    .padding(24)
-}
 #endif
