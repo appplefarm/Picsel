@@ -58,6 +58,41 @@ enum PicselColor {
     static let settingsIconBackground = Color(hex: 0xE6F7EE)
     static let settingsBorder = Color(hex: 0xDAE6DE)
 
+    // MARK: - 디자이너 컬러 라이브러리
+    // Figma 변수 이름을 그대로 옮겼습니다. 새 화면은 아래 토큰을 우선 씁니다.
+
+    /// 화면 기본 배경 (Background/Warm White)
+    static let backgroundWarmWhite = Color(hex: 0xF5F6F5)
+    /// 카드·입력 칸 배경
+    static let surface = Color(hex: 0xFFFFFF)
+    /// 브랜드 CTA (Brand/Brand Color(CTA))
+    static let brandCTA = Color(hex: 0x00725D)
+
+    static let textPrimary = Color(hex: 0x1F1F1F)
+    static let textSecondary = Color(hex: 0x5D6B63)
+    static let textTertiary = Color(hex: 0x718076)
+    /// 보조 안내 문구
+    static let textHelper = Color(hex: 0x858585)
+    static let textDisabled = Color(hex: 0xBCBCBC)
+
+    static let borderBrandSubtle = Color(hex: 0xBEDBD4)
+    static let borderDefault = Color(hex: 0xDAE6DE)
+
+    // MARK: - 기록 작성 화면
+    /// 제목·내용 입력 칸 테두리
+    static let inputBorder = Color(hex: 0xF3F3F3)
+    /// 입력 칸 placeholder
+    static let inputPlaceholder = Color(hex: 0xDBDBDB)
+    /// 사진 추가 버튼 배경
+    static let photoAddBackground = Color(hex: 0xF1F9F7)
+    /// 사진 추가 버튼의 + 기호
+    static let photoAddIcon = Color(hex: 0xABABAB)
+
+    // MARK: - 보조 버튼 (픽셀 획득 화면 "홈으로")
+    static let secondaryButtonBackground = Color(hex: 0xFBFDFD)
+    static let secondaryButtonBorder = Color(hex: 0xE4F1EB)
+    static let secondaryButtonText = Color(hex: 0xA4B8B0)
+
     /// 픽셀맵에서 아직 가보지 않은 칸
     static let pixelLockedFill = Color(hex: 0xEFF1EF)
     static let pixelLockedStroke = Color(hex: 0xD5DAD7)

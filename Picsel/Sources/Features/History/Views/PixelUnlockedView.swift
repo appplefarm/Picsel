@@ -26,14 +26,14 @@ struct PixelUnlockedView: View {
     @State private var areActionsVisible = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("새로운 픽셀이 채워졌어요!")
-                .font(.title)
-                .fontWeight(.bold)
+        // 시안(402×874)의 절대 좌표를 옮긴 값입니다.
+        // 제목은 위쪽, 버튼은 아래쪽에 고정하고 남는 공간을 지도 위아래로 나눕니다.
+        VStack(spacing: 0) {
+            header
+                .padding(.horizontal, 20)
+                .padding(.top, 60)
 
-            Text("\(snapshot.regionName) 여행이 나의 픽셀 지도에 기록됐어요.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            Spacer(minLength: 24)
 
             PixelUnlockedMapView(
                 highlightedRegionCode: unlockedRegionCode,
@@ -41,23 +41,33 @@ struct PixelUnlockedView: View {
                 isRevealed: isMapRevealed
             )
             .frame(maxWidth: .infinity)
-            .frame(height: 240)
+            // 시안의 지도 이미지 높이입니다.
+            .frame(height: 374)
 
-            TripSummaryCard(
-                thumbnailData: snapshot.representativePhotoData,
-                travelDate: snapshot.travelDate,
-                title: snapshot.title,
-                photoCount: snapshot.photoCount,
-                placeCount: snapshot.placeCount
-            )
-
-            Spacer()
+            Spacer(minLength: 24)
 
             actionButtons
+                .padding(.horizontal, 24)
+                .padding(.bottom, 20)
         }
-        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(PicselColor.backgroundWarmWhite)
         .navigationBarBackButtonHidden(true)
         .task { await playIntro() }
+    }
+
+    private var header: some View {
+        VStack(spacing: 8) {
+            Text("새로운 픽셀이 채워졌어요!")
+                .font(PicselFont.title02)
+                .foregroundStyle(.black)
+
+            Text("\(snapshot.regionName) 여행이 나의 픽셀 지도에 기록됐어요.")
+                .font(PicselFont.body01)
+                .foregroundStyle(PicselColor.textPrimary)
+        }
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - 연출
@@ -97,39 +107,46 @@ struct PixelUnlockedView: View {
     // MARK: - 버튼
 
     private var actionButtons: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 14) {
             Button {
                 router.finishTripFlow(returningTo: .home)
             } label: {
                 Text("홈으로")
-                    .font(.headline)
+                    .font(PicselFont.label01)
+                    .foregroundStyle(PicselColor.secondaryButtonText)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                    )
+                    .frame(height: 56)
+                    .background(secondaryButtonBackground)
             }
-            .foregroundStyle(.primary)
+            .buttonStyle(.plain)
 
             Button {
                 router.finishTripFlow(returningTo: .picselMap)
             } label: {
                 Text("픽셀맵 확인하기")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.black)
-                    )
+                    .font(PicselFont.label01)
             }
+            .buttonStyle(.primaryGradient)
         }
         // 자리는 그대로 두고 나타나기만 해서 레이아웃이 흔들리지 않습니다.
         .opacity(areActionsVisible ? 1 : 0)
         .allowsHitTesting(areActionsVisible)
         .accessibilityHidden(!areActionsVisible)
+    }
+
+    private var secondaryButtonBackground: some View {
+        RoundedRectangle(
+            cornerRadius: 18,
+            style: .continuous
+        )
+        .fill(PicselColor.secondaryButtonBackground)
+        .overlay {
+            RoundedRectangle(
+                cornerRadius: 18,
+                style: .continuous
+            )
+            .strokeBorder(PicselColor.secondaryButtonBorder, lineWidth: 1)
+        }
     }
 
     /// 이번에 채운 칸을 뺀 나머지입니다.
