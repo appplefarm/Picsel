@@ -10,8 +10,9 @@ import SwiftData
 
 /// 여행이 끝났을 때 획득한 픽셀(UserPixel)을 만들거나 갱신합니다.
 ///
-/// UserPixel은 여행 기록과 별개로 "이 지역을 밟았다"는 사실만 들고 있습니다.
-/// 그래서 나중에 여행 기록을 지워도 획득한 픽셀은 지도에 남습니다.
+/// UserPixel은 여행 기록과 별개로 "이 지역을 밟았다"는 사실을 들고 있습니다.
+/// 다만 그 지역의 기록이 하나도 남지 않으면 픽셀도 함께 내립니다.
+/// 지도에는 칠해져 있는데 눌러 보면 아무 기록도 없는 상태를 만들지 않기 위해서입니다.
 enum UserPixelStore {
 
     /// 여행을 해당 지역의 픽셀에 연결하고 방문 횟수를 올립니다.
@@ -41,6 +42,42 @@ enum UserPixelStore {
 
         trip.pixel = pixel
         return pixel
+    }
+
+    // MARK: - 삭제
+
+    /// 여행 기록을 지웁니다. 경로와 사진도 함께 사라집니다.
+    ///
+    /// 그 지역의 마지막 기록이었다면 픽셀도 지도에서 내립니다.
+    /// 기록이 더 남아 있으면 방문 횟수만 하나 줄입니다.
+    ///
+    /// - Returns: 삭제에 성공했는지.
+    @discardableResult
+    static func delete(_ trip: Trip, in context: ModelContext) -> Bool {
+        if let pixel = trip.pixel {
+            pixel.totalVisits = max(pixel.totalVisits - 1, 0)
+
+            // 관계를 먼저 끊어야 남은 기록 수를 제대로 셀 수 있습니다.
+            trip.pixel = nil
+
+            // UserPixel.trips의 삭제 규칙이 cascade라서, 기록이 남아 있는데 픽셀을 지우면
+            // 그 기록까지 통째로 사라집니다. 비어 있을 때만 지웁니다.
+            if pixel.trips.isEmpty {
+                context.delete(pixel)
+            }
+        }
+
+        // Trip은 stops와 photos에 cascade가 걸려 있어 함께 지워집니다.
+        context.delete(trip)
+
+        do {
+            try context.save()
+            return true
+        } catch {
+            // TODO: 사용자에게 보여줄 실패 안내는 별도로 정한다.
+            print("여행 기록 삭제에 실패했습니다: \(error.localizedDescription)")
+            return false
+        }
     }
 
     // MARK: - 조회 / 생성

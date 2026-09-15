@@ -38,7 +38,8 @@ enum PicselMapPrototypeData {
                 memo: "바다를 따라 걸으며 남긴 여행 기록",
                 travelDate: Date(timeIntervalSince1970: 1_786_147_200),
                 photoDataList: [],
-                placeCount: 3
+                placeCount: 3,
+                destinationPhotoURL: URL(string: "https://picsum.photos/seed/picsel-yeongdeok/800/900")
             ),
             stops: []
         )
