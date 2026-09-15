@@ -20,7 +20,7 @@ struct SettingsRow: View {
             HStack(spacing: 15) {
 
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.system(size: 18, weight: .regular))
                     .foregroundStyle(PicselColor.settingsIcon)
                     .frame(width: 36, height: 36)
                     .background(

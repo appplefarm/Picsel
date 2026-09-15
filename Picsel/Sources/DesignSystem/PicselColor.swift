@@ -45,8 +45,8 @@ enum PicselColor {
 
     /// 네비게이션 앱 선택 화면
     static let navigationDescription = Color(hex: 0x748686)
-    static let navigationSelectedBackground = Color(hex: 0xEBFAF5)
-    static let navigationSelectedBorder = Color(hex: 0x37B28F)
+    static let navigationSelectedBackground = Color(hex: 0xE6F7EE)
+    static let navigationSelectedBorder = Color(hex: 0x48C98B)
     static let navigationBorder = Color(hex: 0xE3E8E0)
     static let navigationButtonHighlight = Color(hex: 0x149873)
 

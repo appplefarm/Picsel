@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @State private var isNavigationAppPresented = false
     @State private var presentedSheet: SettingsSheet?
 
     var body: some View {
@@ -22,17 +23,16 @@ struct SettingsView: View {
         }
         .scrollIndicators(.hidden)
         .background(PicselColor.settingsBackground.ignoresSafeArea())
-        .navigationTitle("설정")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(PicselColor.settingsBackground, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
+        .settingsNavigationBar(title: "설정")
+        .preferredColorScheme(.light)
+        .navigationDestination(isPresented: $isNavigationAppPresented) {
+            NavigationAppSelectionView(presentation: .settings) {
+                isNavigationAppPresented = false
+            }
+        }
         .sheet(item: $presentedSheet) { sheet in
             NavigationStack {
                 switch sheet {
-                case .navigationApp:
-                    NavigationAppSelectionView(presentation: .settings) {
-                        presentedSheet = nil
-                    }
                 case .privacyPolicy:
                     PrivacyPolicyView()
                 case .serviceTerms:
@@ -59,7 +59,7 @@ private extension SettingsView {
                     description: "기본 길 안내 앱 선택",
                     minHeight: 70
                 ) {
-                    presentedSheet = .navigationApp
+                    isNavigationAppPresented = true
                 }
             }
         }
@@ -119,7 +119,6 @@ private extension SettingsView {
 }
 
 private enum SettingsSheet: Hashable, Identifiable {
-    case navigationApp
     case privacyPolicy
     case serviceTerms
     case dataSource

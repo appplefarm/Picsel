@@ -6,72 +6,29 @@
 import SwiftUI
 
 struct PrivacyPolicyView: View {
-    @Environment(\.dismiss) private var dismiss
-
     var body: some View {
-        ZStack {
-            PicselColor.settingsBackground
-                .ignoresSafeArea()
+        SettingsModalScaffold(
+            title: "개인정보 처리방침",
+            closeAccessibilityLabel: "개인정보 처리방침 닫기"
+        ) {
+            LazyVStack(alignment: .leading, spacing: 0) {
+                header
 
-            VStack(spacing: 0) {
-                closeBar
-
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        header
-
-                        ForEach(Array(PrivacyPolicyContent.sections.enumerated()), id: \.offset) { _, section in
-                            PolicySection(section: section)
-                                .padding(.top, 28)
-                        }
-                    }
-                    .padding(.horizontal, 27)
-                    .padding(.top, 66)
-                    .padding(.bottom, 48)
+                ForEach(Array(PrivacyPolicyContent.sections.enumerated()), id: \.offset) { _, section in
+                    PolicySection(section: section)
+                        .padding(.top, 28)
                 }
-                .scrollIndicators(.hidden)
-                .background(Color.white)
-                .clipShape(
-                    UnevenRoundedRectangle(
-                        topLeadingRadius: 30,
-                        topTrailingRadius: 30
-                    )
-                )
             }
         }
-        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
 private extension PrivacyPolicyView {
-    var closeBar: some View {
-        HStack {
-            Button(action: dismiss.callAsFunction) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(PicselColor.homeText)
-                    .frame(width: 36, height: 36)
-                    .background(.ultraThinMaterial, in: Circle())
-                    .shadow(color: .black.opacity(0.08), radius: 8, y: 3)
-            }
-            .accessibilityLabel("개인정보 처리방침 닫기")
-
-            Spacer()
-        }
-        .padding(.horizontal, 8)
-        .frame(height: 52)
-    }
-
     var header: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("개인정보 처리방침")
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(Color(hex: 0x303B37))
-
-            Text("시행일: \(PrivacyPolicyContent.effectiveDate) | 최종 수정일: \(PrivacyPolicyContent.lastUpdatedDate)")
+            Text("시행일: \(PrivacyPolicyContent.effectiveDate) | Picsel")
                 .font(.system(size: 12))
                 .foregroundStyle(Color(hex: 0x8D9795))
-                .padding(.top, 8)
 
             Text("Picsel 운영팀(이하 ‘운영팀’)은 이용자의 개인정보를 중요하게 생각합니다. 이 방침은 현재 버전의 Picsel이 실제로 처리하는 정보와 이용 목적, 저장 방식을 안내합니다.")
                 .font(.system(size: 13, weight: .medium))
