@@ -9,7 +9,6 @@ import SwiftUI
 
 struct PicselMapView: View {
     @State private var viewModel: PicselMapViewModel
-    @State private var visibleRecordID: UUID?
     /// 채워진 픽셀을 누르면 그 지역 상세로 들어갑니다.
     @State private var selectedPixelRegion: AdministrativeRegion?
     @ScaledMetric(relativeTo: .title2) private var titleSize = 25.0
@@ -87,8 +86,7 @@ struct PicselMapView: View {
 
     /// 지도에서 지역을 눌렀을 때입니다.
     ///
-    /// 아래 기록 카드를 그 지역으로 거르는 기존 동작은 그대로 두고,
-    /// 채워진 픽셀일 때만 지역 상세로 들어갑니다.
+    /// 하단의 최근 기록은 유지하고, 채워진 픽셀일 때만 지역 상세로 들어갑니다.
     private func handleRegionTap(_ code: String?) {
         viewModel.selectRegion(code: code)
 
@@ -149,79 +147,33 @@ struct PicselMapView: View {
     }
 
     private var recentPixelSection: some View {
-        let displayedRecords = viewModel.displayedRecords(in: records)
-
-        return VStack(alignment: .leading, spacing: 12) {
-            sectionHeader(for: displayedRecords)
-
-            if displayedRecords.isEmpty {
-                emptyRecordPlaceholder
-            } else {
-                recordCarousel(displayedRecords)
-            }
-        }
-        // 지역을 바꾸면 첫 카드부터 다시 보여 줍니다.
-        // 바뀐 뒤의 목록을 써야 하므로 여기서 다시 구합니다.
-        .onChange(of: viewModel.selectedRegionCode) { _, _ in
-            visibleRecordID = viewModel.displayedRecords(in: records).first?.id
-        }
-    }
-
-    private func sectionHeader(for displayedRecords: [PicselMapRecord]) -> some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(viewModel.selectedRegion.map { "\($0.name) 픽셀" } ?? "최근 채운 픽셀")
+        VStack(alignment: .leading, spacing: 12) {
+            Text("최근 채운 픽셀")
                 .font(.subheadline.weight(.semibold))
                 .accessibilityAddTraits(.isHeader)
+                .padding(.horizontal, 8)
 
-            Spacer()
-
-            // 카드가 여러 장일 때만 몇 번째를 보고 있는지 알려 줍니다.
-            if displayedRecords.count > 1 {
-                Text("\(currentPage(in: displayedRecords)) / \(displayedRecords.count)")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-                    .accessibilityLabel(
-                        "기록 \(displayedRecords.count)개 중 \(currentPage(in: displayedRecords))번째"
+            // PicselMapScreen에서 최신순으로 전달한 전체 기록 중 첫 건만 표시합니다.
+            if let record = records.first {
+                NavigationLink {
+                    PixelDetailView(
+                        snapshot: record.snapshot,
+                        stops: record.stops,
+                        trip: record.trip
                     )
-            }
-        }
-        .padding(.horizontal, 8)
-    }
-
-    /// 같은 지역을 여러 번 여행했으면 카드를 옆으로 넘겨 볼 수 있습니다.
-    private func recordCarousel(_ displayedRecords: [PicselMapRecord]) -> some View {
-        ScrollView(.horizontal) {
-            LazyHStack(spacing: 12) {
-                ForEach(displayedRecords) { record in
-                    NavigationLink {
-                        PixelDetailView(
-                            snapshot: record.snapshot,
-                            stops: record.stops,
-                            trip: record.trip
-                        )
-                    } label: {
-                        RecentPixelCard(snapshot: record.snapshot)
-                    }
-                    .buttonStyle(.plain)
-                    // 카드 한 장이 스크롤 영역을 꽉 채워 한 장씩 넘어가게 합니다.
-                    .containerRelativeFrame(.horizontal)
+                } label: {
+                    RecentPixelCard(snapshot: record.snapshot)
                 }
+                .buttonStyle(.plain)
+            } else {
+                emptyRecordPlaceholder
             }
-            .scrollTargetLayout()
         }
-        .scrollTargetBehavior(.viewAligned)
-        .scrollIndicators(.hidden)
-        .scrollPosition(id: $visibleRecordID)
-        .scrollDisabled(displayedRecords.count <= 1)
-        // ScrollView는 스크롤하지 않는 축으로도 주어진 공간을 전부 차지합니다.
-        // 그대로 두면 카드 위아래로 빈 공간이 크게 생기므로 높이를 내용에 맞춥니다.
-        .fixedSize(horizontal: false, vertical: true)
     }
 
     private var emptyRecordPlaceholder: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(viewModel.selectedRegion == nil ? "아직 채운 픽셀이 없어요" : "이 지역의 여행 기록이 없어요")
+            Text("아직 채운 픽셀이 없어요")
                 .font(.subheadline.weight(.semibold))
             Text("여행을 기록하면 이곳에 추억이 채워져요.")
                 .font(.caption)
@@ -230,11 +182,5 @@ struct PicselMapView: View {
         .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)
         .padding(14)
         .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 14))
-    }
-
-    /// 지금 보이는 카드가 몇 번째인지 셉니다. 아직 정해지지 않았다면 첫 장으로 봅니다.
-    private func currentPage(in displayedRecords: [PicselMapRecord]) -> Int {
-        let index = displayedRecords.firstIndex { $0.id == visibleRecordID } ?? 0
-        return index + 1
     }
 }
