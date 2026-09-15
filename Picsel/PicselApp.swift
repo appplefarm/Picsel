@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import GoogleMaps
+import CloudKit
 
 @main
 struct PicselApp: App {
@@ -26,6 +27,10 @@ struct PicselApp: App {
     var body: some Scene {
         WindowGroup {
             AppRootView()
+                // TODO: iCloud 준비 확인용 임시 호출. 2단계 끝나면 지웁니다.
+                #if DEBUG
+                .task { await CloudKitSmokeTest.run() }
+                #endif
         }
         // 2. SwiftData 모델들을 앱 전체에서 쓸 수 있도록 컨테이너 등록
         .modelContainer(for: [
