@@ -48,10 +48,10 @@ extension SpatialPlaceItem {
 
     private static let layout: [SpatialPlacePlacement] = [
         SpatialPlacePlacement(
-            position: CGPoint(x: 94, y: 43),
+            position: CGPoint(x: 94, y: 13),
             size: CGSize(width: 172, height: 247),
             depth: 0.78,
-            yaw: 0
+            yaw: -15
         ),
         SpatialPlacePlacement(
             position: CGPoint(x: -206, y: -72),
@@ -66,28 +66,28 @@ extension SpatialPlaceItem {
             yaw: -38
         ),
         SpatialPlacePlacement(
-            position: CGPoint(x: 214, y: 283),
-            size: CGSize(width: 164, height: 188),
+            position: CGPoint(x: 234, y: 283),
+            size: CGSize(width: 184, height: 188),
             depth: 0.57,
-            yaw: 30
+            yaw: -30
         ),
         SpatialPlacePlacement(
             position: CGPoint(x: -200, y: 216),
             size: CGSize(width: 152, height: 202),
             depth: 0.76,
-            yaw: -31
+            yaw: 31
         ),
         SpatialPlacePlacement(
-            position: CGPoint(x: 10, y: 320),
+            position: CGPoint(x: -15, y: 360),
             size: CGSize(width: 220, height: 126),
             depth: 0.52,
-            yaw: 4
+            yaw: 0
         ),
         SpatialPlacePlacement(
             position: CGPoint(x: -100, y: -293),
             size: CGSize(width: 148, height: 214),
             depth: 0.52,
-            yaw: 42
+            yaw: 12
         )
 //        SpatialPlacePlacement(
 //            position: CGPoint(x: 253, y: -60),

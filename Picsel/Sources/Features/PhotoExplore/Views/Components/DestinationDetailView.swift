@@ -117,11 +117,7 @@ struct DestinationDetailView: View {
             onConfirm()
         }
         .font(PicselFont.label01)
-        .buttonStyle(PrimaryGradientButtonStyle(
-            gradientColors: [PicselColor.radiusGreen, Color(hex: 0x149C87), Color(hex: 0x43A485)],
-            height: 66,
-            cornerRadius: 18
-        ))
+        .buttonStyle(.primaryGradient)
         .disabled(!destination.canSelectAsDestination)
         .opacity(destination.canSelectAsDestination ? 1 : 0.45)
     }
@@ -140,20 +136,20 @@ struct DestinationDetailView: View {
                 .scaledToFit()
                 .frame(width: size.width, height: size.height)
                 .background(Color(.systemBackground))
-                .clipShape(.rect(cornerRadius: 10))
+                .clipShape(.rect(cornerRadius: 1))
         } else if didFailToLoadPhoto {
             Image(systemName: "photo")
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
                 .frame(width: maxWidth, height: maxHeight)
                 .background(Color(.secondarySystemBackground))
-                .clipShape(.rect(cornerRadius: 10))
+                .clipShape(.rect(cornerRadius: 1))
                 .accessibilityLabel("사진을 불러오지 못했습니다")
         } else {
             ProgressView()
                 .frame(width: maxWidth, height: maxHeight)
                 .background(Color(.secondarySystemBackground))
-                .clipShape(.rect(cornerRadius: 10))
+                .clipShape(.rect(cornerRadius: 1))
                 .accessibilityLabel("사진 불러오는 중")
         }
     }

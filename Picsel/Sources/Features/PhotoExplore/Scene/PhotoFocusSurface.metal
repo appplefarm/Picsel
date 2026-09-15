@@ -34,10 +34,10 @@ void photoFocusSurface(realitykit::surface_parameters params)
         ).rgb;
     }
 
-    // 알파를 낮추지 않고 배경과 어울리는 옅은 민트를 섞습니다.
+    // 민트색은 최대 25%만 섞어 비포커스 사진도 원래 색이 충분히 드러나게 합니다.
     // 완전히 불투명한 면이 깊이를 기록하므로 뒤쪽 사진은 비치지 않습니다.
     constexpr half3 mistColor = half3(0.855h, 0.939h, 0.922h);
-    constexpr half maximumFade = 0.8h;
+    constexpr half maximumFade = 0.25h;
     params.surface().set_emissive_color(mix(color, mistColor, half(blurAmount) * maximumFade));
     params.surface().set_opacity(1.0h);
 }
