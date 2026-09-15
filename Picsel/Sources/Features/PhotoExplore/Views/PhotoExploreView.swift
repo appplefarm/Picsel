@@ -5,12 +5,15 @@
 //  Created by Jonghyeon Lee on 8/28/26.
 //
 
+import CoreLocation
 import SwiftUI
 
 /// 관광사진 탐색 화면의 상태를 그리는 진입점입니다.
 struct PhotoExploreView: View {
     private let onConfirm: (PhotoDestination) -> Void
     private let sourceNotice: String?
+    private let originLocation: CLLocation?
+    private let directionsService: any RouteDirectionsProviding
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -20,10 +23,14 @@ struct PhotoExploreView: View {
     init(
         service: any PhotoDestinationService,
         sourceNotice: String? = nil,
+        originLocation: CLLocation? = nil,
+        directionsService: any RouteDirectionsProviding = NaverDirectionsService(),
         onConfirm: @escaping (PhotoDestination) -> Void
     ) {
         self.onConfirm = onConfirm
         self.sourceNotice = sourceNotice
+        self.originLocation = originLocation
+        self.directionsService = directionsService
         _viewModel = State(
             initialValue: PhotoExploreViewModel(service: service)
         )
@@ -42,25 +49,16 @@ struct PhotoExploreView: View {
             }
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: isLoading)
-        .safeAreaInset(edge: .top, spacing: 0) {
-            if let sourceNotice, !isLoading {
-                Text(sourceNotice)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
-                    .background(.regularMaterial)
-            }
-        }
         .task(id: viewModel.loadRequest) {
             isSceneLoading = true
             await viewModel.load()
         }
-        .navigationTitle("사진으로 목적지 고르기")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar(isLoading ? .hidden : .visible, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
+        .tint(PicselColor.textPrimary)
     }
 
     private var isLoading: Bool {
@@ -80,6 +78,9 @@ struct PhotoExploreView: View {
         case let .loaded(destinations):
             SpatialPhotoCanvas(
                 destinations: destinations,
+                sourceNotice: sourceNotice,
+                originLocation: originLocation,
+                directionsService: directionsService,
                 onSceneLoadingChange: { isSceneLoading = $0 },
                 onConfirm: onConfirm
             )

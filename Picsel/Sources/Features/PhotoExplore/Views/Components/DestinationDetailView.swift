@@ -6,101 +6,124 @@
 //
 
 import CoreGraphics
+import CoreLocation
 import Foundation
 import SwiftUI
 
 /// 선택된 사진을 최종 목적지로 확정하기 전 보여주는 전체 화면 상세입니다.
 struct DestinationDetailView: View {
     let destination: PhotoDestination
-    let info: DestinationDetailInfo
+    let originLocation: CLLocation?
     let onConfirm: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var loadedPhoto: CGImage?
     @State private var didFailToLoadPhoto = false
+    @State private var viewModel: DestinationDetailViewModel
+
+    init(
+        destination: PhotoDestination,
+        originLocation: CLLocation? = nil,
+        directionsService: any RouteDirectionsProviding = NaverDirectionsService(),
+        onConfirm: @escaping () -> Void
+    ) {
+        self.destination = destination
+        self.originLocation = originLocation
+        self.onConfirm = onConfirm
+        _viewModel = State(initialValue: DestinationDetailViewModel(
+            destination: destination,
+            directionsService: directionsService
+        ))
+    }
 
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                Color.black.opacity(0.85)
-                    .ignoresSafeArea()
+        NavigationStack {
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        destinationPhoto(
+                            maxWidth: min(geometry.size.width - 66, 420),
+                            maxHeight: min(310, geometry.size.height * 0.48)
+                        )
 
-                RadialGradient(
-                    stops: [
-                        .init(color: .white.opacity(0.22), location: 0),
-                        .init(color: .clear, location: 0.58),
-                        .init(color: .black.opacity(0.22), location: 1)
-                    ],
-                    center: UnitPoint(x: 0.5, y: 0.44),
-                    startRadius: 18,
-                    endRadius: max(geometry.size.width, geometry.size.height) * 0.72
-                )
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
+                        if let locationName = destination.address, !locationName.isEmpty {
+                            Text(locationName)
+                                .font(PicselFont.body01)
+                                .multilineTextAlignment(.center)
+                                .padding(.top, 16)
+                        }
 
-                VStack(spacing: 0) {
-                    closeButton
+                        travelInformation
+                            .padding(.top, 56)
 
-                    Spacer(minLength: max(28, geometry.size.height * 0.07))
+                        Text("이 사진을 목적지로 선택하면 다음 단계에서 출발지와 목적지 사이에서 들를 장소를 추천해드려요")
+                            .font(PicselFont.caption01)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 32)
 
-                    destinationPhoto(
-                        maxWidth: min(342, geometry.size.width - 32),
-                        maxHeight: 310
-                    )
-
-                    optionalDetails
-                        .padding(.top, 10)
-
-                    if !destination.canSelectAsDestination {
-                        Text("위치 정보가 없거나 검증되지 않았어요. 사진은 볼 수 있지만 경로에는 추가할 수 없어요.")
-                            .font(.footnote)
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: 326, alignment: .leading)
-                            .padding(.top, 12)
+                        if !destination.canSelectAsDestination {
+                            Text("위치 정보가 없거나 검증되지 않았어요. 사진은 볼 수 있지만 경로에는 추가할 수 없어요.")
+                                .font(PicselFont.caption01)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.top, 16)
+                        }
                     }
-
-                    Spacer(minLength: 24)
-
-                    Text("이 사진을 목적지로 선택하면 출발지와 목적지 사이에서 들를 만한 경유지를 찾아드려요.")
-                        .font(.footnote)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: 326, alignment: .leading)
-
-                    Button("최종 목적지로 선택하기") {
-                        guard destination.canSelectAsDestination else { return }
-                        dismiss()
-                        onConfirm()
-                    }
-                    .disabled(!destination.canSelectAsDestination)
-                    .buttonStyle(.borderedProminent)
-                    .buttonBorderShape(.roundedRectangle(radius: 16))
-                    .tint(Color(.darkGray))
-                    .frame(maxWidth: 292, minHeight: 62)
-                    .padding(.top, 48)
-                    .padding(.bottom, 30)
+                    .foregroundStyle(.white)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: 420)
+                    .padding(.horizontal, 33)
+                    .padding(.top, min(80, geometry.size.height * 0.12))
+                    .padding(.bottom, 24)
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .scrollIndicators(.hidden)
+                .scrollBounceBehavior(.basedOnSize)
             }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                confirmButton
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+                    .padding(.bottom, 8)
+            }
+            .background {
+                // 직전 RealityKit 공간은 부모에서 흐리게 유지하고 이 화면에서는 딤만 더합니다.
+                Color.black.opacity(0.5)
+                    .ignoresSafeArea()
+            }
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("사진 탐색으로 돌아가기", systemImage: "chevron.left", action: dismiss.callAsFunction)
+                        .labelStyle(.iconOnly)
+                }
+            }
+            .tint(PicselColor.textPrimary)
         }
         .presentationBackground(.clear)
         .task(id: destination.photoURL) {
             await loadPhoto()
         }
+        .task(id: TravelRequestID(origin: originLocation, retryAttempt: viewModel.retryAttempt)) {
+            await viewModel.loadTravelInfo(from: originLocation)
+        }
     }
 
-    private var closeButton: some View {
-        HStack {
-            Button("닫기", systemImage: "xmark", action: dismiss.callAsFunction)
-                .labelStyle(.iconOnly)
-                .buttonStyle(.plain)
-                .font(.title3)
-                .bold()
-                .foregroundStyle(.gray)
-                .frame(width: 44, height: 44)
-
-            Spacer()
+    private var confirmButton: some View {
+        Button("최종 목적지로 선택하기") {
+            guard destination.canSelectAsDestination else { return }
+            dismiss()
+            onConfirm()
         }
-        .padding(.horizontal, 12)
+        .font(PicselFont.label01)
+        .buttonStyle(PrimaryGradientButtonStyle(
+            gradientColors: [PicselColor.radiusGreen, Color(hex: 0x149C87), Color(hex: 0x43A485)],
+            height: 66,
+            cornerRadius: 18
+        ))
+        .disabled(!destination.canSelectAsDestination)
+        .opacity(destination.canSelectAsDestination ? 1 : 0.45)
     }
 
     @ViewBuilder
@@ -112,13 +135,12 @@ struct DestinationDetailView: View {
                 maxHeight: maxHeight
             )
 
-            Image(decorative: loadedPhoto, scale: 1)
+            Image(loadedPhoto, scale: 1, label: Text(destination.name))
                 .resizable()
                 .scaledToFit()
                 .frame(width: size.width, height: size.height)
                 .background(Color(.systemBackground))
                 .clipShape(.rect(cornerRadius: 10))
-                .accessibilityLabel(destination.name)
         } else if didFailToLoadPhoto {
             Image(systemName: "photo")
                 .font(.largeTitle)
@@ -175,30 +197,58 @@ struct DestinationDetailView: View {
     }
 
     @ViewBuilder
-    private var optionalDetails: some View {
-        if info.locationName != nil || !info.chips.isEmpty {
-            VStack(spacing: 16) {
-                if let locationName = info.locationName {
-                    Text(locationName)
-                        .font(.footnote)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.white)
-                }
+    private var travelInformation: some View {
+        switch viewModel.travelState {
+        case .loading:
+            ProgressView("거리·시간을 확인하고 있어요")
+                .font(PicselFont.caption01)
+                .tint(.white)
 
-                if !info.chips.isEmpty {
-                    HStack(spacing: 12) {
-                        ForEach(info.chips, id: \.self) { chip in
-                            Text(chip)
-                                .font(.caption2)
-                                .fontWeight(.medium)
-                                .foregroundStyle(Color(.label))
-                                .padding(.horizontal, 14)
-                                .frame(height: 30)
-                                .background(Color(.systemBackground), in: .capsule)
-                        }
-                    }
-                }
+        case let .loaded(info):
+            VStack(spacing: 8) {
+                travelChips(info.chips)
+                Text("자동차 기준 · 교통 상황에 따라 달라질 수 있어요")
+                    .font(PicselFont.caption01)
+                    .multilineTextAlignment(.center)
+            }
+
+        case let .unavailable(message):
+            Text(message)
+                .font(PicselFont.caption01)
+                .multilineTextAlignment(.center)
+
+        case .failed:
+            VStack(spacing: 8) {
+                Text("거리·시간을 불러오지 못했어요.")
+                    .font(PicselFont.caption01)
+                Button("다시 시도", action: viewModel.retry)
+                    .buttonStyle(.bordered)
+                    .tint(.white)
             }
         }
+    }
+
+    private func travelChips(_ chips: [String]) -> some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) { chipLabels(chips) }
+            VStack(spacing: 8) { chipLabels(chips) }
+        }
+    }
+
+    private func chipLabels(_ chips: [String]) -> some View {
+        ForEach(chips, id: \.self) { chip in
+            Text(chip)
+                .font(PicselFont.caption01)
+                .foregroundStyle(.white)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .frame(minWidth: 112, minHeight: 30)
+                .background(.white.opacity(0.65), in: .capsule)
+        }
+    }
+
+    private struct TravelRequestID: Equatable {
+        let origin: CLLocation?
+        let retryAttempt: Int
     }
 }
