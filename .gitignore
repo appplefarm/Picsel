@@ -69,3 +69,6 @@ Configs/Secrets.xcconfig
 # Local API keys
 **/Secrets.xcconfig
 **/Secrets.xcconfig
+
+# 로컬 작업 메모 (공유하지 않음)
+Docs/
