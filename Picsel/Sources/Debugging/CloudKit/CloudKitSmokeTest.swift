@@ -56,6 +56,7 @@ enum CloudKitSmokeTest {
         print("✅ 경계 매칭: 픽셀 \(matched.count)곳 / 지역코드 \(regionCodes.count)종")
 
         await checkAwardAPI(catalog: catalog)
+        await checkGalleryAPI(catalog: catalog)
 
         print("────────────────────────────────────")
     }
@@ -89,6 +90,39 @@ enum CloudKitSmokeTest {
 
             if let sample = matched.first,
                let place = catalog.coordinate(forPhotoID: sample.photoID, source: .award) {
+                print("   예시: \(sample.title)")
+                print("        → \(place.placeName) (\(place.latitude), \(place.longitude))")
+                print("        → \(sample.imageURL.lastPathComponent)")
+            }
+        } catch {
+            print("❌ \(error.localizedDescription)")
+        }
+    }
+
+    /// 관광사진 API를 부르고, 우리 사진만 걸러지는지 확인합니다.
+    private static func checkGalleryAPI(catalog: PhotoCoordinateCatalog) async {
+        print()
+        print("── 관광사진 API ──")
+
+        let wanted = catalog.photoIDs(of: .gallery)
+
+        do {
+            let started = ContinuousClock.now
+            // 탐색 화면 한 번을 채울 만큼만 요청해 봅니다.
+            let photos = try await GalleryPhotoService().fetch(
+                matching: wanted,
+                minimumCount: 20
+            )
+            let elapsed = ContinuousClock.now - started
+
+            print("✅ \(photos.count)장 골라냄 (\(elapsed)) / 좌표 보유 \(wanted.count)장")
+
+            // 걸러낸 것이 전부 우리 목록 안에 드는지 확인합니다.
+            let allWanted = photos.allSatisfy { wanted.contains($0.photoID) }
+            print(allWanted ? "✅ 전부 우리 사진" : "❌ 목록 밖 사진이 섞였습니다")
+
+            if let sample = photos.first,
+               let place = catalog.coordinate(forPhotoID: sample.photoID, source: .gallery) {
                 print("   예시: \(sample.title)")
                 print("        → \(place.placeName) (\(place.latitude), \(place.longitude))")
                 print("        → \(sample.imageURL.lastPathComponent)")

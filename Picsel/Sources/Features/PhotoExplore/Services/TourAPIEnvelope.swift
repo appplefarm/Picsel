@@ -110,7 +110,7 @@ nonisolated struct TourAPIRequest: Sendable {
         itemType: Item.Type = Item.self
     ) async throws -> TourAPIEnvelope<Item>.Body {
 
-        guard let serviceKey = TourAPIKeys.value(for: key) else {
+        guard let serviceKey = TourAPIKeys.percentEncodedValue(for: key) else {
             throw TourAPIError.missingServiceKey(key)
         }
 
@@ -118,15 +118,23 @@ nonisolated struct TourAPIRequest: Sendable {
         components.scheme = "https"
         components.host = Self.host
         components.path = path
+
+        // 인증키를 뺀 나머지는 URLComponents가 인코딩하게 둡니다.
+        // (extraQueryItems에 한글 키워드가 들어와도 안전합니다)
         components.queryItems = [
-            // 이미 풀어 둔 키를 넣고, 인코딩은 URLComponents에 한 번만 맡깁니다.
-            URLQueryItem(name: "serviceKey", value: serviceKey),
             URLQueryItem(name: "MobileOS", value: "IOS"),
             URLQueryItem(name: "MobileApp", value: Self.mobileApp),
             URLQueryItem(name: "_type", value: "json"),
             URLQueryItem(name: "pageNo", value: String(pageNo)),
             URLQueryItem(name: "numOfRows", value: String(numOfRows))
         ] + extraQueryItems
+
+        // 인증키는 이미 인코딩된 문자열이라 URLComponents를 거치면 안 됩니다.
+        // queryItems에 넣으면 %가 %25로 두 번 인코딩되고,
+        // 풀어서 넣으면 +가 그대로 나가 서버가 공백으로 읽습니다.
+        // 그래서 완성된 쿼리 문자열 앞에 손으로 붙입니다.
+        let encodedRest = components.percentEncodedQuery ?? ""
+        components.percentEncodedQuery = "serviceKey=\(serviceKey)&" + encodedRest
 
         guard let url = components.url else { throw TourAPIError.invalidRequest }
 

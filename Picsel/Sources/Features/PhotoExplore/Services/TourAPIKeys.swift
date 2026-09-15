@@ -26,13 +26,22 @@ nonisolated enum TourAPIKey: Sendable {
 
 nonisolated enum TourAPIKeys {
 
-    /// 인증키를 **퍼센트 인코딩이 풀린 상태**로 돌려줍니다.
+    /// 인증키를 **퍼센트 인코딩된 그대로** 돌려줍니다.
     ///
-    /// xcconfig에 든 키는 이미 인코딩돼 있습니다. (`.../BmG%2Fhzg...%3D%3D`)
-    /// 이걸 그대로 URLComponents에 넣으면 `%`가 다시 인코딩돼 `%252F`가 되고,
-    /// 서버는 SERVICE_KEY_IS_NOT_REGISTERED_ERROR를 돌려줍니다.
-    /// 그래서 먼저 풀어서 넘기고, 인코딩은 URLComponents에 한 번만 맡깁니다.
-    static func value(for key: TourAPIKey) -> String? {
+    /// 공공데이터포털이 주는 키가 이미 인코딩된 형태입니다.
+    /// (`.../BmG%2Fhzg...%3D%3D`) xcconfig에도 그 상태로 들어 있습니다.
+    ///
+    /// 이 값을 절대 풀어서 쓰면 안 됩니다. 두 가지가 동시에 어긋납니다.
+    ///
+    /// - `--data-urlencode`나 `URLComponents.queryItems`에 넣으면 `%`가 다시 인코딩돼
+    ///   `%252F`가 됩니다. → SERVICE_KEY_IS_NOT_REGISTERED_ERROR
+    /// - 반대로 풀어서 넣으면 `%2B`가 `+`가 되는데, `URLComponents`는 `+`를 쿼리에서
+    ///   합법적인 문자로 보고 그대로 통과시킵니다. 서버는 `+`를 **공백**으로 읽습니다.
+    ///   → 키가 망가져 403
+    ///
+    /// 그래서 인코딩된 값을 그대로 들고, `percentEncodedQuery`에 직접 붙입니다.
+    /// (TourAPIRequest 참고)
+    static func percentEncodedValue(for key: TourAPIKey) -> String? {
         let raw = Bundle.main.object(forInfoDictionaryKey: key.infoPlistKey) as? String
 
         guard let raw,
@@ -40,6 +49,6 @@ nonisolated enum TourAPIKeys {
               // xcconfig 치환이 안 되면 "$(TOUR_API_...)" 가 그대로 들어옵니다.
               !raw.contains("$(") else { return nil }
 
-        return raw.removingPercentEncoding ?? raw
+        return raw.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
