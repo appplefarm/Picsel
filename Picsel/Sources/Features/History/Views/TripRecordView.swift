@@ -64,13 +64,11 @@ struct TripRecordView: View {
             .padding(.top, 8)
             .padding(.bottom, 24)
             .frame(maxWidth: .infinity, alignment: .leading)
-            // 입력 칸 바깥을 탭하면 키보드를 내린다.
-            // .contentShape가 없으면 VStack의 빈 여백은 탭 판정에 잡히지 않는다.
-            .contentShape(Rectangle())
-            .onTapGesture { focusedField = nil }
         }
         .scrollDismissesKeyboard(.interactively)
         .background(PicselColor.backgroundWarmWhite)
+        // 고정된 밝은 배경에 맞춰 캐럿·키보드·상태바도 밝은 모드로 표시합니다.
+        .preferredColorScheme(.light)
         // 저장 버튼은 스크롤과 무관하게 항상 같은 자리에 둡니다.
         .safeAreaInset(edge: .bottom, spacing: 0) {
             footer
@@ -103,9 +101,6 @@ struct TripRecordView: View {
                 Spacer()
 
                 Button("완료") { focusedField = nil }
-                    .font(PicselFont.label01)
-                    .foregroundStyle(PicselColor.brandCTA)
-                    .padding(.trailing, 4)
             }
         }
     }
