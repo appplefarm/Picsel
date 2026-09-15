@@ -57,6 +57,7 @@ enum CloudKitSmokeTest {
 
         await checkAwardAPI(catalog: catalog)
         await checkGalleryAPI(catalog: catalog)
+        await checkPipeline()
 
         print("────────────────────────────────────")
     }
@@ -126,6 +127,33 @@ enum CloudKitSmokeTest {
                 print("   예시: \(sample.title)")
                 print("        → \(place.placeName) (\(place.latitude), \(place.longitude))")
                 print("        → \(sample.imageURL.lastPathComponent)")
+            }
+        } catch {
+            print("❌ \(error.localizedDescription)")
+        }
+    }
+
+    /// 화면이 실제로 부르는 경로를 그대로 태워 봅니다.
+    private static func checkPipeline() async {
+        print()
+        print("── 전체 경로 ──")
+
+        do {
+            let started = ContinuousClock.now
+            let destinations = try await LivePhotoDestinationService()
+                .fetchDestinations(limit: 10)
+            let elapsed = ContinuousClock.now - started
+
+            print("✅ 목적지 \(destinations.count)곳 (\(elapsed))")
+
+            // 길찾기까지 쓰려면 주소와 좌표가 다 있어야 합니다.
+            let usable = destinations.filter(\.canSelectAsDestination)
+            print(usable.count == destinations.count
+                  ? "✅ 전부 목적지로 선택 가능"
+                  : "⚠️ 선택 불가 \(destinations.count - usable.count)곳 (주소·좌표 누락)")
+
+            for destination in destinations.prefix(3) {
+                print("   · \(destination.name) — \(destination.detailDescription ?? "")")
             }
         } catch {
             print("❌ \(error.localizedDescription)")
