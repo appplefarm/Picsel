@@ -21,10 +21,10 @@ struct HomeSettingsButton: View {
     var body: some View {
         Button(action: action) {
             icon
+                .frame(width: 36, height: 36)
         }
         .buttonStyle(.glass)
         .buttonBorderShape(.circle)
-        .controlSize(.large)
         .accessibilityLabel("설정")
     }
 

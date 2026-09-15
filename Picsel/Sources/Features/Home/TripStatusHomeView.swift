@@ -69,6 +69,13 @@ enum TripHomePresentation {
         case .inProgress: 0.25
         }
     }
+
+    var settingsIconColor: Color {
+        switch self {
+        case .ready: .black
+        case .inProgress: .white
+        }
+    }
 }
 
 /// 두 여행 상태 홈이 공유하는 레이아웃입니다.
@@ -118,7 +125,7 @@ struct TripStatusHomeView: View {
             Spacer()
 
             HomeSettingsButton(
-                foregroundColor: .white,
+                foregroundColor: presentation.settingsIconColor,
                 action: onSettingsTapped
             )
         }
@@ -188,11 +195,6 @@ struct TripStatusHomeView: View {
                     endPoint: .trailing
                 ),
                 in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-            )
-            .shadow(
-                color: .black.opacity(presentation.actionShadowOpacity),
-                radius: 2,
-                y: 4
             )
         }
         .buttonStyle(.plain)
