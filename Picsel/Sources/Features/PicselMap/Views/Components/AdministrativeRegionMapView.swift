@@ -93,7 +93,7 @@ struct AdministrativeRegionMapView: View {
                             )
                         )
                         .stroke(
-                            .black.opacity(0.78),
+                            PicselColor.pixelBoundary,
                             style: StrokeStyle(
                                 lineWidth: 0.7,
                                 lineCap: .square,

@@ -120,11 +120,37 @@ struct AdministrativeMapProjection {
         )
     }
 
+    // MARK: - 동쪽 섬 당기기
+
+    /// 이 경도보다 동쪽에 있는 섬은 본토 쪽으로 당겨서 그립니다.
+    private static let farEastLongitude = 130.0
+
+    /// 당긴 뒤 남길 거리의 비율입니다. 0이면 경계선에 붙고, 1이면 실제 위치입니다.
+    private static let farEastPullIn = 0.25
+
+    /// 좌표를 화면 좌표계의 기준점으로 바꿉니다.
+    ///
+    /// 울릉도(130.9°)와 독도(131.9°)는 본토에서 아주 멀어서, 실제 위치 그대로 넣으면
+    /// 전국 경계 상자가 가로로 늘어납니다. 재 보면 섬 두 개가 상자 폭의 31%를 차지하고,
+    /// 세로로 긴 화면에서는 가로에 먼저 걸려 지도 전체가 그만큼 작게 그려집니다.
+    ///
+    /// 그래서 종이 지도에서 흔히 하듯 두 섬을 본토 쪽으로 당겨 그립니다.
+    /// 지도에 보이는 위치는 실제 경도가 아니지만, 지도가 1.2배 이상 커집니다.
+    ///
+    /// 여행이 어느 픽셀에 속하는지 판정하는 일(PixelRegionLocator)은
+    /// 원본 좌표로 따로 하므로 이 보정에 영향을 받지 않습니다.
     private static func mapPoint(_ coordinate: GeographicCoordinate) -> MKMapPoint {
-        MKMapPoint(
+        var longitude = coordinate.longitude
+
+        if longitude > farEastLongitude {
+            longitude = farEastLongitude
+                + (longitude - farEastLongitude) * farEastPullIn
+        }
+
+        return MKMapPoint(
             CLLocationCoordinate2D(
                 latitude: coordinate.latitude,
-                longitude: coordinate.longitude
+                longitude: longitude
             )
         )
     }

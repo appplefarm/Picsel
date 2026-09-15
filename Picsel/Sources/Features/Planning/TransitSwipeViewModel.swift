@@ -105,7 +105,10 @@ final class TransitSwipeViewModel {
 
         if let destinationStop = activeTrip.destinationStop, let destinationPhotoURL {
             thumbnails[destinationStop.id] = destinationPhotoURL
-            destinationStop.photoURL = destinationPhotoURL.absoluteString
+            // 홈에서 이미 넣어 두지만, 과거에 만들어진 여행에는 비어 있을 수 있습니다.
+            if destinationStop.photoURL == nil {
+                destinationStop.photoURL = destinationPhotoURL.absoluteString
+            }
         }
 
         thumbnailURLsByStopID = thumbnails

@@ -16,6 +16,8 @@ struct TripRecordSnapshot {
     let travelDate: Date
     let photoDataList: [Data]
     let placeCount: Int
+    /// 화면 맨 위에 깔 목적지(수상작) 사진. 과거 데이터에는 없을 수 있습니다.
+    let destinationPhotoURL: URL?
 
     var photoCount: Int { photoDataList.count }
     var representativePhotoData: Data? { photoDataList.first }
@@ -29,6 +31,7 @@ extension TripRecordSnapshot {
         memo: "이건 여행에 대한 간단한 메모입니다. 150자 이상 쓸 수 없어요. 본가에 있으니 기분이 좋다. 이번 여행 참 좋았다!",
         travelDate: .now,
         photoDataList: [],
-        placeCount: 3
+        placeCount: 3,
+        destinationPhotoURL: URL(string: "https://picsum.photos/seed/picsel-destination/800/900")
     )
 }

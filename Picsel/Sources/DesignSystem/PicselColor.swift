@@ -94,6 +94,31 @@ enum PicselColor {
     static let secondaryButtonText = Color(hex: 0xA4B8B0)
 
     /// 픽셀맵에서 아직 가보지 않은 칸
+    /// 경로 타임라인의 점과 선
+    static let actionPrimaryBright = Color(hex: 0x37B287)
+
+    /// 픽셀 히스토리에서 선택된 연도 칩
+    static let mapYearActive = Color(hex: 0x81B89E)
+
+    /// 보조 아이콘·선택된 칩의 테두리
+    static let iconSecondary = Color(hex: 0x718076)
+
+    /// 브랜드 색 위에 얹는 글자 (사진 위 보조 정보 등)
+    static let textOnBrand = Color(hex: 0xF4FEFB)
+
+    /// 픽셀 지역 상세의 방문 횟수
+    static let pixelVisitCount = Color(hex: 0x559E89)
+
+    /// 사진 위에 얹는 보조 글자 (날짜 등)
+    static let textOnPhotoSecondary = Color(hex: 0xC7C7CC)
+
+    /// 픽셀맵에서 채운 칸
+    static let pixelUnlockedFill = Color(hex: 0xADCDBA)
+    static let pixelUnlockedStroke = Color(hex: 0x7DAB95)
+
+    /// 시도 경계선. 칸 경계보다 한 단계만 진하게 둡니다.
+    static let pixelBoundary = Color(hex: 0xC7CCC8)
+
     static let pixelLockedFill = Color(hex: 0xEFF1EF)
     static let pixelLockedStroke = Color(hex: 0xD5DAD7)
     /// 경로 목록 행 테두리

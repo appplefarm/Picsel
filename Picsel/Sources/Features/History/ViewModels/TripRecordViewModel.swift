@@ -81,7 +81,8 @@ final class TripRecordViewModel {
             memo: memo,
             travelDate: trip.recordDate,
             photoDataList: pickedPhotos.map(\.imageData),
-            placeCount: trip.recordedStops.count
+            placeCount: trip.recordedStops.count,
+            destinationPhotoURL: trip.representativePhotoURL
         )
     }
 
