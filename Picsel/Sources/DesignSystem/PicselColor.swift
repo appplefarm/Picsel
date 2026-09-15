@@ -108,6 +108,14 @@ enum PicselColor {
     /// 사진 탐색 로딩 화면
     static let photoLoadingWaveTint = Color(hex: 0x43C994)
     static let photoLoadingText = Color(hex: 0x639580)
+
+    // MARK: - 여행 진행 중 홈
+    static let tripHomeBackground = Color(hex: 0x121A16)
+    static let tripHomeGlow = Color(hex: 0x00866D)
+    static let tripHomeTitle = Color(hex: 0xFBFFFD)
+    static let tripHomeSubtitle = Color(hex: 0xE6F7EE)
+    static let tripHomeButtonStart = Color(hex: 0x37B287)
+    static let tripHomeButtonEnd = Color(hex: 0x7ED2B5)
 }
 
 extension Color {
