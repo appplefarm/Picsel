@@ -110,8 +110,12 @@ enum PicselColor {
     static let photoLoadingText = Color(hex: 0x639580)
 
     // MARK: - 여행 진행 중 홈
+    /// 경로 확정 직후 여행 준비 화면 배경
+    static let tripReadyBackground = Color(hex: 0x9EB1AD)
     static let tripHomeBackground = Color(hex: 0x121A16)
     static let tripHomeGlow = Color(hex: 0x00866D)
+    /// 여행 준비 화면 픽셀의 Figma glow 색상
+    static let tripReadyPixelGlow = Color(red: 0.39, green: 0.94, blue: 0.75)
     static let tripHomeTitle = Color(hex: 0xFBFFFD)
     static let tripHomeSubtitle = Color(hex: 0xE6F7EE)
     static let tripHomeButtonStart = Color(hex: 0x37B287)

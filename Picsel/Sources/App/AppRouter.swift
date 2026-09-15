@@ -33,15 +33,28 @@ final class AppRouter {
     ///       스택을 새로 만들지 않고 경로만 비울 수 있습니다. (별도 이슈)
     private(set) var homeStackID = UUID()
 
-    /// 경로 확정 후 진행 중 홈을 루트로 다시 보여 줍니다.
-    /// 실제 화면 종류는 SwiftData에 저장된 진행 중 여행 여부로 결정됩니다.
-    func showTripInProgressHome() {
+    /// 경로를 막 확정한 현재 앱 실행에서만 보여 줄 여행 준비 화면의 여행 ID입니다.
+    ///
+    /// 이 값은 디스크에 저장하지 않습니다. 따라서 앱을 강제 종료한 뒤 다시 실행하면
+    /// SwiftData에 남아 있는 진행 중 여행을 기준으로 `TripInProgressHomeView`가 표시됩니다.
+    private(set) var tripReadyTripID: UUID?
+
+    /// 경로 확정 직후 여행 준비 화면을 홈 탭의 루트로 보여 줍니다.
+    func showTripReadyHome(for tripID: UUID) {
+        tripReadyTripID = tripID
         homeStackID = UUID()
         selectedTab = .home
     }
 
+    /// 준비 화면에서 여행을 시작하면 이후 홈은 진행 중 상태로 표시합니다.
+    func markTripAsStarted(_ tripID: UUID) {
+        guard tripReadyTripID == tripID else { return }
+        tripReadyTripID = nil
+    }
+
     /// 여행 흐름을 닫고 지정한 탭의 첫 화면으로 돌아갑니다.
     func finishTripFlow(returningTo tab: Tab) {
+        tripReadyTripID = nil
         homeStackID = UUID()
         selectedTab = tab
     }

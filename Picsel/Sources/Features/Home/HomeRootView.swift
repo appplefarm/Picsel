@@ -6,11 +6,13 @@
 import SwiftData
 import SwiftUI
 
-/// 저장된 여행 상태에 따라 일반 홈과 진행 중 홈을 전환합니다.
+/// 저장된 여행 상태에 따라 일반 홈과 활성 여행 홈을 전환합니다.
 ///
 /// `Trip.startTime != nil && !Trip.isDone`인 여행은 앱을 다시 실행해도
 /// SwiftData에서 복원되므로 진행 중 홈이 다시 표시됩니다.
+/// 경로 확정 직후의 준비 화면 여부는 `AppRouter`가 현재 실행 중에만 관리합니다.
 struct HomeRootView: View {
+    @Environment(AppRouter.self) private var router
     @Query private var trips: [Trip]
     @State private var sessionTripID: UUID?
 
@@ -35,7 +37,10 @@ struct HomeRootView: View {
     var body: some View {
         Group {
             if let trip = displayedTrip {
-                ActiveTripHomeFlow(trip: trip)
+                ActiveTripHomeFlow(
+                    trip: trip,
+                    startsInReadyState: router.tripReadyTripID == trip.id
+                )
                     .id(trip.id)
             } else {
                 HomeView()
@@ -55,8 +60,15 @@ struct HomeRootView: View {
 }
 
 private struct ActiveTripHomeFlow: View {
+    private enum HomeMode {
+        case ready
+        case inProgress
+    }
+
+    @Environment(AppRouter.self) private var router
     let trip: Trip
 
+    @State private var homeMode: HomeMode
     @State private var isSettingsPresented = false
     @State private var isTripProgressPresented = false
     @State private var isVisitedPlacesPresented = false
@@ -71,13 +83,30 @@ private struct ActiveTripHomeFlow: View {
         )
     }
 
+    init(trip: Trip, startsInReadyState: Bool) {
+        self.trip = trip
+        _homeMode = State(initialValue: startsInReadyState ? .ready : .inProgress)
+    }
+
     var body: some View {
-        TripInProgressHomeView(
-            cityName: trip.recordRegionName,
-            regionCode: trip.targetPixelCode ?? trip.pixelTile?.code,
-            onSettingsTapped: { isSettingsPresented = true },
-            onTripProgressTapped: { isTripProgressPresented = true }
-        )
+        Group {
+            switch homeMode {
+            case .ready:
+                TripReadyHomeView(
+                    cityName: trip.recordRegionName,
+                    regionCode: trip.targetPixelCode ?? trip.pixelTile?.code,
+                    onSettingsTapped: { isSettingsPresented = true },
+                    onStartTripTapped: startTrip
+                )
+            case .inProgress:
+                TripInProgressHomeView(
+                    cityName: trip.recordRegionName,
+                    regionCode: trip.targetPixelCode ?? trip.pixelTile?.code,
+                    onSettingsTapped: { isSettingsPresented = true },
+                    onTripProgressTapped: { isTripProgressPresented = true }
+                )
+            }
+        }
         .fullScreenCover(isPresented: $isSettingsPresented) {
             SettingsView()
         }
@@ -98,6 +127,12 @@ private struct ActiveTripHomeFlow: View {
             )
             .toolbar(.hidden, for: .tabBar)
         }
+    }
+
+    private func startTrip() {
+        router.markTripAsStarted(trip.id)
+        homeMode = .inProgress
+        isTripProgressPresented = true
     }
 }
 

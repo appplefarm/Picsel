@@ -105,9 +105,10 @@ struct TransitSwipeView: View {
                 trip: viewModel.activeTrip,
                 thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
             ) { _ in
-                // 여행이 실제로 시작되는 시점입니다. 여기서부터는 앱이 꺼져도 남아야 합니다.
+                // 경로가 확정된 여행은 여기서 저장합니다.
+                // 준비 화면은 현재 실행에만 남고, 앱 재실행 시에는 진행 중 홈으로 복원됩니다.
                 if viewModel.startTrip(in: modelContext) {
-                    router.showTripInProgressHome()
+                    router.showTripReadyHome(for: viewModel.activeTrip.id)
                 } else {
                     tripStartErrorMessage = "여행 계획을 저장하지 못했어요. 잠시 후 다시 시도해주세요."
                 }
