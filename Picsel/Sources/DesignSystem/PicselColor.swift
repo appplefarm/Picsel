@@ -94,6 +94,12 @@ enum PicselColor {
     static let secondaryButtonText = Color(hex: 0xA4B8B0)
 
     /// 픽셀맵에서 아직 가보지 않은 칸
+    /// 경로 타임라인의 점과 선
+    static let actionPrimaryBright = Color(hex: 0x37B287)
+
+    /// 사진 위에 얹는 보조 글자 (날짜 등)
+    static let textOnPhotoSecondary = Color(hex: 0xC7C7CC)
+
     static let pixelLockedFill = Color(hex: 0xEFF1EF)
     static let pixelLockedStroke = Color(hex: 0xD5DAD7)
     /// 경로 목록 행 테두리

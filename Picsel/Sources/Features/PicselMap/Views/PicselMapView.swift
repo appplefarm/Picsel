@@ -145,7 +145,6 @@ struct PicselMapView: View {
                 ForEach(displayedRecords) { record in
                     NavigationLink {
                         PixelDetailView(snapshot: record.snapshot, stops: record.stops)
-                            .toolbar(.visible, for: .navigationBar)
                     } label: {
                         RecentPixelCard(snapshot: record.snapshot)
                     }

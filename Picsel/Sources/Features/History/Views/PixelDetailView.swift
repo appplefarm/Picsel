@@ -2,15 +2,14 @@
 //  PixelDetailView.swift
 //  Picsel
 //
-//  픽셀 상세 — "영덕 픽셀"
-//  픽셀맵에서 지역 하나를 눌렀을 때 보여줄 기록 상세 화면.
+//  기록 상세 — 목적지 사진 위로 기록 시트가 덮는 화면.
+//  픽셀맵과 픽셀 히스토리 양쪽에서 같은 화면으로 들어옵니다.
 //
 
 import SwiftUI
 
 /// 타임라인 한 줄에 필요한 값.
 /// SwiftData 없이도 Preview가 돌게 하려고 화면 전용 타입으로 둔다.
-/// 나중에 RouteStop -> RouteStopDisplay로 변환해서 넘긴다.
 struct RouteStopDisplay: Identifiable {
     let id = UUID()
     let name: String
@@ -20,9 +19,9 @@ struct RouteStopDisplay: Identifiable {
 extension RouteStopDisplay {
     /// TODO: 경로 데이터 연결 전까지 쓰는 목업
     static let mockStops: [RouteStopDisplay] = [
-        RouteStopDisplay(name: "호미곶 해맞이광장", travelMinutesToNext: 12),
-        RouteStopDisplay(name: "구룡포 일본인가옥거리", travelMinutesToNext: 8),
-        RouteStopDisplay(name: "월포해수욕장", travelMinutesToNext: nil)
+        RouteStopDisplay(name: "영일대해수욕장", travelMinutesToNext: 12),
+        RouteStopDisplay(name: "환호공원", travelMinutesToNext: 8),
+        RouteStopDisplay(name: "해안로 작은 카페", travelMinutesToNext: nil)
     ]
 }
 
@@ -32,40 +31,96 @@ struct PixelDetailView: View {
     /// TODO: 경로 데이터가 생기면 실제 값으로 교체
     var stops: [RouteStopDisplay] = RouteStopDisplay.mockStops
 
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 32) {
-                Text("\(snapshot.regionName) 픽셀")
-                    .font(.title).bold()
-                
-                // TODO: 최종 목적지 (수상작 사진) 보여주기
-//                RoundedRectangle(cornerRadius: 12)
-//                    .fill(Color.gray.opacity(0.2))
-//                    .frame(width: 300, height: 200)
+        // 사진은 상태 표시줄까지 올라가야 하지만 버튼은 안전 영역 안에 있어야 합니다.
+        // ScrollView에만 ignoresSafeArea를 걸려고 ZStack으로 나눠 둡니다.
+        ZStack(alignment: .top) {
+            ScrollView {
+                VStack(spacing: 0) {
+                    PixelDetailHeroView(
+                        photoURL: snapshot.destinationPhotoURL,
+                        title: snapshot.title,
+                        travelDate: snapshot.travelDate
+                    )
 
-                TripMemoCard(
-                    title: snapshot.title,
-                    travelDate: snapshot.travelDate,
-                    memo: snapshot.memo
-                )
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("그날의 사진")
-                        .font(.headline)
-
-                    TripPhotoScroller(photoDataList: snapshot.photoDataList)
-                }
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("다녀온 경로")
-                        .font(.headline)
-
-                    RouteTimelineView(stops: stops)
+                    sheet
+                        // 시트가 사진 위로 올라와 둥근 모서리 안쪽에 사진이 비칩니다.
+                        .padding(.top, -30)
                 }
             }
-            .padding(20)
+            .scrollIndicators(.hidden)
+            .ignoresSafeArea(edges: .top)
+
+            floatingBar
         }
-        .navigationBarTitleDisplayMode(.inline)
+        .background(PicselColor.surface)
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarBackButtonHidden()
+    }
+
+    // MARK: - 기록 시트
+
+    private var sheet: some View {
+        VStack(alignment: .leading, spacing: 32) {
+            if !snapshot.memo.isEmpty {
+                Text(snapshot.memo)
+                    .font(PicselFont.body01)
+                    .foregroundStyle(PicselColor.textSecondary)
+                    .lineSpacing(6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            if !stops.isEmpty {
+                RouteTimelineView(stops: stops)
+            }
+
+            // TODO: Step 3 - 사진 개수에 따라 유동적으로 배치하는 그리드로 교체
+            if !snapshot.photoDataList.isEmpty {
+                TripPhotoScroller(photoDataList: snapshot.photoDataList)
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 36)
+        .padding(.bottom, 40)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            PicselColor.surface,
+            in: .rect(
+                topLeadingRadius: 30,
+                topTrailingRadius: 30
+            )
+        )
+    }
+
+    // MARK: - 사진 위에 뜨는 버튼
+
+    private var floatingBar: some View {
+        HStack {
+            Button(action: dismiss.callAsFunction) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(PicselColor.textPrimary)
+                    .frame(width: 44, height: 44)
+                    .background(.ultraThinMaterial, in: .circle)
+            }
+            .accessibilityLabel("뒤로")
+
+            Spacer()
+
+            // TODO: Step 4 - 제목·내용·사진 인라인 편집
+            Button {
+            } label: {
+                Text("편집")
+                    .font(PicselFont.label01)
+                    .foregroundStyle(PicselColor.textPrimary)
+                    .frame(height: 44)
+                    .padding(.horizontal, 20)
+                    .background(.ultraThinMaterial, in: .capsule)
+            }
+        }
+        .padding(.horizontal, 16)
     }
 }
 
