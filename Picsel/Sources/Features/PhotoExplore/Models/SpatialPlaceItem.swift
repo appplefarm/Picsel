@@ -48,64 +48,64 @@ extension SpatialPlaceItem {
 
     private static let layout: [SpatialPlacePlacement] = [
         SpatialPlacePlacement(
-            position: CGPoint(x: 0, y: 28),
+            position: CGPoint(x: 94, y: 43),
             size: CGSize(width: 172, height: 247),
-            depth: 0.98,
+            depth: 0.78,
             yaw: 0
         ),
         SpatialPlacePlacement(
-            position: CGPoint(x: -206, y: -122),
+            position: CGPoint(x: -206, y: -72),
             size: CGSize(width: 196, height: 186),
-            depth: 0.68,
+            depth: 0.72,
             yaw: 34
         ),
         SpatialPlacePlacement(
-            position: CGPoint(x: 253, y: -370),
+            position: CGPoint(x: 180, y: -240),
             size: CGSize(width: 124, height: 213),
-            depth: 0.38,
+            depth: 0.63,
             yaw: -38
         ),
         SpatialPlacePlacement(
-            position: CGPoint(x: -214, y: 83),
+            position: CGPoint(x: 214, y: 283),
             size: CGSize(width: 164, height: 188),
             depth: 0.57,
             yaw: 30
         ),
         SpatialPlacePlacement(
-            position: CGPoint(x: 210, y: 166),
+            position: CGPoint(x: -200, y: 216),
             size: CGSize(width: 152, height: 202),
             depth: 0.76,
             yaw: -31
         ),
         SpatialPlacePlacement(
-            position: CGPoint(x: -40, y: -282),
+            position: CGPoint(x: 10, y: 320),
             size: CGSize(width: 220, height: 126),
-            depth: 0.24,
+            depth: 0.52,
             yaw: 4
         ),
         SpatialPlacePlacement(
-            position: CGPoint(x: -220, y: 257),
+            position: CGPoint(x: -100, y: -293),
             size: CGSize(width: 148, height: 214),
-            depth: 0.86,
+            depth: 0.52,
             yaw: 42
-        ),
-        SpatialPlacePlacement(
-            position: CGPoint(x: 253, y: -60),
-            size: CGSize(width: 194, height: 138),
-            depth: 0.48,
-            yaw: -44
-        ),
-        SpatialPlacePlacement(
-            position: CGPoint(x: -286, y: -400),
-            size: CGSize(width: 168, height: 116),
-            depth: 0.32,
-            yaw: 27
-        ),
-        SpatialPlacePlacement(
-            position: CGPoint(x: 40, y: 328),
-            size: CGSize(width: 50, height: 280),
-            depth: 0.12,
-            yaw: -33
         )
+//        SpatialPlacePlacement(
+//            position: CGPoint(x: 253, y: -60),
+//            size: CGSize(width: 194, height: 138),
+//            depth: 0.48,
+//            yaw: -44
+//        ),
+//        SpatialPlacePlacement(
+//            position: CGPoint(x: -286, y: -400),
+//            size: CGSize(width: 168, height: 116),
+//            depth: 0.32,
+//            yaw: 27
+//        ),
+//        SpatialPlacePlacement(
+//            position: CGPoint(x: 40, y: 328),
+//            size: CGSize(width: 50, height: 280),
+//            depth: 0.12,
+//            yaw: -33
+//        )
     ]
 }
