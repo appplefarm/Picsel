@@ -107,7 +107,9 @@ struct TripStatusHomeView: View {
             }
             .padding(.horizontal, Metric.horizontalPadding)
         }
-        .preferredColorScheme(presentation.colorScheme)
+        // 홈의 표현만 바꾸고, 다음 화면까지 다크 모드를 강제하지 않습니다.
+        .environment(\.colorScheme, presentation.colorScheme)
+        .toolbarColorScheme(presentation.colorScheme, for: .navigationBar)
     }
 
     @ViewBuilder
