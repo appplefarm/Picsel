@@ -3,6 +3,8 @@ import Observation
 
 @Observable
 final class HomeViewModel {
+    static let minimumRadiusKm = 10.0
+
     /// 값이 클수록 가까운 거리 구간이 Slider에서 더 넓은 영역을 차지합니다.
     private let radiusSliderCurve = 3.0
 
@@ -18,7 +20,7 @@ final class HomeViewModel {
     private(set) var farthestExtremePoint: KoreaExtremePoint?
     var currentRadiusKm = 80.0
 
-    var radiusRange: ClosedRange<Double> { 0...maximumRadiusKm }
+    var radiusRange: ClosedRange<Double> { Self.minimumRadiusKm...maximumRadiusKm }
 
     /// Slider의 동일한 위치 간격에 해당하는 로그 스케일 거리 눈금입니다.
     var radiusGuideValues: [Double] {
@@ -28,11 +30,12 @@ final class HomeViewModel {
     var currentRadiusMeters: Double { currentRadiusKm * 1_000 }
 
     /// SwiftUI Slider가 사용하는 0...1 위치와 실제 km를 비선형으로 변환합니다.
-    /// 0km를 지원하기 위해 위치→거리는 지수 함수, 거리→위치는 그 역함수를 사용합니다.
+    /// 최소 반경과 최대 반경 사이를 지수 곡선으로 변환합니다.
     var radiusSliderPosition: Double {
         get {
-            guard maximumRadiusKm > 0 else { return 0 }
-            let normalizedRadius = currentRadiusKm / maximumRadiusKm
+            let selectableRange = maximumRadiusKm - Self.minimumRadiusKm
+            guard selectableRange > 0 else { return 0 }
+            let normalizedRadius = (currentRadiusKm - Self.minimumRadiusKm) / selectableRange
             let curveRange = exp(radiusSliderCurve) - 1
             return log(1 + normalizedRadius * curveRange) / radiusSliderCurve
         }
@@ -57,7 +60,7 @@ final class HomeViewModel {
         }) else { return }
 
         let farthestDistanceKm = distance(from: currentLocation, to: farthest) / 1_000
-        maximumRadiusKm = max(1, ceil(farthestDistanceKm))
+        maximumRadiusKm = max(Self.minimumRadiusKm, ceil(farthestDistanceKm))
         farthestExtremePoint = farthest
 
         // 위치 갱신으로 최댓값이 작아져도 Slider 값이 범위를 벗어나지 않게 합니다.
@@ -75,7 +78,8 @@ final class HomeViewModel {
         let clampedPosition = min(max(position, 0), 1)
         let curveRange = exp(radiusSliderCurve) - 1
         let normalizedRadius = (exp(radiusSliderCurve * clampedPosition) - 1) / curveRange
-        return (maximumRadiusKm * normalizedRadius).rounded()
+        let selectableRange = maximumRadiusKm - Self.minimumRadiusKm
+        return (Self.minimumRadiusKm + selectableRange * normalizedRadius).rounded()
     }
 }
 

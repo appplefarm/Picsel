@@ -5,10 +5,11 @@
 //  Created by kosoobin on 9/16/26.
 //
 
+import CoreLocation
 import Foundation
 import OSLog
 
-/// 관광공사 API에서 사진을 실시간으로 받고, CloudKit의 좌표와 짝지어 목적지 후보를 만듭니다.
+/// 관광공사 수상작 API에서 사진을 실시간으로 받고, 반경 안의 CloudKit 좌표와 짝지어 목적지 후보를 만듭니다.
 ///
 /// 두 조각이 만나야 화면에 띄울 수 있습니다.
 ///
@@ -22,122 +23,77 @@ import OSLog
 nonisolated struct LivePhotoDestinationService: PhotoDestinationService {
 
     private let awardService: AwardPhotoService
-    private let galleryService: GalleryPhotoService
+    private let originLocation: CLLocation?
+    private let selectedRadiusMeters: CLLocationDistance
     private let logger = Logger(subsystem: "com.applefarm.picsel", category: "PhotoDestination")
 
     init(
-        awardService: AwardPhotoService = AwardPhotoService(),
-        galleryService: GalleryPhotoService = GalleryPhotoService()
+        originLocation: CLLocation?,
+        selectedRadiusMeters: CLLocationDistance,
+        awardService: AwardPhotoService = AwardPhotoService()
     ) {
+        self.originLocation = originLocation
+        self.selectedRadiusMeters = selectedRadiusMeters.isFinite
+            ? max(selectedRadiusMeters, PhotoRecommendationPolicy.minimumRadiusMeters)
+            : PhotoRecommendationPolicy.minimumRadiusMeters
         self.awardService = awardService
-        self.galleryService = galleryService
     }
 
     func fetchDestinations(limit: Int) async throws -> [PhotoDestination] {
         guard limit > 0 else { return [] }
 
-        // ① 좌표를 먼저 확보합니다.
-        //    어떤 사진을 쓸지가 여기서 정해지고, 갤러리 API에 넘길 ID 목록도 여기서 나옵니다.
+        guard let originLocation,
+              CLLocationCoordinate2DIsValid(originLocation.coordinate) else {
+            throw PhotoDestinationError.missingOrigin
+        }
+
+        // ① 좌표를 먼저 확보하고 수상작 중 선택 반경 안의 후보만 남깁니다.
         let catalog = await PhotoCoordinateCatalogStore.shared.catalog()
 
         guard !catalog.isEmpty else {
             throw PhotoDestinationError.missingCoordinates
         }
 
-        // ② 두 API를 동시에 부릅니다. 순서대로 부르면 기다리는 시간이 두 배가 됩니다.
-        async let awardResult = load(.award) {
-            try await awardService.fetchAll()
-        }
-        async let galleryResult = load(.gallery) {
-            try await galleryService.fetch(
-                matching: catalog.photoIDs(of: .gallery),
-                // 섞어서 고를 여유를 두려고 넉넉히 받습니다.
-                minimumCount: limit * 2
-            )
-        }
-
-        let results = await [awardResult, galleryResult]
-        let remotePhotos = results.flatMap { (try? $0.get()) ?? [] }
-
-        // ③ 한쪽이 실패해도 나머지로 화면을 채웁니다. 둘 다 실패했을 때만 오류를 올립니다.
-        guard !remotePhotos.isEmpty else {
-            if let failure = results.compactMap(\.failureError).first {
-                throw failure
-            }
-            throw PhotoDestinationError.noMatchingPhotos
-        }
-
-        // ④ 사진 정보와 좌표를 짝짓습니다.
-        let destinations = remotePhotos.compactMap { photo in
-            catalog
-                .coordinate(forPhotoID: photo.photoID, source: photo.source)
-                .map { destination(photo: photo, place: $0) }
-        }
-
-        logger.info("후보 \(destinations.count)곳 (API \(remotePhotos.count)장 중)")
-
-        guard !destinations.isEmpty else {
-            throw PhotoDestinationError.noMatchingPhotos
-        }
-
-        // ⑤ 섞어서 필요한 만큼만 돌려줍니다.
-        //    안 섞으면 수상작이 항상 앞에 몰려 매번 같은 사진부터 보게 됩니다.
-        return Array(destinations.shuffled().prefix(limit))
-    }
-
-    // MARK: - 짝짓기
-
-    private func destination(
-        photo: RemotePhoto,
-        place: PhotoCoordinate
-    ) -> PhotoDestination {
-        PhotoDestination(
-            id: photo.id,
-            // 촬영지 글("정선군 남면, 민둥산")보다 팀이 찍어 둔 장소명이 구체적입니다.
-            name: place.placeName,
-            photoURL: photo.displayImageURL.absoluteString,
-            detailDescription: photo.title,
-            regionCode: Int(place.regionCode),
-            address: place.address,
-            latitude: place.latitude,
-            longitude: place.longitude
+        let coordinates = PhotoRecommendationPolicy.awardCoordinates(
+            in: catalog,
+            from: originLocation,
+            radiusMeters: selectedRadiusMeters
         )
-    }
 
-    // MARK: - 부분 실패 허용
+        // 반경 안 후보가 없으면 네트워크 오류가 아닌 정상적인 Empty 결과입니다.
+        guard !coordinates.isEmpty else { return [] }
 
-    /// 실패해도 던지지 않고 담아 둡니다. 한쪽 API가 죽어도 화면은 떠야 합니다.
-    private func load(
-        _ source: PhotoAPISource,
-        _ operation: () async throws -> [RemotePhoto]
-    ) async -> Result<[RemotePhoto], Error> {
-        do {
-            return .success(try await operation())
-        } catch {
-            logger.error("\(source.rawValue) 실패: \(error.localizedDescription)")
-            return .failure(error)
-        }
+        // ② 실제 표시할 제목과 이미지 주소는 공모전 규정에 따라 API에서 실시간으로 받습니다.
+        let remotePhotos = try await awardService.fetchAll()
+        try Task.checkCancellation()
+
+        // ③ API와 결합 가능한 후보만 섞고 최대 7개를 반환합니다.
+        let destinations = PhotoRecommendationPolicy.destinations(
+            coordinates: coordinates,
+            remotePhotos: remotePhotos,
+            limit: limit
+        )
+
+        logger.info(
+            "반경 후보 \(coordinates.count)장 → 표시 가능 \(destinations.count)장"
+        )
+        return destinations
     }
 }
 
 nonisolated enum PhotoDestinationError: LocalizedError {
     case missingCoordinates
+    case missingOrigin
     case noMatchingPhotos
 
     var errorDescription: String? {
         switch self {
         case .missingCoordinates:
             "사진 위치 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요."
+        case .missingOrigin:
+            "현재 위치를 확인할 수 없어 주변 사진을 추천할 수 없어요."
         case .noMatchingPhotos:
             "지금 보여드릴 사진을 찾지 못했어요."
         }
-    }
-}
-
-private extension Result {
-    /// 실패했을 때의 오류만 꺼냅니다.
-    var failureError: Failure? {
-        guard case .failure(let error) = self else { return nil }
-        return error
     }
 }

@@ -17,6 +17,15 @@ struct HomeView: View {
         locationManager.currentLocation?.coordinate ?? viewModel.fallbackCoordinate
     }
 
+    /// 지도 표시용 기본 좌표를 실제 추천 기준 위치로 오인하지 않습니다.
+    private var recommendationOrigin: CLLocation? {
+        guard locationManager.isLocationAuthorized,
+              let location = locationManager.currentLocation,
+              location.horizontalAccuracy >= 0,
+              CLLocationCoordinate2DIsValid(location.coordinate) else { return nil }
+        return location
+    }
+
     private var mapLocationName: String {
         if locationManager.currentLocation != nil {
             return locationManager.localityName
@@ -168,9 +177,15 @@ struct HomeView: View {
     private var destinationButton: some View {
         NavigationLink {
             PhotoExploreView(
-                service: PhotoDestinationServiceFactory.make(),
+                service: PhotoDestinationServiceFactory.make(
+                    originLocation: recommendationOrigin,
+                    selectedRadiusMeters: max(
+                        viewModel.currentRadiusMeters,
+                        PhotoRecommendationPolicy.minimumRadiusMeters
+                    )
+                ),
                 sourceNotice: PhotoDestinationServiceFactory.sourceNotice,
-                originLocation: locationManager.isLocationAuthorized ? locationManager.currentLocation : nil
+                originLocation: recommendationOrigin
             ) { destination in
                 guard destination.canSelectAsDestination else { return }
                 confirmedDestination = destination
