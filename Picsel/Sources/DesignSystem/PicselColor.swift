@@ -97,6 +97,15 @@ enum PicselColor {
     /// 경로 타임라인의 점과 선
     static let actionPrimaryBright = Color(hex: 0x37B287)
 
+    /// 픽셀 히스토리에서 선택된 연도 칩
+    static let mapYearActive = Color(hex: 0x81B89E)
+
+    /// 보조 아이콘·선택된 칩의 테두리
+    static let iconSecondary = Color(hex: 0x718076)
+
+    /// 브랜드 색 위에 얹는 글자 (사진 위 보조 정보 등)
+    static let textOnBrand = Color(hex: 0xF4FEFB)
+
     /// 사진 위에 얹는 보조 글자 (날짜 등)
     static let textOnPhotoSecondary = Color(hex: 0xC7C7CC)
 

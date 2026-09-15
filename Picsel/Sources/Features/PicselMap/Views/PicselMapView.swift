@@ -45,13 +45,19 @@ struct PicselMapView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 24) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("나의 픽셀맵")
-                    .font(.system(size: titleSize, weight: .semibold))
-                    .accessibilityAddTraits(.isHeader)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("나의 픽셀맵")
+                        .font(.system(size: titleSize, weight: .semibold))
+                        .accessibilityAddTraits(.isHeader)
 
-                Text("다녀온 여행으로 대한민국을 채워보세요.")
-                    .font(.footnote)
+                    Text("다녀온 여행으로 대한민국을 채워보세요.")
+                        .font(.footnote)
+                }
+
+                Spacer()
+
+                historyButton
             }
 
             map
@@ -62,6 +68,21 @@ struct PicselMapView: View {
         .padding(.horizontal, 24)
         .padding(.top, 20)
         .padding(.bottom, 16)
+    }
+
+    /// 다녀온 여행을 모아 보는 픽셀 히스토리로 들어갑니다.
+    private var historyButton: some View {
+        NavigationLink {
+            PixelHistoryScreen()
+        } label: {
+            Image(systemName: "point.bottomleft.forward.to.point.topright.scurvepath")
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(PicselColor.homeText)
+                .frame(width: 48, height: 48)
+                .background(PicselColor.surface, in: .circle)
+                .shadow(color: .black.opacity(0.08), radius: 8, y: 2)
+        }
+        .accessibilityLabel("픽셀 히스토리")
     }
 
     @ViewBuilder

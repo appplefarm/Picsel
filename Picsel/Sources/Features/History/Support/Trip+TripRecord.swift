@@ -60,6 +60,29 @@ extension Trip {
         )
     }
 
+    /// 기록 상세로 넘길 표시용 값입니다.
+    ///
+    /// 사진 원본을 전부 담으므로 목록에서 미리 만들면 안 됩니다.
+    /// 상세 화면으로 넘어가는 시점에만 부르세요.
+    func makeRecordSnapshot() -> TripRecordSnapshot {
+        TripRecordSnapshot(
+            regionName: recordRegionName,
+            title: title,
+            memo: memo,
+            travelDate: recordDate,
+            photoDataList: photos.sorted { $0.orderIndex < $1.orderIndex }.map(\.imageData),
+            placeCount: recordedStops.count,
+            destinationPhotoURL: representativePhotoURL
+        )
+    }
+
+    /// 기록 상세의 경로 타임라인에 넘길 값입니다.
+    ///
+    /// 현재 RouteStop에 이동 시간 필드가 없어 시간은 비워 둡니다.
+    var recordStopDisplays: [RouteStopDisplay] {
+        recordedStops.map { RouteStopDisplay(name: $0.name, travelMinutesToNext: nil) }
+    }
+
     /// 기록 화면 제목의 기본값입니다. "포항 여행"
     ///
     /// 지역을 못 읽었을 때는 "여행 지역 여행"처럼 어색해지므로 빈 값을 돌려주고,
