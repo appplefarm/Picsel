@@ -16,18 +16,18 @@ struct PhotoInteractionSettings: Equatable {
     var pinchStartDelta = 0.001
 
     // Direct manipulation
-    var dragSensitivity = 1.0
-    var zoomSensitivity = 1.0
+    var dragSensitivity = 1.20
+    var zoomSensitivity = 1.15
 
     // Momentum
-    var dragMomentumRetention = 0.40
+    var dragMomentumRetention = 0.30
     var maximumDragCoast = 160.0
-    var zoomMomentumDuration = 0.10
+    var zoomMomentumDuration = 0.080
     var maximumZoomCoast = 0.22
     var settlingDuration = 0.40
 
     // Magnet and appearance
-    var magnetDepthTolerance = 0.60
+    var magnetDepthTolerance = 0.80
     var magnetViewportMargin = 0.55
     // 하이파이 기준: 가까운 가로 사진은 화면 너비의 약 2/3를 차지합니다.
     var photoScale = 1.2

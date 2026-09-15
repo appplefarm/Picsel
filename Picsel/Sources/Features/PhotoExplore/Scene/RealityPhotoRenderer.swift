@@ -16,7 +16,6 @@ import UIKit
 final class RealityPhotoRenderer {
     private enum Constants {
         static let entityNamePrefix = "photo:"
-        static let minimumOpacity: Float = 0.20
         static let selectionFrameName = "selection-frame"
         static let maximumBlurMipBias: Float = 2
     }
@@ -125,17 +124,7 @@ final class RealityPhotoRenderer {
         viewportSize: CGSize
     ) {
         for (id, entry) in entries {
-            let focusAmount = max(
-                0,
-                1 - (
-                    pose.depthError(to: entry.entity.position)
-                        / PhotoSpace.focusFadeRange
-                )
-            )
-            let opacity = Constants.minimumOpacity
-                + (focusAmount * (1 - Constants.minimumOpacity))
-
-            entry.entity.components.set(OpacityComponent(opacity: opacity))
+            // 투명도 대신 셰이더의 색 혼합으로 옅게 표현해 뒤쪽 사진을 가립니다.
             entry.entity.findEntity(named: Constants.selectionFrameName)?.isEnabled = id == selectedPlaceID
             updateFocusTransform(on: entry, camera: pose, photoScale: photoScale, viewportSize: viewportSize)
         }
@@ -190,7 +179,6 @@ final class RealityPhotoRenderer {
 
         configureVisual(
             on: entity,
-            for: item,
             aspectRatio: Float(item.fallbackAspectRatio),
             material: makeMaterial()
         )
@@ -266,7 +254,6 @@ final class RealityPhotoRenderer {
                 / Float(max(loadedPhoto.image.height, 1))
             configureVisual(
                 on: entry.entity,
-                for: entry.item,
                 aspectRatio: aspectRatio,
                 material: makeMaterial(texture: texture)
             )
@@ -278,13 +265,12 @@ final class RealityPhotoRenderer {
 
     private func configureVisual(
         on entity: ModelEntity,
-        for item: SpatialPlaceItem,
         aspectRatio: Float,
         material: any Material
     ) {
-        let width = PhotoSpace.width(for: item)
-        let validAspectRatio = aspectRatio.isFinite && aspectRatio > 0 ? aspectRatio : 1
-        let height = width / validAspectRatio
+        let size = PhotoSpace.photoSize(aspectRatio: aspectRatio)
+        let width = size.x
+        let height = size.y
         let mesh = MeshResource.generatePlane(
             width: width,
             height: height,
@@ -320,20 +306,29 @@ final class RealityPhotoRenderer {
     private func makeMaterial(texture: TextureResource? = nil) -> any Material {
         var material = texture.map(UnlitMaterial.init(texture:))
             ?? UnlitMaterial()
+#if DEBUG
+        // 프리뷰의 빈 사진만 회색으로 표시해 배경과 배치를 구분합니다.
+        if texture == nil,
+           ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            material.color.tint = .gray
+        }
+#endif
+        material.blending = .opaque
         material.faceCulling = .none
         material.readsDepth = true
         material.writesDepth = true
 
         // 기존 mipmap을 재사용합니다. 셰이더를 쓸 수 없으면 원본 사진은 그대로 표시합니다.
-        guard texture != nil, let focusShader,
+        guard let focusShader,
               var focusMaterial = try? CustomMaterial(from: material, surfaceShader: focusShader)
         else { return material }
 
+        focusMaterial.blending = .opaque
         focusMaterial.custom.value = SIMD4(
             PhotoSpace.focusDistance,
             PhotoSpace.sharpDepthTolerance,
             PhotoSpace.focusFadeRange,
-            Constants.maximumBlurMipBias
+            texture == nil ? -1 : Constants.maximumBlurMipBias
         )
         return focusMaterial
     }
