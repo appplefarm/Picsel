@@ -176,7 +176,8 @@ struct HomeView: View {
         NavigationLink {
             PhotoExploreView(
                 service: PhotoDestinationServiceFactory.make(),
-                sourceNotice: PhotoDestinationServiceFactory.sourceNotice
+                sourceNotice: PhotoDestinationServiceFactory.sourceNotice,
+                originLocation: locationManager.isLocationAuthorized ? locationManager.currentLocation : nil
             ) { destination in
                 guard destination.canSelectAsDestination else { return }
                 confirmedDestination = destination

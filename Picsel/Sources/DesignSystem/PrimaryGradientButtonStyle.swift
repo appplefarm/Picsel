@@ -5,16 +5,18 @@ import SwiftUI
 struct PrimaryGradientButtonStyle: ButtonStyle {
     
     // Figma 시안에 맞는 그라데이션 색상을 조절합니다.
-    private let gradientColors = [
-        Color(red: 17/255, green: 112/255, blue: 82/255), // 조금 더 짙은 초록 (왼쪽)
-        Color(red: 40/255, green: 152/255, blue: 94/255)  // PicselColor.primaryGreen과 유사한 밝은 초록 (오른쪽)
+    var gradientColors: [Color] = [
+        Color(red: 17/255, green: 112/255, blue: 82/255),
+        Color(red: 40/255, green: 152/255, blue: 94/255)
     ]
+    var height: CGFloat = 60
+    var cornerRadius: CGFloat = 16
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .frame(height: 60) // 기존 공통 버튼 높이
+            .frame(minHeight: height)
             .background(
                 LinearGradient(
                     colors: gradientColors,
@@ -22,7 +24,7 @@ struct PrimaryGradientButtonStyle: ButtonStyle {
                     endPoint: .trailing
                 )
             )
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             // 눌렸을 때 아주 살짝 줄어들고 투명해지는 애니메이션 적용
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .opacity(configuration.isPressed ? 0.9 : 1.0)
