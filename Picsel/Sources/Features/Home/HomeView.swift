@@ -222,6 +222,7 @@ struct HomeView: View {
         )
         stop.address = destination.address
         stop.regionCode = destination.regionCode
+        stop.photoURL = destination.photoURL
         stop.trip = trip
         trip.stops.append(stop)
         return trip

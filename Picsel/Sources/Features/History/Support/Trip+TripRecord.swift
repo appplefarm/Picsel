@@ -35,6 +35,19 @@ extension Trip {
         endTime ?? startTime ?? createdAt
     }
 
+    /// 기록 상세 맨 위에 깔 대표 사진입니다.
+    ///
+    /// 사용자가 고른 목적지(수상작) 사진을 씁니다.
+    /// 목적지에 사진이 없으면 경유지 중 먼저 나오는 사진으로 대신합니다.
+    var representativePhotoURL: URL? {
+        for stop in [destinationStop].compactMap({ $0 }) + orderedStops {
+            if let address = stop.photoURL, let url = URL(string: address) {
+                return url
+            }
+        }
+        return nil
+    }
+
     /// 이 여행이 채울 픽셀입니다. 최종 목적지 좌표로 판정합니다.
     ///
     /// 경유지가 아니라 목적지를 기준으로 삼는 이유는,
@@ -73,6 +86,7 @@ extension Trip {
             orderIndex: 0
         )
         destination.address = "경상북도 포항시 북구 청하면 이가리"
+        destination.photoURL = "https://picsum.photos/seed/picsel-destination/800/900"
 
         let waypoint = RouteStop(
             placeId: "preview-waypoint",

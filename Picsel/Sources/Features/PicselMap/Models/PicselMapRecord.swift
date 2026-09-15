@@ -37,7 +37,8 @@ struct PicselMapRecord: Identifiable {
                 memo: trip.memo,
                 travelDate: trip.recordDate,
                 photoDataList: trip.photos.sorted { $0.orderIndex < $1.orderIndex }.map(\.imageData),
-                placeCount: visitedStops.count
+                placeCount: visitedStops.count,
+                destinationPhotoURL: trip.representativePhotoURL
             ),
             // 현재 RouteStop에 이동 시간/방문 순서 필드가 없어 값을 만들지 않습니다.
             stops: visitedStops.map { RouteStopDisplay(name: $0.name, travelMinutesToNext: nil) }
