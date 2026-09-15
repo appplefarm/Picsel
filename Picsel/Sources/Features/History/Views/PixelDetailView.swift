@@ -76,10 +76,8 @@ struct PixelDetailView: View {
                 RouteTimelineView(stops: stops)
             }
 
-            // TODO: Step 3 - 사진 개수에 따라 유동적으로 배치하는 그리드로 교체
-            if !snapshot.photoDataList.isEmpty {
-                TripPhotoScroller(photoDataList: snapshot.photoDataList)
-            }
+            // 사진이 없으면 TripPhotoGrid가 아무것도 그리지 않아 섹션째 사라집니다.
+            TripPhotoGrid(photoDataList: snapshot.photoDataList)
         }
         .padding(.horizontal, 24)
         .padding(.top, 36)
@@ -124,8 +122,15 @@ struct PixelDetailView: View {
     }
 }
 
-#Preview {
+#Preview("사진 7장") {
+    // 숫자만 바꿔 가며 0~10장 배치를 확인하세요.
     NavigationStack {
-        PixelDetailView(snapshot: .sample)
+        PixelDetailView(snapshot: TripRecordPreviewData.snapshot(photoCount: 7))
+    }
+}
+
+#Preview("사진 없음") {
+    NavigationStack {
+        PixelDetailView(snapshot: TripRecordPreviewData.snapshot(photoCount: 0))
     }
 }
