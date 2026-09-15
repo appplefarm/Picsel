@@ -9,8 +9,8 @@ import SwiftUI
 /// 저장된 여행 상태에 따라 일반 홈과 활성 여행 홈을 전환합니다.
 ///
 /// `Trip.startTime != nil && !Trip.isDone`인 여행은 앱을 다시 실행해도
-/// SwiftData에서 복원되므로 진행 중 홈이 다시 표시됩니다.
-/// 경로 확정 직후의 준비 화면 여부는 `AppRouter`가 현재 실행 중에만 관리합니다.
+/// SwiftData에서 복원됩니다. 경로를 확정한 뒤 아직 시작하지 않은 여행은
+/// AppRouter에 저장된 준비중 여행 ID를 기준으로 준비 화면을 복원합니다.
 struct HomeRootView: View {
     @Environment(AppRouter.self) private var router
     @Query private var trips: [Trip]
@@ -24,9 +24,20 @@ struct HomeRootView: View {
             }
     }
 
+    /// 강제 종료 전에 준비중이었던 여행을 다른 활성 여행보다 우선합니다.
+    private var persistedReadyTrip: Trip? {
+        guard let readyTripID = router.tripReadyTripID else { return nil }
+        return trips.first { trip in
+            trip.id == readyTripID && !trip.isDone
+        }
+    }
+
     /// 기록 저장으로 isDone이 true가 된 직후에도 현재 NavigationStack을 유지합니다.
     /// 픽셀 획득 화면의 버튼이 AppRouter를 초기화하면 새 HomeRootView가 만들어집니다.
     private var displayedTrip: Trip? {
+        if let persistedReadyTrip {
+            return persistedReadyTrip
+        }
         if let sessionTripID,
            let sessionTrip = trips.first(where: { $0.id == sessionTripID }) {
             return sessionTrip
@@ -48,7 +59,7 @@ struct HomeRootView: View {
         }
         .task {
             if sessionTripID == nil {
-                sessionTripID = latestActiveTrip?.id
+                sessionTripID = persistedReadyTrip?.id ?? latestActiveTrip?.id
             }
         }
         .onChange(of: latestActiveTrip?.id) { _, activeTripID in

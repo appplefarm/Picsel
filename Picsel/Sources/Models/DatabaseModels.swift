@@ -68,9 +68,11 @@ final class RouteStop {
     var latitude: Double = 0
     var longitude: Double = 0
     var regionCode: Int?
-    /// 여행 재진입 시에도 장소 썸네일을 복원하기 위한 원격 이미지 주소입니다.
-    var photoURL: String?
     var isDestination: Bool = false
+
+    // 수상작/관광정보 API가 준 사진 주소입니다.
+    // 저장해 두지 않으면 앱을 껐다 켠 뒤 기록 화면에서 대표 사진을 다시 구할 수 없습니다.
+    var photoURL: String?
     
     // 진행 상황 및 순서 통제
     var orderIndex: Int = 0
