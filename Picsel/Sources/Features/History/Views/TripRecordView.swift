@@ -30,56 +30,39 @@ struct TripRecordView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text("오늘 여행의 마무리")
-                    .font(.title)
-                    .fontWeight(.bold)
-                
-                Text("이번 여행은 어떠셨나요?\n나만의 여행 제목과 내용을 간단히 작성해 픽셀에 보관해보세요")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                
+            VStack(alignment: .leading, spacing: 0) {
+                header
+
+                Spacer()
+                    .frame(height: 32)
+
                 TitleTextField(
                     text: $viewModel.title,
                     focusedField: $focusedField
                 )
-                
+
+                Spacer()
+                    .frame(height: 24)
+
                 MemoTextEditor(
                     text: $viewModel.memo,
                     focusedField: $focusedField,
                     maxCount: viewModel.maxMemoCount
                 )
-                
+
+                Spacer()
+                    .frame(height: 24)
+
                 PhotoThumbnailStrip(
                     photos: viewModel.pickedPhotos,
                     canAddMore: viewModel.canAddMorePhotos,
                     onAddTapped: { isGalleryPresented = true },
                     onDelete: { viewModel.removePhoto($0) }
                 )
-                
-                Text("여행 제목과 내용은 픽셀 상세에 저장돼요.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                
-                Button {
-                    focusedField = nil
-                    // 저장이 끝난 뒤에만 결과 화면으로 넘어갑니다.
-                    guard viewModel.save(to: trip, in: modelContext) else { return }
-                    isPixelUnlockedPresented = true
-                } label: {
-                    Text("인증하고 픽셀 채우기")
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 18)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(viewModel.canSave ? Color.black : Color.gray.opacity(0.3))
-                        )
-                }
-                .disabled(!viewModel.canSave)
             }
-            .padding(20)
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 24)
             .frame(maxWidth: .infinity, alignment: .leading)
             // 입력 칸 바깥을 탭하면 키보드를 내린다.
             // .contentShape가 없으면 VStack의 빈 여백은 탭 판정에 잡히지 않는다.
@@ -87,6 +70,12 @@ struct TripRecordView: View {
             .onTapGesture { focusedField = nil }
         }
         .scrollDismissesKeyboard(.interactively)
+        .background(PicselColor.backgroundWarmWhite)
+        // 저장 버튼은 스크롤과 무관하게 항상 같은 자리에 둡니다.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            footer
+        }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .task {
             viewModel.prefillTitleIfNeeded(for: trip)
             // 저장할 때 경계 데이터 파싱으로 화면이 끊기지 않도록 미리 읽어 둡니다.
@@ -112,11 +101,55 @@ struct TripRecordView: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
+
                 Button("완료") { focusedField = nil }
+                    .font(PicselFont.label01)
+                    .foregroundStyle(PicselColor.brandCTA)
+                    .padding(.trailing, 4)
             }
         }
     }
-    
+
+    // MARK: - 구성 요소
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("오늘 여행의 마무리")
+                .font(PicselFont.title02)
+                .foregroundStyle(.black)
+
+            Text("이번 여행은 어떠셨나요?\n나만의 여행 기록을 남겨 픽셀에 보관해보세요")
+                .font(PicselFont.body01)
+                .foregroundStyle(.black)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var footer: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("여행 제목과 내용은 픽셀 상세에 저장돼요.")
+                .font(PicselFont.caption01)
+                .foregroundStyle(PicselColor.textHelper)
+
+            Button {
+                focusedField = nil
+                // 저장이 끝난 뒤에만 결과 화면으로 넘어갑니다.
+                guard viewModel.save(to: trip, in: modelContext) else { return }
+                isPixelUnlockedPresented = true
+            } label: {
+                Text("인증하고 픽셀 채우기")
+                    .font(PicselFont.label01)
+            }
+            .buttonStyle(.primaryGradient)
+            .disabled(!viewModel.canSave)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .background(PicselColor.backgroundWarmWhite)
+    }
+
     private func loadPhotos(from items: [PhotosPickerItem]) async {
         var newPhotos: [PickedPhoto] = []
         for item in items {

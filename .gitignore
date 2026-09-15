@@ -69,3 +69,9 @@ Configs/Secrets.xcconfig
 # Local API keys
 **/Secrets.xcconfig
 **/Secrets.xcconfig
+
+# 로컬 작업 메모 (공유하지 않음)
+Docs/
+
+# 삭제 대기 (원격 세션에서 rm이 안 돼 옮겨두는 자리)
+_to_delete/

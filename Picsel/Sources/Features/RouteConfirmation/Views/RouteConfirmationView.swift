@@ -54,9 +54,9 @@ struct RouteConfirmationView: View {
                     )
                     .listRowInsets(
                         EdgeInsets(
-                            top: 4,
+                            top: 0,
                             leading: editMode.isEditing ? 20 : 24,
-                            bottom: 4,
+                            bottom: 0,
                             trailing: 24
                         )
                     )
@@ -67,6 +67,7 @@ struct RouteConfirmationView: View {
                 }
                 .onDelete(perform: deleteStops)
                 .onMove(perform: moveStops)
+                .padding(.top, 4)
             }
         }
         .listStyle(.plain)
@@ -188,13 +189,8 @@ struct RouteConfirmationView: View {
         } label: {
             Text("이대로 여행 계획표 만들기")
                 .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(PicselColor.onPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: 66)
-                .background(PicselColor.primaryGreen)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.primaryGradient)
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 8)

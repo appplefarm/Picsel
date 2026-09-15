@@ -7,15 +7,17 @@
 
 import CoreGraphics
 import Foundation
+import Metal
 import RealityKit
+import UIKit
 
 /// `SpatialPlaceItem`을 RealityKit 엔티티로 표현하는 렌더링 전용 객체입니다.
 @MainActor
 final class RealityPhotoRenderer {
     private enum Constants {
         static let entityNamePrefix = "photo:"
-        static let selectedScale: Float = 1.035
-        static let minimumOpacity: Float = 0.38
+        static let selectionFrameName = "selection-frame"
+        static let maximumBlurMipBias: Float = 2
     }
 
     private struct PhotoEntry {
@@ -33,8 +35,12 @@ final class RealityPhotoRenderer {
 
     private var entries: [PhotoDestination.ID: PhotoEntry] = [:]
     private var loadGeneration = UUID()
+    private let focusShader: CustomMaterial.SurfaceShader?
 
     init() {
+        focusShader = MTLCreateSystemDefaultDevice()?.makeDefaultLibrary().map {
+            CustomMaterial.SurfaceShader(named: "photoFocusSurface", in: $0)
+        }
         root.name = "photo-scene"
         camera.name = "photo-camera"
         camera.camera = PerspectiveCameraComponent(
@@ -80,14 +86,23 @@ final class RealityPhotoRenderer {
     func render(
         camera pose: PhotoCameraState,
         selectedPlaceID: PhotoDestination.ID?,
-        photoScale: Float
+        photoScale: Float,
+        viewportSize: CGSize
     ) {
         updateCamera(pose)
         updateAppearance(
             camera: pose,
             selectedPlaceID: selectedPlaceID,
-            photoScale: photoScale
+            photoScale: photoScale,
+            viewportSize: viewportSize
         )
+    }
+
+    /// 상세 화면과 배경에 같은 사진이 겹치지 않게 하며, 닫으면 기존 공간을 복원합니다.
+    func setPresentedPlaceID(_ id: PhotoDestination.ID?) {
+        for (placeID, entry) in entries {
+            entry.entity.isEnabled = placeID != id
+        }
     }
 
     private func updateCamera(_ pose: PhotoCameraState) {
@@ -105,25 +120,38 @@ final class RealityPhotoRenderer {
     private func updateAppearance(
         camera pose: PhotoCameraState,
         selectedPlaceID: PhotoDestination.ID?,
-        photoScale: Float
+        photoScale: Float,
+        viewportSize: CGSize
     ) {
         for (id, entry) in entries {
-            let focusAmount = max(
-                0,
-                1 - (
-                    pose.depthError(to: entry.entity.position)
-                        / PhotoSpace.focusFadeRange
-                )
-            )
-            let opacity = Constants.minimumOpacity
-                + (focusAmount * (1 - Constants.minimumOpacity))
-
-            entry.entity.components.set(OpacityComponent(opacity: opacity))
-            let selectionScale = id == selectedPlaceID
-                ? Constants.selectedScale
-                : 1
-            entry.entity.scale = SIMD3(repeating: photoScale * selectionScale)
+            // 투명도 대신 셰이더의 색 혼합으로 옅게 표현해 뒤쪽 사진을 가립니다.
+            entry.entity.findEntity(named: Constants.selectionFrameName)?.isEnabled = id == selectedPlaceID
+            updateFocusTransform(on: entry, camera: pose, photoScale: photoScale, viewportSize: viewportSize)
         }
+    }
+
+    private func updateFocusTransform(
+        on entry: PhotoEntry,
+        camera pose: PhotoCameraState,
+        photoScale: Float,
+        viewportSize: CGSize
+    ) {
+        guard let bounds = entry.entity.model?.mesh.bounds.extents,
+              let focusedScale = PhotoSpace.focusedScale(
+                photoSize: SIMD2(bounds.x, bounds.y),
+                forwardDepth: pose.position.z - entry.entity.position.z,
+                viewportSize: viewportSize
+              ) else { return }
+
+        // 선택 ID가 바뀌는 순간이 아닌, 연속적인 초점 깊이를 기준으로 보정합니다.
+        let progress = PhotoSpace.focusProgress(depthError: pose.depthError(to: entry.entity.position))
+        let scale = photoScale + (focusedScale - photoScale) * progress
+        entry.entity.scale = SIMD3(repeating: scale)
+        entry.entity.orientation = simd_slerp(
+            spatialOrientation(for: entry.item),
+            simd_quatf(angle: 0, axis: SIMD3(0, 1, 0)),
+            progress
+        )
     }
 
     func placeID(for entity: Entity) -> PhotoDestination.ID? {
@@ -147,19 +175,22 @@ final class RealityPhotoRenderer {
         let entity = ModelEntity()
         entity.name = Constants.entityNamePrefix + item.id
         entity.position = PhotoSpace.position(for: item)
-        entity.orientation = simd_quatf(
-            angle: Float(item.yaw * .pi / 180) * 0.45,
-            axis: SIMD3<Float>(0, 1, 0)
-        )
+        entity.orientation = spatialOrientation(for: item)
 
         configureVisual(
             on: entity,
-            for: item,
             aspectRatio: Float(item.fallbackAspectRatio),
             material: makeMaterial()
         )
         configureAccessibility(on: entity, label: item.name)
         return entity
+    }
+
+    private func spatialOrientation(for item: SpatialPlaceItem) -> simd_quatf {
+        simd_quatf(
+            angle: Float(item.yaw * .pi / 180) * 0.45,
+            axis: SIMD3<Float>(0, 1, 0)
+        )
     }
 
     private func loadRemotePhotos(
@@ -223,7 +254,6 @@ final class RealityPhotoRenderer {
                 / Float(max(loadedPhoto.image.height, 1))
             configureVisual(
                 on: entry.entity,
-                for: entry.item,
                 aspectRatio: aspectRatio,
                 material: makeMaterial(texture: texture)
             )
@@ -235,19 +265,32 @@ final class RealityPhotoRenderer {
 
     private func configureVisual(
         on entity: ModelEntity,
-        for item: SpatialPlaceItem,
         aspectRatio: Float,
-        material: UnlitMaterial
+        material: any Material
     ) {
-        let width = PhotoSpace.width(for: item)
-        let height = width / max(aspectRatio, 0.2)
+        let size = PhotoSpace.photoSize(aspectRatio: aspectRatio)
+        let width = size.x
+        let height = size.y
         let mesh = MeshResource.generatePlane(
             width: width,
             height: height,
-            cornerRadius: 0.06
+            cornerRadius: 0.01
         )
 
         entity.model = ModelComponent(mesh: mesh, materials: [material])
+
+        // 흰색 얇은 프레임은 실제 사진 비율에 맞추고 선택된 사진에만 표시합니다.
+        let selectionFrame = entity.findEntity(named: Constants.selectionFrameName) as? ModelEntity
+            ?? ModelEntity()
+        selectionFrame.name = Constants.selectionFrameName
+        selectionFrame.model = ModelComponent(
+            mesh: .generatePlane(width: width + 0.008, height: height + 0.008, cornerRadius: 0.01),
+            materials: [UnlitMaterial(color: .white)]
+        )
+        selectionFrame.position.z = -0.002
+        selectionFrame.isEnabled = false
+        if selectionFrame.parent == nil { entity.addChild(selectionFrame) }
+
         entity.components.set(InputTargetComponent())
         entity.components.set(
             CollisionComponent(
@@ -260,13 +303,34 @@ final class RealityPhotoRenderer {
         )
     }
 
-    private func makeMaterial(texture: TextureResource? = nil) -> UnlitMaterial {
+    private func makeMaterial(texture: TextureResource? = nil) -> any Material {
         var material = texture.map(UnlitMaterial.init(texture:))
             ?? UnlitMaterial()
+#if DEBUG
+        // 프리뷰의 빈 사진만 회색으로 표시해 배경과 배치를 구분합니다.
+        if texture == nil,
+           ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            material.color.tint = .gray
+        }
+#endif
+        material.blending = .opaque
         material.faceCulling = .none
         material.readsDepth = true
         material.writesDepth = true
-        return material
+
+        // 기존 mipmap을 재사용합니다. 셰이더를 쓸 수 없으면 원본 사진은 그대로 표시합니다.
+        guard let focusShader,
+              var focusMaterial = try? CustomMaterial(from: material, surfaceShader: focusShader)
+        else { return material }
+
+        focusMaterial.blending = .opaque
+        focusMaterial.custom.value = SIMD4(
+            PhotoSpace.focusDistance,
+            PhotoSpace.sharpDepthTolerance,
+            PhotoSpace.focusFadeRange,
+            texture == nil ? -1 : Constants.maximumBlurMipBias
+        )
+        return focusMaterial
     }
 
     private func configureAccessibility(

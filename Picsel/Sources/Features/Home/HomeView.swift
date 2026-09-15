@@ -176,32 +176,34 @@ struct HomeView: View {
         NavigationLink {
             PhotoExploreView(
                 service: PhotoDestinationServiceFactory.make(),
-                sourceNotice: PhotoDestinationServiceFactory.sourceNotice
+                sourceNotice: PhotoDestinationServiceFactory.sourceNotice,
+                originLocation: locationManager.isLocationAuthorized ? locationManager.currentLocation : nil
             ) { destination in
                 guard destination.canSelectAsDestination else { return }
                 confirmedDestination = destination
             }
         } label: {
-            HStack(spacing: 14) {
-                Image(systemName: "photo")
-                    .font(.title2)
-
-                VStack(spacing: 3) {
+            ZStack {
+                // 텍스트는 ZStack의 기본 속성으로 버튼 정중앙에 위치
+                VStack(spacing: 4) {
                     Text("사진으로 목적지 고르기")
                         .font(.headline)
                         .fontWeight(.bold)
                     Text("반경 안의 사진들을 둘러보세요")
                         .font(.caption)
+                        .foregroundStyle(.white.opacity(0.9))
                 }
+
+                // 아이콘은 텍스트의 중앙 정렬에 영향을 주지 않고 좌측에 배치
+                HStack {
+                    Image(systemName: "photo")
+                        .font(.title2)
+                    Spacer()
+                }
+                .padding(.leading, 64)
             }
-            .foregroundStyle(PicselColor.onPrimary)
-            .frame(maxWidth: .infinity)
-            .frame(height: 66)
-            .background(PicselColor.homeCTA)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .shadow(color: .black.opacity(0.2), radius: 3, y: 4)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.primaryGradient)
     }
 
     private func makeTrip(for destination: PhotoDestination) -> Trip? {
@@ -220,6 +222,7 @@ struct HomeView: View {
         )
         stop.address = destination.address
         stop.regionCode = destination.regionCode
+        stop.photoURL = destination.photoURL
         stop.trip = trip
         trip.stops.append(stop)
         return trip

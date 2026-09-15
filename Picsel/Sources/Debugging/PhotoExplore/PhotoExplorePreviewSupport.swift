@@ -36,9 +36,11 @@ extension PhotoDestination {
 
 struct PreviewPhotoDestinationService: PhotoDestinationService {
     var destinations: [PhotoDestination] = PhotoDestination.previewSamples
+    var loadingDelay: Duration = .zero
 
     func fetchDestinations(limit: Int) async throws -> [PhotoDestination] {
-        Array(destinations.prefix(limit))
+        try await Task.sleep(for: loadingDelay)
+        return Array(destinations.prefix(limit))
     }
 }
 #endif

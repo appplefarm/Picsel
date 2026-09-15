@@ -40,7 +40,7 @@ private struct PhotoCatalogPreview: View {
                 catch { errorMessage = error.localizedDescription }
             }
             .sheet(item: $selectedPhoto) { photo in
-                DestinationDetailView(destination: photo, info: DestinationDetailInfo(destination: photo)) {
+                DestinationDetailView(destination: photo) {
                     selectedPhoto = nil
                 }
             }

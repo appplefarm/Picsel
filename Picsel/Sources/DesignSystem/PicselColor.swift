@@ -58,7 +58,67 @@ enum PicselColor {
     static let settingsIconBackground = Color(hex: 0xE6F7EE)
     static let settingsBorder = Color(hex: 0xDAE6DE)
 
+    // MARK: - 디자이너 컬러 라이브러리
+    // Figma 변수 이름을 그대로 옮겼습니다. 새 화면은 아래 토큰을 우선 씁니다.
+
+    /// 화면 기본 배경 (Background/Warm White)
+    static let backgroundWarmWhite = Color(hex: 0xF5F6F5)
+    /// 카드·입력 칸 배경
+    static let surface = Color(hex: 0xFFFFFF)
+    /// 브랜드 CTA (Brand/Brand Color(CTA))
+    static let brandCTA = Color(hex: 0x00725D)
+
+    static let textPrimary = Color(hex: 0x1F1F1F)
+    static let textSecondary = Color(hex: 0x5D6B63)
+    static let textTertiary = Color(hex: 0x718076)
+    /// 보조 안내 문구
+    static let textHelper = Color(hex: 0x858585)
+    static let textDisabled = Color(hex: 0xBCBCBC)
+
+    static let borderBrandSubtle = Color(hex: 0xBEDBD4)
+    static let borderDefault = Color(hex: 0xDAE6DE)
+
+    // MARK: - 기록 작성 화면
+    /// 제목·내용 입력 칸 테두리
+    static let inputBorder = Color(hex: 0xF3F3F3)
+    /// 입력 칸 placeholder
+    static let inputPlaceholder = Color(hex: 0xDBDBDB)
+    /// 사진 추가 버튼 배경
+    static let photoAddBackground = Color(hex: 0xF1F9F7)
+    /// 사진 추가 버튼의 + 기호
+    static let photoAddIcon = Color(hex: 0xABABAB)
+
+    // MARK: - 보조 버튼 (픽셀 획득 화면 "홈으로")
+    static let secondaryButtonBackground = Color(hex: 0xFBFDFD)
+    static let secondaryButtonBorder = Color(hex: 0xE4F1EB)
+    static let secondaryButtonText = Color(hex: 0xA4B8B0)
+
     /// 픽셀맵에서 아직 가보지 않은 칸
+    /// 경로 타임라인의 점과 선
+    static let actionPrimaryBright = Color(hex: 0x37B287)
+
+    /// 픽셀 히스토리에서 선택된 연도 칩
+    static let mapYearActive = Color(hex: 0x81B89E)
+
+    /// 보조 아이콘·선택된 칩의 테두리
+    static let iconSecondary = Color(hex: 0x718076)
+
+    /// 브랜드 색 위에 얹는 글자 (사진 위 보조 정보 등)
+    static let textOnBrand = Color(hex: 0xF4FEFB)
+
+    /// 픽셀 지역 상세의 방문 횟수
+    static let pixelVisitCount = Color(hex: 0x559E89)
+
+    /// 사진 위에 얹는 보조 글자 (날짜 등)
+    static let textOnPhotoSecondary = Color(hex: 0xC7C7CC)
+
+    /// 픽셀맵에서 채운 칸
+    static let pixelUnlockedFill = Color(hex: 0xADCDBA)
+    static let pixelUnlockedStroke = Color(hex: 0x7DAB95)
+
+    /// 시도 경계선. 칸 경계보다 한 단계만 진하게 둡니다.
+    static let pixelBoundary = Color(hex: 0xC7CCC8)
+
     static let pixelLockedFill = Color(hex: 0xEFF1EF)
     static let pixelLockedStroke = Color(hex: 0xD5DAD7)
     /// 경로 목록 행 테두리
@@ -69,6 +129,10 @@ enum PicselColor {
     static let editLabel = Color(hex: 0x738376)
     /// 구간 이동 시간
     static let travelMinutes = Color(hex: 0x858585)
+
+    /// 사진 탐색 로딩 화면
+    static let photoLoadingWaveTint = Color(hex: 0x43C994)
+    static let photoLoadingText = Color(hex: 0x639580)
 }
 
 extension Color {

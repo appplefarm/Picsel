@@ -12,26 +12,15 @@ struct PhotoExploreBackground: View {
     var body: some View {
         LinearGradient(
             stops: [
-                .init(color: color(255), location: 0.27),
-                .init(color: color(180), location: 0.53),
-                .init(color: color(153), location: 0.72),
-                .init(color: color(243), location: 1)
+                .init(color: PicselColor.surface, location: 0.20192),
+                .init(color: Color(hex: 0xF4FAF9), location: 0.48558),
+                .init(color: Color(hex: 0xC5E1E1), location: 0.65385),
+                .init(color: Color(hex: 0xEEF8F6), location: 1)
             ],
             startPoint: .top,
             endPoint: .bottom
         )
         .ignoresSafeArea()
         .accessibilityHidden(true)
-    }
-
-    private func color(_ grayscale: Double) -> Color {
-        let channel = grayscale / 255
-        return Color(
-            .sRGB,
-            red: channel,
-            green: channel,
-            blue: channel,
-            opacity: 1
-        )
     }
 }

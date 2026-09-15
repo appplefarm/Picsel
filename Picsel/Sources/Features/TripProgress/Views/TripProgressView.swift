@@ -16,8 +16,7 @@ struct TripProgressView: View {
     let thumbnailURLsByStopID: [UUID: URL]
     let onFinishTrip: () -> Void
 
-    /// 온보딩이 붙기 전까지 이 화면의 토글로 정하는 값입니다.
-    @AppStorage("preferredNavigationApp") private var navigationApp: NavigationApp = .naverMap
+    @AppStorage("preferredNavigationApp") private var navigationApp: NavigationApp = .kakaoMap
 
     private var stops: [RouteStop] { trip.orderedStops }
 
@@ -25,10 +24,6 @@ struct TripProgressView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 header
-
-                NavigationAppPicker(selection: $navigationApp)
-                    .padding(.horizontal, Metric.headerHorizontalPadding)
-                    .padding(.bottom, 24)
 
                 stopList
             }
@@ -86,13 +81,8 @@ struct TripProgressView: View {
         Button(action: onFinishTrip) {
             Text("여행 마치기")
                 .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(PicselColor.onPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: Metric.finishButtonHeight)
-                .background(PicselColor.primaryGreen)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.primaryGradient)
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 8)

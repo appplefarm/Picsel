@@ -55,17 +55,21 @@ struct AdministrativeRegionTile: View {
 
     private var fillColor: Color {
         if isSelected {
-            return .accentColor
+            // 선택된 칸은 디자인 시스템의 "선택됨" 초록을 씁니다.
+            return PicselColor.mapYearActive
         }
-        return isUnlocked ? .primary.opacity(0.7) : Color(.systemGray5)
+        return isUnlocked ? PicselColor.pixelUnlockedFill : PicselColor.pixelLockedFill
     }
 
     private var strokeColor: Color {
-        .black.opacity(isSelected ? 0.85 : 0.65)
+        if isSelected {
+            return PicselColor.actionPrimaryBright
+        }
+        return isUnlocked ? PicselColor.pixelUnlockedStroke : PicselColor.pixelLockedStroke
     }
 
     private var strokeWidth: CGFloat {
-        isSelected ? 0.8 : 0.45
+        isSelected ? 0.9 : 0.45
     }
 
     private var accessibilityValue: String {
@@ -94,6 +98,13 @@ struct AdministrativeBoundaryOutlineShape: Shape {
 
 /// 한 지역 안에서 두 번 나타나는 공유 경계는 제거하고 외곽선만 만듭니다.
 struct AdministrativeRegionTileGeometry {
+
+    /// 지도를 그릴 때 사방에 남기는 여백입니다.
+    ///
+    /// 확대 위치를 계산하는 쪽(PixelMapCamera)도 같은 값을 써야 초점이 어긋나지 않아서,
+    /// 값을 여기 한 곳에만 두고 가져다 씁니다.
+    static let projectionPadding: CGFloat = 8
+
     private let projection: AdministrativeMapProjection
     private let pixelResolution: Int
     private let rings: [[AdministrativeMapGridPoint]]
@@ -277,7 +288,7 @@ struct AdministrativeRegionTileGeometry {
             for: gridPoint,
             horizontalResolution: pixelResolution,
             in: rect,
-            padding: 18
+            padding: Self.projectionPadding
         )
     }
 

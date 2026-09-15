@@ -11,7 +11,7 @@ import Foundation
 /// 제스처가 종료된 후 유지되는 카메라 위치입니다.
 struct PhotoCameraState: Equatable {
     static let initial = PhotoCameraState(
-        position: SIMD3<Float>(0, 0, PhotoSpace.focusDistance)
+        position: SIMD3<Float>(0, 0, PhotoSpace.initialCameraDistance)
     )
 
     var position: SIMD3<Float>

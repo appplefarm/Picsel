@@ -8,12 +8,11 @@
 import Foundation
 
 /// 목적지 상세 화면에만 필요한 부가 정보입니다.
-/// 현재 없는 위치·경로 값은 `nil`로 두고, 서버 데이터가 생기면 주입합니다.
+/// 경로 조회 전에는 `nil`로 두고, 길찾기 응답의 거리·시간을 주입합니다.
 struct DestinationDetailInfo {
     let locationName: String?
     let distanceKilometers: Double?
     let estimatedDurationMinutes: Int?
-    let categoryName: String?
 
     init(
         destination: PhotoDestination,
@@ -23,11 +22,10 @@ struct DestinationDetailInfo {
         locationName = destination.address
         self.distanceKilometers = distanceKilometers
         self.estimatedDurationMinutes = estimatedDurationMinutes
-        categoryName = "관광사진"
     }
 
     var chips: [String] {
-        [distanceText, durationText, categoryName]
+        [distanceText, durationText]
             .compactMap { value in
                 guard let value,
                       !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {

@@ -33,6 +33,12 @@ struct RouteStopRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if showsTimeline, let travelMinutes {
+                // 첫 줄에 이동 시간이 있다는 것은 현재 위치에서 출발한다는 뜻입니다.
+                // 캡슐에는 "N분"만 남으므로 출발점을 여기서 따로 밝혀 줍니다.
+                if position.isFirst {
+                    originRow
+                }
+
                 travelSegment(minutes: travelMinutes)
             }
 
@@ -51,12 +57,11 @@ struct RouteStopRow: View {
 
     private func travelSegment(minutes: Int) -> some View {
         HStack(spacing: Metric.timelineSpacing) {
-            dashedLine
-                .frame(width: Metric.dotSize)
+            travelLabel(minutes: minutes)
 
-            Text(position.isFirst ? "현재 위치에서 \(minutes)분" : "\(minutes)분")
-                .font(.system(size: 11))
-                .foregroundStyle(PicselColor.travelMinutes)
+            // 선 옆에 두던 시절의 자리를 비워, 카드가 밀리지 않게 합니다.
+            Color.clear
+                .frame(maxWidth: .infinity)
         }
         .frame(height: Metric.segmentHeight)
         .accessibilityLabel(
@@ -64,6 +69,52 @@ struct RouteStopRow: View {
                 ? "현재 위치에서 \(minutes)분 이동"
                 : "직전 장소에서 \(minutes)분 이동"
         )
+    }
+
+    private var originRow: some View {
+        HStack(spacing: Metric.timelineSpacing) {
+            Circle()
+                .stroke(PicselColor.actionGreen, lineWidth: 3)
+                .frame(width: Metric.originDotSize, height: Metric.originDotSize)
+                .frame(width: Metric.dotSize)
+
+            Text("현재 위치")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(PicselColor.locationLabel)
+
+            Spacer(minLength: 0)
+        }
+        .accessibilityLabel("출발지, 현재 위치")
+    }
+
+    /// 이동 시간은 장소가 아니라 장소 "사이"의 값이라 점선 위에 얹습니다.
+    ///
+    /// 선 옆에 두면 숫자가 장소 이름과 같은 열에 놓여 형제처럼 보입니다.
+    /// 선을 끊고 그 자리에 두면 "이 구간에 드는 시간"이라는 뜻이 형태로 드러납니다.
+    private func travelLabel(minutes: Int) -> some View {
+        ZStack {
+            dashedLine
+                .frame(width: Metric.dotSize)
+
+            Text("\(minutes)분")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(PicselColor.travelMinutes)
+                .lineLimit(1)
+                .fixedSize()
+                .padding(.horizontal, Metric.labelHorizontalPadding)
+                .padding(.vertical, Metric.labelVerticalPadding)
+                // 배경이 없으면 점선이 글자 사이를 관통해 읽기 어려워집니다.
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(Color.white)
+                )
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(PicselColor.rowBorder, lineWidth: 1)
+                }
+        }
+        // 캡슐이 점 열보다 넓어도 카드 위치가 흔들리지 않도록 폭을 고정합니다.
+        .frame(width: Metric.dotSize)
     }
 
     private var timelineIndicator: some View {
@@ -152,12 +203,59 @@ private struct VerticalDashedLine: Shape {
 /// 시안에서 가져온 값입니다.
 private enum Metric {
     static let dotSize: CGFloat = 22
+    /// 출발점은 아직 지나지 않은 곳이라 속을 비운 원으로 둡니다.
+    static let originDotSize: CGFloat = 14
     static let timelineSpacing: CGFloat = 12
     /// 이동 시간이 놓이는 구간 높이
-    static let segmentHeight: CGFloat = 26
+    static let segmentHeight: CGFloat = 30
+    static let labelHorizontalPadding: CGFloat = 7
+    static let labelVerticalPadding: CGFloat = 3
     static let cardPadding: CGFloat = 10
     static let cardContentSpacing: CGFloat = 17
     static let cardCornerRadius: CGFloat = 18
     static let thumbnailSize: CGFloat = 48
     static let thumbnailCornerRadius: CGFloat = 10
 }
+
+#if DEBUG
+private enum RouteStopRowPreviewData {
+    static func makeStops() -> [RouteStop] {
+        let places: [(String, Double, Double, Bool)] = [
+            ("호미곶 해맞이광장", 36.076_2, 129.567_3, false),
+            ("구룡포 일본인가옥거리", 35.989_6, 129.554_9, false),
+            ("이가리 닻 전망대", 36.187_992, 129.379_005, true)
+        ]
+
+        return places.enumerated().map { index, place in
+            RouteStop(
+                name: place.0,
+                latitude: place.1,
+                longitude: place.2,
+                stopType: place.3 ? "destination" : "waypoint",
+                orderIndex: index
+            )
+        }
+    }
+
+    static let minutes = [12, 8, 23]
+}
+
+
+#Preview {
+    let stops = RouteStopRowPreviewData.makeStops()
+
+    return VStack(spacing: 0) {
+        ForEach(Array(stops.enumerated()), id: \.element.id) { index, stop in
+            RouteStopRow(
+                stop: stop,
+                thumbnailURL: nil,
+                travelMinutes: RouteStopRowPreviewData.minutes[index],
+                position: index == 0 ? .first : (index == stops.count - 1 ? .last : .middle),
+                showsTimeline: true
+            )
+        }
+    }
+    .padding(24)
+}
+
+#endif

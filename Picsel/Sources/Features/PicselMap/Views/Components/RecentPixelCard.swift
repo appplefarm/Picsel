@@ -22,11 +22,8 @@ struct RecentPixelCard: View {
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(2)
 
-                Text("\(snapshot.travelDate, format: .dateTime.year().month(.twoDigits).day(.twoDigits)) · 사진 \(snapshot.photoCount)장")
+                Text("\(snapshot.travelDate, format: .dateTime.year().month(.twoDigits).day(.twoDigits))")
                     .font(.caption)
-
-                Text("픽셀 상세 보기 →")
-                    .font(.caption.weight(.medium))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
