@@ -11,13 +11,13 @@ import SwiftUI
 struct TripInProgressHomeView: View {
     let cityName: String
     /// 여행 완료 시 PixelUnlockedView에서 강조할 행정구역 코드와 같은 값입니다.
-    let regionCode: String
+    let regionCode: String?
     let onSettingsTapped: () -> Void
     let onTripProgressTapped: () -> Void
 
     init(
         cityName: String = "포항",
-        regionCode: String = "4711",
+        regionCode: String? = "4711",
         onSettingsTapped: @escaping () -> Void = {},
         onTripProgressTapped: @escaping () -> Void = {}
     ) {
@@ -39,13 +39,7 @@ struct TripInProgressHomeView: View {
 
                 Spacer(minLength: Metric.titleToPixelMinimumSpacing)
 
-                PixelUnlockedMapView(
-                    highlightedRegionCode: regionCode,
-                    isRevealed: false
-                )
-                    .frame(width: Metric.pixelWidth, height: Metric.pixelHeight)
-                    .shadow(color: PicselColor.tripHomeGlow.opacity(0.85), radius: 14)
-                    .accessibilityHidden(true)
+                pixelView
 
                 Spacer(minLength: Metric.pixelToButtonMinimumSpacing)
 
@@ -76,6 +70,26 @@ struct TripInProgressHomeView: View {
             .accessibilityLabel("설정")
         }
         .padding(.top, Metric.settingsTopSpacing)
+    }
+
+    @ViewBuilder
+    private var pixelView: some View {
+        if let regionCode {
+            PixelUnlockedMapView(
+                highlightedRegionCode: regionCode,
+                isRevealed: false
+            )
+            .frame(width: Metric.pixelWidth, height: Metric.pixelHeight)
+            .shadow(color: PicselColor.tripHomeGlow.opacity(0.85), radius: 14)
+            .accessibilityHidden(true)
+        } else {
+            Image(systemName: "square.grid.3x3.fill")
+                .font(.system(size: 92, weight: .light))
+                .foregroundStyle(PicselColor.tripHomeSubtitle.opacity(0.8))
+                .frame(width: Metric.pixelWidth, height: Metric.pixelHeight)
+                .shadow(color: PicselColor.tripHomeGlow.opacity(0.7), radius: 14)
+                .accessibilityHidden(true)
+        }
     }
 
     private var titleSection: some View {

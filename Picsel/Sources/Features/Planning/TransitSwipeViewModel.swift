@@ -87,6 +87,7 @@ final class TransitSwipeViewModel {
             )
             newStop.address = place.address
             newStop.regionCode = place.regionCode
+            newStop.photoURL = place.photoURL
 
             // 양방향 연결
             newStop.trip = activeTrip
@@ -104,6 +105,7 @@ final class TransitSwipeViewModel {
 
         if let destinationStop = activeTrip.destinationStop, let destinationPhotoURL {
             thumbnails[destinationStop.id] = destinationPhotoURL
+            destinationStop.photoURL = destinationPhotoURL.absoluteString
         }
 
         thumbnailURLsByStopID = thumbnails
@@ -116,20 +118,27 @@ final class TransitSwipeViewModel {
     /// 여기서 저장해 두지 않으면 실제 여행 중(몇 시간)에 앱이 메모리에서 내려갈 때
     /// 목적지·경유지·경로가 통째로 사라집니다.
     /// 목적지를 눌러보기만 한 여행이 쌓이지 않도록, 경로를 확정한 이 시점에 넣습니다.
-    func startTrip(in context: ModelContext) {
+    @discardableResult
+    func startTrip(in context: ModelContext) -> Bool {
         if activeTrip.startTime == nil {
             activeTrip.startTime = Date()
         }
 
-        // 뒤로 갔다가 다시 들어와도 두 번 등록되지 않게 확인합니다.
-        guard activeTrip.modelContext == nil else { return }
+        // 완료 화면에서 사용할 픽셀과 진행 중 홈의 도형이 같은 지역을 가리키게 합니다.
+        activeTrip.targetPixelCode = activeTrip.pixelTile?.code
 
-        context.insert(activeTrip)
+        // 뒤로 갔다가 다시 들어와도 두 번 등록되지 않게 확인합니다.
+        if activeTrip.modelContext == nil {
+            context.insert(activeTrip)
+        }
 
         do {
             try context.save()
+            return true
         } catch {
+            context.rollback()
             print("여행 저장에 실패했습니다: \(error.localizedDescription)")
+            return false
         }
     }
 }
