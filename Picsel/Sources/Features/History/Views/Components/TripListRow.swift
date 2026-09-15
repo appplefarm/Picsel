@@ -9,19 +9,23 @@ import SwiftUI
 
 /// 목록에 한 줄로 들어가는 여행 기록입니다.
 ///
-/// 픽셀 지역 상세의 시트에서 씁니다.
+/// 픽셀맵의 최근 기록과 지역 상세의 시트에서 씁니다.
 /// 픽셀 히스토리의 큰 카드(TripHistoryCard)와 달리, 한 화면에 여러 개를 쌓는 용도입니다.
 struct TripListRow: View {
 
     let title: String
     let travelDate: Date
     let photoURL: URL?
+    /// 목적지 사진을 표시할 수 없을 때 사용할 기존 첨부 사진입니다.
+    var fallbackPhotoData: Data? = nil
+    @Environment(\.displayScale) private var displayScale
 
     var body: some View {
         HStack(spacing: 16) {
             thumbnail
                 .frame(width: 88, height: 62)
                 .clipShape(.rect(cornerRadius: 10))
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
@@ -60,9 +64,21 @@ struct TripListRow: View {
                         .resizable()
                         .scaledToFill()
                 default:
-                    PicselColor.pixelLockedFill
+                    fallbackPhoto
                 }
             }
+        } else {
+            fallbackPhoto
+        }
+    }
+
+    @ViewBuilder
+    private var fallbackPhoto: some View {
+        if let data = fallbackPhotoData,
+           let image = TripPhotoImage.downsampled(data, maxPixelSize: 88 * displayScale) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
         } else {
             PicselColor.pixelLockedFill
         }
