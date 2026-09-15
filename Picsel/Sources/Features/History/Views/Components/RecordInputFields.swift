@@ -84,16 +84,17 @@ struct MemoTextEditor: View {
                 guard newValue.count > maxCount else { return }
                 text = String(newValue.prefix(maxCount))
             }
-            // TextEditor는 안쪽에 5pt 여백을 갖고 있어, 목표 여백(16 / 14)에서 그만큼 뺍니다.
+            // TextEditor의 기본 여백은 가로 5pt, 세로 8pt입니다.
+            // 안내 문구와 동일한 시작점(가로 16pt / 세로 14pt)에 맞춥니다.
             .padding(.horizontal, 11)
-            .padding(.vertical, 9)
+            .padding(.vertical, 6)
             // 글자 수 표시와 본문이 겹치지 않도록 아래를 비워 둡니다.
             .padding(.bottom, 18)
     }
 
     private var placeholder: some View {
         Text("사진들과 관련해 짧은 글을 남겨보세요")
-            .font(PicselFont.caption01)
+            .font(PicselFont.body02)
             .foregroundStyle(PicselColor.inputPlaceholder)
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
