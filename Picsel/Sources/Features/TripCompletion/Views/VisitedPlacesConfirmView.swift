@@ -39,9 +39,6 @@ struct VisitedPlacesConfirmView: View {
                     let yOffset = CGFloat(clampedIndex) * -55.0
                     let scale = 1.0 - (CGFloat(clampedIndex) * 0.12)
                     
-                    // 우측으로 회전 (3도씩)
-                    let rotationAngle = Double(clampedIndex) * 3.0
-                    
                     VisitedPlaceCardView(
                         stop: stop,
                         photoURL: viewModel.thumbnailURLsByStopID[stop.id],
@@ -51,13 +48,15 @@ struct VisitedPlacesConfirmView: View {
                         },
                         onSwipeDown: {
                             viewModel.sendTopCardToBack()
+                        },
+                        onSwipeUp: {
+                            viewModel.sendBottomCardToFront()
                         }
                     )
                     // 회전 시 bounding box 팽창으로 전체 레이아웃이 망가지는 것을 막기 위해 명시적 크기 고정
                     .frame(width: 334)
                     .scaleEffect(scale, anchor: .bottom)
                     .offset(y: yOffset)
-                    .rotationEffect(.degrees(rotationAngle), anchor: .bottom)
                     // 최상단 카드와 그 아래 2장(총 3장)까지만 보여줌
                     .opacity(reverseIndex < 3 ? 1 : 0)
                     // 맨 위에 있는 카드만 터치/스와이프 가능하도록 활성화

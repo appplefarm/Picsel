@@ -6,6 +6,7 @@ struct VisitedPlaceCardView: View {
     let isSelected: Bool
     let toggleSelection: () -> Void
     var onSwipeDown: () -> Void
+    var onSwipeUp: () -> Void
     
     @State private var offset: CGSize = .zero
     
@@ -81,26 +82,27 @@ struct VisitedPlaceCardView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 24))
         .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
-        .offset(y: offset.height) // 드래그 시 Y축(아래)으로만 이동
+        .offset(y: offset.height) // 드래그 시 Y축으로만 이동
         .gesture(
             DragGesture()
                 .onChanged { value in
-                    // 카드를 아래로 내릴 때만 움직이게
-                    if value.translation.height > 0 {
-                        offset = value.translation
-                    }
+                    // 위아래 양방향 이동 허용
+                    offset = value.translation
                 }
                 .onEnded { value in
-                    // 100 픽셀 이상 내렸을 때 스와이프 처리
-                    if value.translation.height > 100 {
+                    if value.translation.height > 80 {
+                        // 아래로 내렸을 때 (이전 카드로)
                         UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
                         onSwipeDown()
-                        offset = .zero // 뷰모델이 배열을 업데이트하면 카드가 맨 뒤로 가므로 offset은 원상복구
-                    } else {
-                        // 되돌아가기
-                        withAnimation(.spring()) {
-                            offset = .zero
-                        }
+                    } else if value.translation.height < -80 {
+                        // 위로 올렸을 때 (다음 카드로)
+                        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+                        onSwipeUp()
+                    }
+                    
+                    // 스와이프 후 무조건 중앙으로 복귀
+                    withAnimation(.spring()) {
+                        offset = .zero
                     }
                 }
         )
