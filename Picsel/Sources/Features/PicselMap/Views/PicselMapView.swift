@@ -144,7 +144,11 @@ struct PicselMapView: View {
             LazyHStack(spacing: 12) {
                 ForEach(displayedRecords) { record in
                     NavigationLink {
-                        PixelDetailView(snapshot: record.snapshot, stops: record.stops)
+                        PixelDetailView(
+                            snapshot: record.snapshot,
+                            stops: record.stops,
+                            trip: record.trip
+                        )
                     } label: {
                         RecentPixelCard(snapshot: record.snapshot)
                     }

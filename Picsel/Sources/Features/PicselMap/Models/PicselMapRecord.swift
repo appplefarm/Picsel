@@ -13,12 +13,22 @@ struct PicselMapRecord: Identifiable {
     let regionCode: String
     let snapshot: TripRecordSnapshot
     let stops: [RouteStopDisplay]
+    /// 기록 상세에서 제목·내용·사진을 고치려면 저장된 원본이 필요합니다.
+    /// 목업 데이터로 만든 기록은 nil이라 편집 버튼이 보이지 않습니다.
+    let trip: Trip?
 
-    init(id: UUID, regionCode: String, snapshot: TripRecordSnapshot, stops: [RouteStopDisplay]) {
+    init(
+        id: UUID,
+        regionCode: String,
+        snapshot: TripRecordSnapshot,
+        stops: [RouteStopDisplay],
+        trip: Trip? = nil
+    ) {
         self.id = id
         self.regionCode = regionCode
         self.snapshot = snapshot
         self.stops = stops
+        self.trip = trip
     }
 
     init?(trip: Trip) {
@@ -41,7 +51,8 @@ struct PicselMapRecord: Identifiable {
                 destinationPhotoURL: trip.representativePhotoURL
             ),
             // 현재 RouteStop에 이동 시간/방문 순서 필드가 없어 값을 만들지 않습니다.
-            stops: visitedStops.map { RouteStopDisplay(name: $0.name, travelMinutesToNext: nil) }
+            stops: visitedStops.map { RouteStopDisplay(name: $0.name, travelMinutesToNext: nil) },
+            trip: trip
         )
     }
 }

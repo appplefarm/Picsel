@@ -16,6 +16,8 @@ struct PixelDetailHeroView: View {
     let photoURL: URL?
     let title: String
     let travelDate: Date
+    /// 편집 중에는 제목을 입력 칸에서 고치므로, 사진 위 제목은 숨깁니다.
+    var showsCaption: Bool = true
 
     /// 본문이 1만큼 올라갈 때 사진은 이만큼만 따라 올라갑니다. 0이면 사진이 완전히 멈춥니다.
     private let parallaxRatio: CGFloat = 0.35
@@ -38,7 +40,11 @@ struct PixelDetailHeroView: View {
                 )
                 .clipped()
                 .overlay { shade }
-                .overlay(alignment: .bottomLeading) { titleBlock }
+                .overlay(alignment: .bottomLeading) {
+                    if showsCaption {
+                        titleBlock
+                    }
+                }
                 .offset(y: -stretch + parallax)
         }
         // 시트가 덮는 만큼 아래로 더 그립니다.
@@ -71,10 +77,16 @@ struct PixelDetailHeroView: View {
         PicselColor.pixelLockedFill
     }
 
-    /// 흰 글씨가 어떤 사진 위에서도 읽히도록 아래쪽을 어둡게 덮습니다.
+    /// 흰 글씨가 어떤 사진 위에서도 읽히도록 위아래를 어둡게 덮습니다.
+    ///
+    /// 아래쪽은 제목·날짜를 위해, 위쪽은 내비게이션 바의 뒤로·편집 버튼을 위해 깝니다.
     private var shade: some View {
         LinearGradient(
-            colors: [.clear, .black.opacity(0.75)],
+            stops: [
+                .init(color: .black.opacity(0.28), location: 0),
+                .init(color: .clear, location: 0.22),
+                .init(color: .black.opacity(0.75), location: 1)
+            ],
             startPoint: .top,
             endPoint: .bottom
         )
