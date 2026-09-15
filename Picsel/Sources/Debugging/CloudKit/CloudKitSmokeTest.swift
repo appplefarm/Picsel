@@ -55,7 +55,47 @@ enum CloudKitSmokeTest {
         }
         print("✅ 경계 매칭: 픽셀 \(matched.count)곳 / 지역코드 \(regionCodes.count)종")
 
+        await checkAwardAPI(catalog: catalog)
+
         print("────────────────────────────────────")
+    }
+
+    /// 수상작 API를 실제로 부르고, 좌표와 짝이 지어지는지 확인합니다.
+    private static func checkAwardAPI(catalog: PhotoCoordinateCatalog) async {
+        print()
+        print("── 수상작 API ──")
+
+        do {
+            let started = ContinuousClock.now
+            let photos = try await AwardPhotoService().fetchAll()
+            let elapsed = ContinuousClock.now - started
+
+            print("✅ \(photos.count)건 수신 (\(elapsed))")
+
+            // 좌표가 있는 사진만 지도에 띄울 수 있습니다.
+            let matched = photos.filter {
+                catalog.coordinate(forPhotoID: $0.photoID, source: .award) != nil
+            }
+            let expected = catalog.photoIDs(of: .award).count
+
+            print("✅ 좌표와 짝지음: \(matched.count)건 / 우리 좌표 \(expected)건")
+
+            if matched.count < expected {
+                print("   ⚠️ 좌표는 있는데 API에 없는 사진 \(expected - matched.count)건")
+            }
+            if photos.count > matched.count {
+                print("   (API에는 있지만 좌표를 안 넣은 사진 \(photos.count - matched.count)건)")
+            }
+
+            if let sample = matched.first,
+               let place = catalog.coordinate(forPhotoID: sample.photoID, source: .award) {
+                print("   예시: \(sample.title)")
+                print("        → \(place.placeName) (\(place.latitude), \(place.longitude))")
+                print("        → \(sample.imageURL.lastPathComponent)")
+            }
+        } catch {
+            print("❌ \(error.localizedDescription)")
+        }
     }
 }
 #endif

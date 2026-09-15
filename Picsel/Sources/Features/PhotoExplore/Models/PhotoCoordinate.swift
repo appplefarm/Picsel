@@ -11,7 +11,7 @@ import Foundation
 /// 사진 한 장을 어느 API에서 가져와야 하는지입니다.
 ///
 /// 514장이 두 API에서 오고, 사진 ID만으로는 구분되지 않아 따로 들고 다닙니다.
-enum PhotoAPISource: String, Codable, Sendable, CaseIterable {
+nonisolated enum PhotoAPISource: String, Codable, Sendable, CaseIterable {
     /// 관광공모전 수상작. PhokoAwrdService의 `contentId`와 사진 ID가 같습니다.
     case award
     /// 관광사진 갤러리. PhotoGalleryService1의 `galContentId`와 사진 ID가 같습니다.
@@ -26,7 +26,7 @@ enum PhotoAPISource: String, Codable, Sendable, CaseIterable {
 ///
 /// 제목·이미지 주소 같은 API가 주는 값은 여기 담지 않습니다.
 /// 그건 화면을 그릴 때마다 API에서 실시간으로 받아옵니다.
-struct PhotoCoordinate: Codable, Sendable, Identifiable {
+nonisolated struct PhotoCoordinate: Codable, Sendable, Identifiable {
 
     let photoID: String
     let source: PhotoAPISource
@@ -47,7 +47,7 @@ struct PhotoCoordinate: Codable, Sendable, Identifiable {
 }
 
 /// CloudKit에서 받은 좌표 데이터 한 벌입니다.
-struct PhotoCoordinateCatalog: Codable, Sendable {
+nonisolated struct PhotoCoordinateCatalog: Codable, Sendable {
 
     let schemaVersion: Int
     let photos: [PhotoCoordinate]
