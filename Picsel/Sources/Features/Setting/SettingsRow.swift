@@ -10,6 +10,7 @@ struct SettingsRow: View {
     let icon: String
     let title: String
     let description: String
+    var minHeight: CGFloat = 76
     let action: () -> Void
 
     var body: some View {
@@ -42,9 +43,10 @@ struct SettingsRow: View {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(PicselColor.settingsSecondaryText.opacity(0.75))
+                    .frame(width: 20)
             }
-            .padding(.horizontal, 10)
-            .frame(minHeight: 56)
+            .padding(.horizontal, 11)
+            .frame(minHeight: minHeight)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

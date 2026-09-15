@@ -35,8 +35,9 @@ struct VersionRow: View {
             Text(AppInfo.displayVersion)
                 .font(.system(size: 12))
                 .foregroundStyle(PicselColor.settingsSecondaryText.opacity(0.85))
+                .padding(.trailing, 9)
         }
-        .padding(.horizontal, 10)
-        .frame(minHeight: 56)
+        .padding(.horizontal, 11)
+        .frame(minHeight: 76)
     }
 }

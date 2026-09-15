@@ -51,12 +51,12 @@ enum PicselColor {
     static let navigationButtonHighlight = Color(hex: 0x149873)
 
     /// 설정 화면
-    static let settingsBackground = Color(hex: 0xDEE7E2)
-    static let settingsSectionTitle = Color(hex: 0x114D36)
+    static let settingsBackground = Color(hex: 0xF5F6F5)
+    static let settingsSectionTitle = Color(hex: 0x1F1F1F)
     static let settingsSecondaryText = Color(hex: 0x5D6B63)
     static let settingsIcon = Color(hex: 0x31B98C)
-    static let settingsIconBackground = Color(hex: 0xE6F7EE)
-    static let settingsBorder = Color(hex: 0xDAE6DE)
+    static let settingsIconBackground = Color(hex: 0xF5F6F5)
+    static let settingsBorder = Color(hex: 0xBEDBD4)
 
     // MARK: - 디자이너 컬러 라이브러리
     // Figma 변수 이름을 그대로 옮겼습니다. 새 화면은 아래 토큰을 우선 씁니다.
