@@ -11,12 +11,15 @@ import SwiftData
 
 @Observable
 final class TransitSwipeViewModel {
+    static let maximumRecommendationCount = 10
+
     var activeTrip: Trip
     
-    var candidates: [PlaceDTO] = []       // API로 받아올 추천 장소 최대 10곳
+    var candidates: [PlaceDTO] = []       // gallery API로 받아올 추천 장소 최대 10곳
     var totalFetchedCount: Int = 0        // 10장 중 몇장째인지 계산하기 위한 전체 개수
     var selectedPlaces: [PlaceDTO] = []   // 오른쪽으로 스와이프(선택)한 장소들
     var isLoading: Bool = false
+    var hasLoadedRecommendations: Bool = false
 
     /// 경로 확인 화면에 넘길 장소 사진입니다.
     /// RouteStop 모델에는 사진 필드가 없어 화면 사이에서만 들고 다닙니다.
@@ -30,24 +33,62 @@ final class TransitSwipeViewModel {
         self.destinationPhotoURL = destinationPhotoURL
     }
     
-    // MARK: - API 통신 (한국관광공사 지역기반 API)
+    // MARK: - 목적지와 동일한 시·군·구의 관광사진 추천
     func fetchRecommendedPlaces(areaCode: String, sigunguCode: String) async {
         isLoading = true
+        hasLoadedRecommendations = false
         
         do {
-            let fetchedData = try await TourAPIManager.shared.fetchRecommendedPlaces(areaCode: areaCode, sigunguCode: sigunguCode)
-            
-            // UI 스레드(Main Actor)에서 상태 업데이트
-            await MainActor.run {
-                self.candidates = fetchedData
-                self.totalFetchedCount = fetchedData.count
-                self.isLoading = false
+            let catalog = await PhotoCoordinateCatalogStore.shared.catalog()
+            try Task.checkCancellation()
+
+            // 관광공사 areaCd/sigunguCd와 카탈로그의 5자리 regionCode는 체계가 다릅니다.
+            // 기존 RegionCodeManager로 각 주소를 판별해 같은 시·군·구만 유지합니다.
+            let regionalPhotos = catalog.photos.filter { photo in
+                guard photo.source == .gallery,
+                      let region = RegionCodeManager.shared.findRegion(by: photo.address)
+                else { return false }
+
+                return region.areaCd == areaCode && region.sigunguCd == sigunguCode
             }
+
+            let regionalCatalog = PhotoCoordinateCatalog(
+                schemaVersion: catalog.schemaVersion,
+                photos: regionalPhotos
+            )
+            let coordinates = PhotoRecommendationPolicy.galleryCoordinates(in: regionalCatalog)
+            let wantedPhotoIDs = Set(coordinates.map(\.photoID))
+            let requestedCount = min(
+                wantedPhotoIDs.count,
+                Self.maximumRecommendationCount
+            )
+
+            let remotePhotos = try await GalleryPhotoService().fetch(
+                matching: wantedPhotoIDs,
+                minimumCount: requestedCount
+            )
+            try Task.checkCancellation()
+
+            let fetchedData = PhotoRecommendationPolicy.galleryDestinations(
+                coordinates: coordinates,
+                remotePhotos: remotePhotos,
+                limit: Self.maximumRecommendationCount
+            )
+            .compactMap(\.placeDTO)
+
+            candidates = fetchedData
+            totalFetchedCount = fetchedData.count
+            hasLoadedRecommendations = true
+            isLoading = false
+        } catch is CancellationError {
+            isLoading = false
+            return
         } catch {
-            print("API 통신 에러: \(error.localizedDescription)")
-            await MainActor.run {
-                self.isLoading = false
-            }
+            print("Gallery 추천 통신 에러: \(error.localizedDescription)")
+            candidates = []
+            totalFetchedCount = 0
+            hasLoadedRecommendations = true
+            isLoading = false
         }
     }
     
