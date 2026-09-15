@@ -87,16 +87,9 @@ struct HomeView: View {
             .foregroundStyle(PicselColor.homeText)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
 
-            Button(action: {
+            HomeSettingsButton {
                 isSettingsPresented = true
-            }) {
-                Image(systemName: "gearshape")
-                    .font(.title2)
             }
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.circle)
-            .tint(PicselColor.homeText)
-            .accessibilityLabel("설정")
         }
         .fullScreenCover(isPresented: $isSettingsPresented) {
             SettingsView()

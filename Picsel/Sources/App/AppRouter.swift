@@ -16,6 +16,8 @@ import Foundation
 @Observable
 final class AppRouter {
 
+    private static let tripReadyTripIDKey = "picsel.tripReadyTripID"
+
     enum Tab: Hashable {
         case home
         case picselMap
@@ -33,9 +35,46 @@ final class AppRouter {
     ///       스택을 새로 만들지 않고 경로만 비울 수 있습니다. (별도 이슈)
     private(set) var homeStackID = UUID()
 
+    /// 경로를 확정했지만 아직 실제 여행을 시작하지 않은 여행 ID입니다.
+    /// 강제 종료 후에도 준비 화면을 복원할 수 있도록 UserDefaults에 함께 저장합니다.
+    private(set) var tripReadyTripID: UUID?
+
+    init() {
+        tripReadyTripID = UserDefaults.standard
+            .string(forKey: Self.tripReadyTripIDKey)
+            .flatMap(UUID.init(uuidString:))
+    }
+
+    /// 경로 확정 직후 여행 준비 화면을 홈 탭의 루트로 보여 줍니다.
+    func showTripReadyHome(for tripID: UUID) {
+        updateTripReadyTripID(tripID)
+        homeStackID = UUID()
+        selectedTab = .home
+    }
+
+    /// 준비 화면에서 여행을 시작하면 이후 홈은 진행 중 상태로 표시합니다.
+    func markTripAsStarted(_ tripID: UUID) {
+        guard tripReadyTripID == tripID else { return }
+        updateTripReadyTripID(nil)
+    }
+
     /// 여행 흐름을 닫고 지정한 탭의 첫 화면으로 돌아갑니다.
     func finishTripFlow(returningTo tab: Tab) {
+        updateTripReadyTripID(nil)
         homeStackID = UUID()
         selectedTab = tab
+    }
+
+    private func updateTripReadyTripID(_ tripID: UUID?) {
+        tripReadyTripID = tripID
+
+        if let tripID {
+            UserDefaults.standard.set(
+                tripID.uuidString,
+                forKey: Self.tripReadyTripIDKey
+            )
+        } else {
+            UserDefaults.standard.removeObject(forKey: Self.tripReadyTripIDKey)
+        }
     }
 }

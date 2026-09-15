@@ -11,11 +11,11 @@ import SwiftUI
 
 struct TransitSwipeView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppRouter.self) private var router
 
     @State var viewModel: TransitSwipeViewModel
     @State private var isShowingRouteConfirmation = false
-    @State private var isShowingTripProgress = false
-    @State private var isShowingVisitedPlacesConfirm = false
+    @State private var tripStartErrorMessage: String?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -105,29 +105,26 @@ struct TransitSwipeView: View {
                 trip: viewModel.activeTrip,
                 thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
             ) { _ in
-                // 여행이 실제로 시작되는 시점입니다. 여기서부터는 앱이 꺼져도 남아야 합니다.
-                viewModel.startTrip(in: modelContext)
-                isShowingTripProgress = true
+                // 경로가 확정된 여행은 여기서 저장합니다.
+                // 준비 화면은 현재 실행에만 남고, 앱 재실행 시에는 진행 중 홈으로 복원됩니다.
+                if viewModel.startTrip(in: modelContext) {
+                    router.showTripReadyHome(for: viewModel.activeTrip.id)
+                } else {
+                    tripStartErrorMessage = "여행 계획을 저장하지 못했어요. 잠시 후 다시 시도해주세요."
+                }
             }
                 .toolbar(.hidden, for: .tabBar)
         }
-        .navigationDestination(isPresented: $isShowingTripProgress) {
-            TripProgressView(
-                trip: viewModel.activeTrip,
-                thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
-            ) {
-                isShowingVisitedPlacesConfirm = true
-            }
-            .toolbar(.hidden, for: .tabBar)
-        }
-        .navigationDestination(isPresented: $isShowingVisitedPlacesConfirm) {
-            VisitedPlacesConfirmView(
-                viewModel: VisitedPlacesConfirmViewModel(
-                    trip: viewModel.activeTrip,
-                    thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
-                )
+        .alert(
+            "여행 시작 실패",
+            isPresented: Binding(
+                get: { tripStartErrorMessage != nil },
+                set: { if !$0 { tripStartErrorMessage = nil } }
             )
-            .toolbar(.hidden, for: .tabBar)
+        ) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text(tripStartErrorMessage ?? "")
         }
         .onAppear {
             // 화면 진입 시 추천 장소 로드

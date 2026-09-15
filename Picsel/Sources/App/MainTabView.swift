@@ -14,7 +14,7 @@ struct MainTabView: View {
 
         TabView(selection: $router.selectedTab) {
             NavigationStack {
-                HomeView()
+                HomeRootView()
             }
             // 여행 흐름을 마치면 이 값이 바뀌면서 스택이 첫 화면으로 되돌아갑니다.
             .id(router.homeStackID)
