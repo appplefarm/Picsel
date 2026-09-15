@@ -26,14 +26,28 @@ struct PixelUnlockedMapView: View {
     /// true로 바뀔 때 줌아웃하며 나머지 지역이 함께 나타납니다.
     let isRevealed: Bool
 
+    /// 주변 지역이 드러난 뒤에도 카메라를 강조 칸에 붙여 둘지입니다.
+    ///
+    /// 픽셀 획득 연출은 줌아웃해서 전국을 보여 주므로 false,
+    /// 픽셀 지역 상세는 그 지역을 계속 크게 보여 주므로 true입니다.
+    let keepsFocused: Bool
+
+    /// 강조하지 않은 지역을 얼마나 진하게 보여 줄지입니다.
+    /// 지역 상세에서는 옅게 깔아 강조 칸이 도드라지게 합니다.
+    let surroundingOpacity: Double
+
     init(
         highlightedRegionCode: String?,
         unlockedRegionCodes: Set<String> = [],
-        isRevealed: Bool = true
+        isRevealed: Bool = true,
+        keepsFocused: Bool = false,
+        surroundingOpacity: Double = 1
     ) {
         self.highlightedRegionCode = highlightedRegionCode
         self.unlockedRegionCodes = unlockedRegionCodes
         self.isRevealed = isRevealed
+        self.keepsFocused = keepsFocused
+        self.surroundingOpacity = surroundingOpacity
     }
 
     var body: some View {
@@ -58,7 +72,7 @@ struct PixelUnlockedMapView: View {
     // MARK: - 카메라
 
     private func camera(in size: CGSize) -> PixelMapCamera {
-        guard !isRevealed,
+        guard !isRevealed || keepsFocused,
               let highlightedRegionCode,
               let focused = PixelMapCamera.focused(
                   onRegionCode: highlightedRegionCode,
@@ -88,7 +102,7 @@ struct PixelUnlockedMapView: View {
                     )
             }
             // 처음에는 새로 채운 칸만 보이고, 줌아웃하며 나머지가 드러납니다.
-            .opacity(state == .highlighted || isRevealed ? 1 : 0)
+            .opacity(state == .highlighted ? 1 : (isRevealed ? surroundingOpacity : 0))
             // 새로 채운 칸이 다른 칸에 가리지 않게 맨 위로 올립니다.
             .zIndex(state == .highlighted ? 1 : 0)
     }
@@ -164,6 +178,18 @@ private struct PixelTileShape: Shape {
         highlightedRegionCode: "4711",
         unlockedRegionCodes: ["11", "50130"],
         isRevealed: true
+    )
+    .frame(height: 320)
+    .padding()
+}
+
+#Preview("지역 상세") {
+    PixelUnlockedMapView(
+        highlightedRegionCode: "4711",
+        unlockedRegionCodes: ["11", "50130"],
+        isRevealed: true,
+        keepsFocused: true,
+        surroundingOpacity: 0.3
     )
     .frame(height: 320)
     .padding()

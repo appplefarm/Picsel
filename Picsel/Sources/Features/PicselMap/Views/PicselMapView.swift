@@ -10,6 +10,8 @@ import SwiftUI
 struct PicselMapView: View {
     @State private var viewModel: PicselMapViewModel
     @State private var visibleRecordID: UUID?
+    /// 채워진 픽셀을 누르면 그 지역 상세로 들어갑니다.
+    @State private var selectedPixelRegion: AdministrativeRegion?
     @ScaledMetric(relativeTo: .title2) private var titleSize = 25.0
 
     private let unlockedRegionCodes: Set<String>
@@ -40,6 +42,12 @@ struct PicselMapView: View {
         }
         .background(Color(.systemBackground))
         .toolbar(.hidden, for: .navigationBar)
+        .navigationDestination(item: $selectedPixelRegion) { region in
+            PixelRegionScreen(
+                region: region,
+                unlockedRegionCodes: allUnlockedRegionCodes
+            )
+        }
         .task { await viewModel.loadRegions() }
     }
 
@@ -62,12 +70,34 @@ struct PicselMapView: View {
 
             map
                 .frame(minHeight: 280, maxHeight: .infinity)
+                // 지도는 화면을 최대한 넓게 씁니다. 글자보다 여백을 좁게 둡니다.
+                .padding(.horizontal, -8)
 
             recentPixelSection
         }
         .padding(.horizontal, 24)
         .padding(.top, 20)
         .padding(.bottom, 16)
+    }
+
+    /// 지도에 채워진 것으로 그려야 할 지역 코드입니다.
+    private var allUnlockedRegionCodes: Set<String> {
+        unlockedRegionCodes.union(records.map(\.regionCode))
+    }
+
+    /// 지도에서 지역을 눌렀을 때입니다.
+    ///
+    /// 아래 기록 카드를 그 지역으로 거르는 기존 동작은 그대로 두고,
+    /// 채워진 픽셀일 때만 지역 상세로 들어갑니다.
+    private func handleRegionTap(_ code: String?) {
+        viewModel.selectRegion(code: code)
+
+        guard let code,
+              let region = viewModel.regions.first(where: { $0.code == code }),
+              region.containsAnyRegion(in: allUnlockedRegionCodes)
+        else { return }
+
+        selectedPixelRegion = region
     }
 
     /// 다녀온 여행을 모아 보는 픽셀 히스토리로 들어갑니다.
@@ -109,10 +139,10 @@ struct PicselMapView: View {
             } else {
                 AdministrativeRegionMapView(
                     regions: viewModel.regions,
-                    unlockedRegionCodes: unlockedRegionCodes.union(records.map(\.regionCode)),
+                    unlockedRegionCodes: allUnlockedRegionCodes,
                     selectedRegionCode: viewModel.selectedRegionCode,
                     pixelResolution: pixelResolution,
-                    onSelectRegion: viewModel.selectRegion
+                    onSelectRegion: handleRegionTap
                 )
             }
         }

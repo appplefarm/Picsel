@@ -51,6 +51,7 @@ struct PixelHistoryView: View {
         .background(PicselColor.backgroundWarmWhite)
         .navigationTitle("픽셀 히스토리")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
         .navigationDestination(item: $selectedTrip) { trip in
             PixelDetailView(
                 snapshot: trip.makeRecordSnapshot(),
@@ -82,53 +83,9 @@ struct PixelHistoryView: View {
     // MARK: - 연도 필터
 
     private var yearFilter: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: 16) {
-                chip(label: "전체", isSelected: selectedYear == nil) {
-                    selectedYear = nil
-                }
-
-                ForEach(availableYears, id: \.self) { year in
-                    chip(label: String(year), isSelected: selectedYear == year) {
-                        selectedYear = year
-                    }
-                }
-            }
-            .padding(.horizontal, 20)
-        }
-        .scrollIndicators(.hidden)
-        // ScrollView는 스크롤하지 않는 축으로도 주어진 공간을 전부 차지합니다.
-        .fixedSize(horizontal: false, vertical: true)
-        .padding(.top, 8)
-        .padding(.bottom, 14)
-    }
-
-    private func chip(
-        label: String,
-        isSelected: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Text(label)
-                .font(PicselFont.body01)
-                .foregroundStyle(isSelected ? .white : PicselColor.textSecondary)
-                .padding(.horizontal, 15)
-                .padding(.vertical, 8)
-                .background {
-                    Capsule()
-                        .fill(isSelected ? PicselColor.mapYearActive : PicselColor.backgroundWarmWhite)
-                        .overlay {
-                            // stroke는 선의 절반이 도형 밖으로 나가 모서리가 흐려집니다.
-                            Capsule()
-                                .strokeBorder(
-                                    isSelected ? PicselColor.iconSecondary : PicselColor.borderBrandSubtle,
-                                    lineWidth: 1
-                                )
-                        }
-                }
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+        YearFilterChips(years: availableYears, selection: $selectedYear)
+            .padding(.top, 8)
+            .padding(.bottom, 14)
     }
 
     // MARK: - 목록

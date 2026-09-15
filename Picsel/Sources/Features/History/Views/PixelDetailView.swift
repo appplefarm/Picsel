@@ -78,6 +78,8 @@ struct PixelDetailView: View {
         .ignoresSafeArea(edges: .top)
         .background(sheetBackground)
         .navigationBarTitleDisplayMode(.inline)
+        // 탭바가 사진 위에 떠 있으면 기록을 가립니다.
+        .toolbar(.hidden, for: .tabBar)
         .toolbarBackground(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(isEditing)
         // 사진 위에 얹히는 버튼이라 밝은 색으로 그려야 읽힙니다.

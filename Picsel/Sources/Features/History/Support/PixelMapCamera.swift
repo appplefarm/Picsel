@@ -64,8 +64,8 @@ enum PixelMapGeometryCache {
     static let pixelResolution = 128
 
     /// AdministrativeRegionTileGeometry가 좌표를 화면으로 옮길 때 쓰는 여백입니다.
-    /// 카메라 계산도 같은 값을 써야 확대한 위치가 어긋나지 않습니다.
-    private static let projectionPadding: CGFloat = 18
+    /// 카메라 계산도 같은 값을 써야 확대한 위치가 어긋나지 않아, 같은 상수를 가져다 씁니다.
+    private static let projectionPadding = AdministrativeRegionTileGeometry.projectionPadding
 
     static let projection = AdministrativeMapProjection(
         regions: PixelRegionLocator.allRegions
