@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import GoogleMaps
+import CloudKit
 
 @main
 struct PicselApp: App {
