@@ -8,10 +8,11 @@
 import SwiftUI
 import SwiftData
 import GoogleMaps
-import CloudKit
 
 @main
 struct PicselApp: App {
+    private let modelContainer: ModelContainer
+
     init() {
         guard let apiKey = Bundle.main.object(
             forInfoDictionaryKey: "GOOGLE_MAPS_API_KEY"
@@ -22,32 +23,29 @@ struct PicselApp: App {
             fatalError("GoogleMapsAPIKey를 불러오지 못했습니다.")
         }
         GMSServices.provideAPIKey(apiKey)
+
+        let schema = Schema([
+            Trip.self,
+            RouteStop.self,
+            TripPhoto.self,
+            UserPixel.self
+        ])
+        // 사용자 여행은 기존 기기 저장소에만 보관합니다.
+        // 사진 좌표 조회용 CloudKit capability가 있어도 private DB로 자동 동기화하지 않습니다.
+        let configuration = ModelConfiguration(schema: schema, cloudKitDatabase: .none)
+
+        do {
+            modelContainer = try ModelContainer(for: schema, configurations: [configuration])
+        } catch {
+            // 저장소 오류를 메모리 저장으로 우회하면 종료 후 여행이 사라집니다.
+            fatalError("여행 저장소를 열지 못했습니다: \(error)")
+        }
     }
         
     var body: some Scene {
         WindowGroup {
             AppRootView()
         }
-        // 2. SwiftData 모델들을 앱 전체에서 쓸 수 있도록 컨테이너 등록
-        .modelContainer(for: [
-            Trip.self,
-            RouteStop.self,
-            TripPhoto.self,
-            UserPixel.self
-        ])
-//        WindowGroup {
-//            // 1. 테스트를 위한 임시(더미) Trip 객체 생성
-//            let dummyTrip = Trip(title: "포항 테스트 여행")
-//            let viewModel = TransitSwipeViewModel(trip: dummyTrip)
-//            
-//            TransitSwipeView(viewModel: viewModel)
-//        }
-//        // 2. SwiftData 모델들을 앱 전체에서 쓸 수 있도록 컨테이너 등록
-//        .modelContainer(for: [
-//            Trip.self,
-//            RouteStop.self,
-//            TripPhoto.self,
-//            UserPixel.self
-//        ])
+        .modelContainer(modelContainer)
     }
 }
