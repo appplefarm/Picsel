@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import SwiftData
 
 @Observable
 final class VisitedPlacesConfirmViewModel {
@@ -49,8 +50,18 @@ final class VisitedPlacesConfirmViewModel {
     
     // 다음 화면으로 넘어갈 때 실제 모델에 데이터 반영
     func confirmVisitedPlaces() {
+        // 방문하지 않은 장소 찾아서 Context에서 완전 삭제
+        let unvisitedStops = trip.stops.filter { !visitedStopIDs.contains($0.id) }
+        for stop in unvisitedStops {
+            stop.modelContext?.delete(stop)
+        }
+        
+        // Trip 관계에서도 제거
+        trip.stops.removeAll { !visitedStopIDs.contains($0.id) }
+        
+        // 남은 장소들은 방문 처리
         for stop in trip.stops {
-            stop.isVisited = visitedStopIDs.contains(stop.id)
+            stop.isVisited = true
         }
     }
 }
