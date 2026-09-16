@@ -239,6 +239,7 @@ private struct ViewingPhoto: Identifiable {
     var id: Int { index }
 }
 
+#if DEBUG
 #Preview("사진 7장") {
     // 숫자만 바꿔 가며 0~10장 배치를 확인하세요.
     NavigationStack {
@@ -258,3 +259,4 @@ private struct ViewingPhoto: Identifiable {
         inMemory: true
     )
 }
+#endif
