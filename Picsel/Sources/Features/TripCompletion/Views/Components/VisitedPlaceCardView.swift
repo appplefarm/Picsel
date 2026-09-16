@@ -20,7 +20,12 @@ struct VisitedPlaceCardView: View {
                         .fill(Color.gray.opacity(0.2))
                         .overlay(ProgressView())
                 case .success(let image):
-                    image.resizable().scaledToFill()
+                    image
+                        .resizable()
+                        .scaledToFill()
+                        // 내부 이미지에도 프레임을 주고 잘라내어 overflow 방지
+                        .frame(maxWidth: .infinity, maxHeight: 220)
+                        .clipped()
                 case .failure:
                     Rectangle()
                         .fill(Color.gray.opacity(0.2))
@@ -31,6 +36,7 @@ struct VisitedPlaceCardView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 220)
+            .contentShape(Rectangle())
             .clipped()
             // 미완료(비활성화) 시 사진 흑백 처리
             .grayscale(isSelected ? 0.0 : 1.0)
