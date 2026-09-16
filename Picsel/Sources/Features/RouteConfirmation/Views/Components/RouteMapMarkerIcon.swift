@@ -29,36 +29,16 @@ enum RouteMapMarkerIcon {
 
     // MARK: - 그리기
 
+    /// 크기와 색은 목록 타임라인과 같은 정의(RouteMarkerStyle)에서 가져옵니다.
+    /// 지도에서만 흰 테두리가 배경과 마커를 떼어내는 역할을 합니다.
     private static func draw(_ kind: RouteMapMarker.Kind) -> UIImage {
-        switch kind {
-        case .origin:
-            // 출발지: 브랜드 색으로 꽉 채운 원
-            circle(
-                diameter: Metric.originDiameter,
-                fill: Palette.actionGreen,
-                border: .white,
-                borderWidth: 2.5
-            )
-
-        case .waypoint:
-            // 경유지: 흰 원에 얇은 초록 테두리
-            circle(
-                diameter: Metric.waypointDiameter,
-                fill: .white,
-                border: Palette.actionGreen,
-                borderWidth: 2
-            )
-
-        case .destination:
-            // 목적지: 가장 크고 진하게, 가운데를 비워 도착점처럼 보이게 합니다.
-            circle(
-                diameter: Metric.destinationDiameter,
-                fill: Palette.primaryGreen,
-                border: .white,
-                borderWidth: 2.5,
-                innerDotDiameter: Metric.destinationInnerDot
-            )
-        }
+        circle(
+            diameter: RouteMarkerStyle.diameter(for: kind),
+            fill: UIColor(RouteMarkerStyle.fill(for: kind)),
+            border: UIColor(RouteMarkerStyle.border(for: kind)),
+            borderWidth: RouteMarkerStyle.borderWidth(for: kind),
+            innerDotDiameter: RouteMarkerStyle.innerDotDiameter(for: kind)
+        )
     }
 
     /// 테두리는 stroke 대신 큰 원 위에 작은 원을 덮어 그립니다.
@@ -109,16 +89,6 @@ enum RouteMapMarkerIcon {
     }
 
     private enum Metric {
-        static let originDiameter: CGFloat = 16
-        static let waypointDiameter: CGFloat = 12
-        static let destinationDiameter: CGFloat = 22
-        static let destinationInnerDot: CGFloat = 7
         static let shadowPadding: CGFloat = 3
-    }
-
-    /// 지도 SDK는 UIColor를 받으므로 디자인 토큰을 변환해 씁니다.
-    private enum Palette {
-        static let actionGreen = UIColor(PicselColor.actionGreen)
-        static let primaryGreen = UIColor(PicselColor.primaryGreen)
     }
 }

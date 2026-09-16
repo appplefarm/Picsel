@@ -58,6 +58,7 @@ struct RouteConfirmationView: View {
                         stop: stop,
                         thumbnailURL: viewModel.thumbnailURL(for: stop),
                         travelMinutes: viewModel.travelMinutes(before: stop),
+                        kind: viewModel.stopKind(for: stop),
                         position: position(for: stop),
                         showsTimeline: !editMode.isEditing
                     )

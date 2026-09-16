@@ -90,6 +90,17 @@ final class RouteConfirmationViewModel {
     /// 수동으로 입력한 위치도 그 사람에게는 현재 위치라서 문구를 나누지 않습니다.
     static let originMarkerTitle = "현재 위치"
 
+    /// 이 장소가 경로에서 맡은 역할입니다.
+    ///
+    /// 지도 마커와 목록 타임라인이 같은 판정을 쓰도록 여기서만 정합니다.
+    func stopKind(for stop: RouteStop) -> RouteMapMarker.Kind {
+        guard let index = locatedStops.firstIndex(where: { $0.id == stop.id }) else {
+            // 좌표가 없어 경로에 못 들어간 장소입니다. 목적지 여부만 보고 판단합니다.
+            return stop.isDestination ? .destination : .waypoint
+        }
+        return markerKind(for: stop, at: index)
+    }
+
     /// 경로에서 이 장소가 맡은 역할입니다.
     ///
     /// 현재 위치에서 출발하는 경로라면 첫 장소도 들르는 곳이므로 경유지로 봅니다.

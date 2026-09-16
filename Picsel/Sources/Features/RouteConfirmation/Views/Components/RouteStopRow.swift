@@ -17,6 +17,8 @@ struct RouteStopRow: View {
     let thumbnailURL: URL?
     /// 직전 지점에서 이 장소까지 걸리는 시간입니다.
     let travelMinutes: Int?
+    /// 이 장소가 경로에서 맡은 역할입니다. 점 모양을 지도 마커와 맞추는 데 씁니다.
+    let kind: RouteMapMarker.Kind
     let position: Position
     let showsTimeline: Bool
 
@@ -73,10 +75,8 @@ struct RouteStopRow: View {
 
     private var originRow: some View {
         HStack(spacing: Metric.timelineSpacing) {
-            Circle()
-                .stroke(PicselColor.actionGreen, lineWidth: 3)
-                .frame(width: Metric.originDotSize, height: Metric.originDotSize)
-                .frame(width: Metric.dotSize)
+            RouteStopDot(kind: .origin)
+                .frame(width: Metric.dotSize, height: Metric.dotSize)
 
             Text("현재 위치")
                 .font(.system(size: 12, weight: .medium))
@@ -126,8 +126,8 @@ struct RouteStopRow: View {
                 dashedLine.frame(maxHeight: .infinity)
             }
             
-            Circle()
-                .fill(PicselColor.actionGreen)
+            RouteStopDot(kind: kind)
+                // 점 크기는 역할마다 다르지만 열 너비는 고정해야 줄이 흔들리지 않습니다.
                 .frame(width: Metric.dotSize, height: Metric.dotSize)
 
             if position.isLast {
@@ -202,9 +202,8 @@ private struct VerticalDashedLine: Shape {
 
 /// 시안에서 가져온 값입니다.
 private enum Metric {
+    /// 점이 놓이는 열의 너비입니다. 점 자체의 크기는 역할에 따라 RouteMarkerStyle이 정합니다.
     static let dotSize: CGFloat = 22
-    /// 출발점은 아직 지나지 않은 곳이라 속을 비운 원으로 둡니다.
-    static let originDotSize: CGFloat = 14
     static let timelineSpacing: CGFloat = 12
     /// 이동 시간이 놓이는 구간 높이
     static let segmentHeight: CGFloat = 30
@@ -250,6 +249,7 @@ private enum RouteStopRowPreviewData {
                 stop: stop,
                 thumbnailURL: nil,
                 travelMinutes: RouteStopRowPreviewData.minutes[index],
+                kind: stop.isDestination ? .destination : .waypoint,
                 position: index == 0 ? .first : (index == stops.count - 1 ? .last : .middle),
                 showsTimeline: true
             )
