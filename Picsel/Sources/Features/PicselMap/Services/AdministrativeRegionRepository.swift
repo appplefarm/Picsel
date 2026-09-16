@@ -73,7 +73,12 @@ nonisolated private struct Feature: Decodable {
             name: properties.name,
             parentCode: properties.parentCode,
             constituentCodes: [properties.code],
-            polygons: geometry.polygons
+            polygons: geometry.polygons,
+            // 화면에 그릴 좌표는 읽어 들일 때 한 번만 만들어 둡니다.
+            displayPolygons: PixelMapIslandLayout.displayPolygons(
+                of: geometry.polygons,
+                regionCode: properties.code
+            )
         )
     }
 }

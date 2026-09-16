@@ -46,7 +46,7 @@ struct AdministrativeRegionMapView: View {
         .map { code, members in
             ProvinceBoundary(
                 code: code,
-                polygons: members.flatMap(\.polygons)
+                polygons: members.flatMap(\.displayPolygons)
             )
         }
         .sorted { $0.code < $1.code }

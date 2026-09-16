@@ -124,7 +124,8 @@ enum PixelMapGeometryCache {
         var minimumRow = Int.max
         var maximumRow = Int.min
 
-        for polygon in region.polygons {
+        // 화면에서 어디를 확대할지 정하는 계산이라 표시용 좌표를 씁니다.
+        for polygon in region.displayPolygons {
             for coordinate in polygon.exterior {
                 let point = projection.gridPoint(
                     for: coordinate,
