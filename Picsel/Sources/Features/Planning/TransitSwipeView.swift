@@ -16,6 +16,7 @@ struct TransitSwipeView: View {
     @State var viewModel: TransitSwipeViewModel
     @State private var isShowingRouteConfirmation = false
     @State private var tripStartErrorMessage: String?
+    @State private var showSwipeToast = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -50,49 +51,46 @@ struct TransitSwipeView: View {
                         .frame(width: 334, height: 239) // 카드 사이즈와 동일한 빈 공간 유지 (하단 UI 고정용)
                 } else {
                     ForEach(Array(viewModel.candidates.enumerated().reversed()), id: \.element.id) { index, place in
-                        let angle = (index == 1) ? 3.0 : (index == 2) ? -2.0 : 0.0
-                        let yOffset = CGFloat(index * 12)
+                        let angle = (index == 1) ? 6.0 : (index == 2) ? -4.5 : 0.0
                         
-                        SwipeCardView(place: place) {
+                        SwipeCardView(place: place, isTopCard: index == 0) {
                             withAnimation(.spring()) { viewModel.swipeLeft(on: place) }
                         } onSwipeRight: {
                             withAnimation(.spring()) { viewModel.swipeRight(on: place) }
                         }
                         .rotationEffect(.degrees(index == 0 ? 0 : angle))
-                        .offset(y: index == 0 ? 0 : yOffset)
                         .opacity(index < 3 ? 1 : 0)
                         .allowsHitTesting(index == 0)
                         .animation(.spring(), value: index)
                     }
                 }
             }
-            .padding(.bottom, 30) // 카드 스택과 텍스트 사이 간격 (기존 Spacer 대체)
+            .padding(.bottom, 60) // 카드 스택과 텍스트 사이 간격 늘림
             
             // MARK: - 스와이프 안내 문구 및 버튼
             let currentIndex = viewModel.totalFetchedCount - viewModel.candidates.count + 1
             let displayIndex = min(currentIndex, viewModel.totalFetchedCount)
             
-            VStack(spacing: 16) {
+            HStack {
+                Text("← 안 갈래요")
+                    .onTapGesture { showToast() }
+                
+                Spacer()
+                
                 if viewModel.totalFetchedCount > 0 && !viewModel.candidates.isEmpty {
                     Text("\(Text("\(displayIndex)").font(.system(size: 15, weight: .bold))) / \(viewModel.totalFetchedCount)")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(Color(red: 125/255, green: 160/255, blue: 142/255))
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
                 }
                 
-                HStack {
-                    Text("← 안 갈래요")
-                    
-                    Spacer()
-                    
-                    
-                    Text("갈래요 →")
-                }
-                .padding(.horizontal, 40)
-                    .font(.system(size: 11))
-                    .foregroundColor(Color(white: 0.42))
+                Spacer()
+                
+                Text("갈래요 →")
+                    .onTapGesture { showToast() }
             }
+            .padding(.horizontal, 32)
+            .font(.system(size: 12))
+            .foregroundColor(Color(white: 0.42))
             .padding(.bottom, 10)
             
             Spacer()
@@ -134,6 +132,22 @@ struct TransitSwipeView: View {
         } message: {
             Text(tripStartErrorMessage ?? "")
         }
+        .overlay(
+            VStack {
+                if showSwipeToast {
+                    Text("버튼 대신 화면을 좌우로 스와이프 해주세요")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                        .padding(.vertical, 14)
+                        .padding(.horizontal, 20)
+                        .background(Color.black.opacity(0.3))
+                        .cornerRadius(12)
+                        .padding(.bottom, 120)
+                        .transition(.opacity)
+                }
+            }
+            , alignment: .bottom
+        )
         .onAppear {
             // 화면 진입 시 추천 장소 로드
             Task {
@@ -153,6 +167,17 @@ struct TransitSwipeView: View {
                     areaCode: region.areaCd,
                     sigunguCode: region.sigunguCd
                 )
+            }
+        }
+    }
+    
+    private func showToast() {
+        withAnimation {
+            showSwipeToast = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            withAnimation {
+                showSwipeToast = false
             }
         }
     }

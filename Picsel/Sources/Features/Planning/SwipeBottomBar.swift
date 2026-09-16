@@ -13,18 +13,17 @@ struct SwipeBottomBar: View {
     var onConfirm: () -> Void
     
     var body: some View {
-        HStack {
-            Text("\(selectedCount)곳 선택됨")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(.black)
-            
-            Spacer()
-            
+        VStack {
             Button(action: onConfirm) {
-                Text(selectedCount == 0 ? "경유지 없이 건너뛰기" : "이 장소들로 경로 만들기")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.black)
+                Text(selectedCount == 0 ? "경유지 없이 건너뛰기" : "\(selectedCount)곳의 장소들로 경로 만들기")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+//                    .background(Color(red: 25/255, green: 140/255, blue: 99/255))
+                    .cornerRadius(16)
             }
+            .buttonStyle(.primaryGradient)
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 16)
