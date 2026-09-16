@@ -408,6 +408,15 @@ final class RouteConfirmationViewModel {
         unreachableStopIDs.contains(stop.id)
     }
 
+    /// 경로에서 뺀 장소가 있다는 사실을 알리는 문구입니다. 뺀 것이 없으면 nil입니다.
+    ///
+    /// 뺀 사실을 감추면 사용자는 "왜 저기는 안 들르지?"만 남습니다.
+    /// 어디가 빠졌는지는 각 줄에서 밝히고, 여기서는 일이 있었다는 것과 할 수 있는 일을 알립니다.
+    var unreachableNotice: String? {
+        guard !unreachableStopIDs.isEmpty else { return nil }
+        return "자동차로 갈 수 없는 \(unreachableStopIDs.count)곳을 경로에서 뺐어요. 편집에서 지울 수 있어요."
+    }
+
     func cancelDirections() {
         directionsTask?.cancel()
         directionsTask = nil
