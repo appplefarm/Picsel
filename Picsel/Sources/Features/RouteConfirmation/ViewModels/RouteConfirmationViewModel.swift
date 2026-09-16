@@ -30,6 +30,11 @@ final class RouteConfirmationViewModel {
     private(set) var startsFromCurrentLocation = false
     /// 계산에 실제로 쓰인 출발지 좌표입니다. 지도에 출발지 마커를 세울 때 씁니다.
     private(set) var routeOriginCoordinate: CLLocationCoordinate2D?
+    /// 자동차로 갈 수 없어 경로에 넣을 수 없는 장소입니다.
+    ///
+    /// 여행 목록에서 지우지는 않습니다. 사용자가 고른 장소를 앱이 말없이 없애면 안 되고,
+    /// 걸어서 갈 수 있는 곳일 수도 있습니다. 경로 계산에서만 빼고 화면에 그 사실을 밝힙니다.
+    private(set) var unreachableStopIDs: Set<UUID> = []
     /// 다시 시도할 때 같은 출발지를 쓰기 위해 보관합니다.
     private var lastOrigin: CLLocationCoordinate2D?
     @ObservationIgnored private var directionsTask: Task<RouteDirections, Error>?
@@ -153,17 +158,18 @@ final class RouteConfirmationViewModel {
         }
 
         let destination = coordinate(of: destinationStop)
-        let remaining = stops.dropLast().map(coordinate(of:))
+        let remainingStops = Array(stops.dropLast())
 
         let start: CLLocationCoordinate2D
-        let waypoints: [CLLocationCoordinate2D]
+        // 좌표만 들고 다니면 나중에 "몇 번째 경유지가 문제인가"를 장소와 이어 붙일 수 없습니다.
+        let waypointStops: [RouteStop]
 
         if let origin {
             start = origin
-            waypoints = Array(remaining)
-        } else if let first = remaining.first {
-            start = first
-            waypoints = Array(remaining.dropFirst())
+            waypointStops = remainingStops
+        } else if let first = remainingStops.first {
+            start = coordinate(of: first)
+            waypointStops = Array(remainingStops.dropFirst())
         } else {
             // 목적지 하나뿐인데 출발지도 없으면 그릴 경로가 없습니다.
             // 잔상(이전 경로 선)이 남지 않도록 초기화해 줍니다.
@@ -175,6 +181,8 @@ final class RouteConfirmationViewModel {
             needsOrigin = true
             return
         }
+
+        let waypoints = waypointStops.map(coordinate(of:))
 
         let signature = "\(start.latitude),\(start.longitude)>"
             + waypoints.map { "\($0.latitude),\($0.longitude)" }.joined(separator: "|")
@@ -194,6 +202,7 @@ final class RouteConfirmationViewModel {
         directions = nil
         startsFromCurrentLocation = false
         routeOriginCoordinate = nil
+        unreachableStopIDs = []
         
         defer {
             if activeRequestID == requestID {
@@ -222,8 +231,47 @@ final class RouteConfirmationViewModel {
             // 실패한 요청은 표식을 지워서 다시 시도할 수 있게 합니다.
             lastRequestSignature = nil
             guard !Task.isCancelled, !RequestFailure.isCancellation(error) else { return }
-            directionsFailure = (error as? RouteDirectionsError)?.requestFailure ?? RequestFailure(error)
+
+            let failure = (error as? RouteDirectionsError)?.requestFailure ?? RequestFailure(error)
+            directionsFailure = failure
+
+            // 어느 장소가 문제인지 모르면 사용자는 고칠 방법이 없습니다.
+            guard failure == .unreachableWaypoint else { return }
+            await markUnreachableStops(
+                origin: start,
+                waypointStops: waypointStops,
+                requestID: requestID
+            )
         }
+    }
+
+    /// 자동차로 갈 수 없는 장소를 골라내 표시해 둡니다.
+    ///
+    /// 업체에 지점마다 따로 물어보므로 경유지 수만큼 요청이 더 나갑니다.
+    /// 실패했을 때만 부르기 때문에, 잘 되는 경로에는 이 비용이 붙지 않습니다.
+    private func markUnreachableStops(
+        origin: CLLocationCoordinate2D,
+        waypointStops: [RouteStop],
+        requestID: UUID
+    ) async {
+        let indices = await directionsService.unreachableWaypointIndices(
+            origin: origin,
+            waypoints: waypointStops.map(coordinate(of:))
+        )
+
+        // 기다리는 사이 더 새로운 요청이 시작됐다면 이 결과는 낡은 것입니다.
+        guard activeRequestID == requestID else { return }
+
+        unreachableStopIDs = Set(
+            indices
+                .filter { waypointStops.indices.contains($0) }
+                .map { waypointStops[$0].id }
+        )
+    }
+
+    /// 이 장소가 자동차로 갈 수 없어 경로에서 빠졌는지 여부입니다.
+    func isUnreachable(_ stop: RouteStop) -> Bool {
+        unreachableStopIDs.contains(stop.id)
     }
 
     func cancelDirections() {

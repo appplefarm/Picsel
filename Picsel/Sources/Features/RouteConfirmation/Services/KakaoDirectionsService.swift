@@ -117,6 +117,64 @@ struct KakaoDirectionsService: RouteDirectionsProviding {
         return directions
     }
 
+    // MARK: - 갈 수 없는 경유지 골라내기
+
+    /// 경유지 하나하나에 "여기까지 자동차로 갈 수 있나"를 따로 물어봅니다.
+    ///
+    /// 카카오는 경유지 중에 못 가는 곳이 있다는 사실만 알려 주고 어느 것인지는 말하지 않습니다.
+    /// 하나씩 빼 보며 찾으면 경유지 수만큼 왕복이 쌓이므로, 전부 동시에 물어 한 번에 끝냅니다.
+    ///
+    /// 경유지가 아니라 목적지 자리에 넣어 물어봅니다. 그래야 그 지점 하나만의 문제인지가
+    /// 다른 지점에 가려지지 않습니다.
+    func unreachableWaypointIndices(
+        origin: CLLocationCoordinate2D,
+        waypoints: [CLLocationCoordinate2D]
+    ) async -> Set<Int> {
+        let trimmed = Array(waypoints.prefix(Self.maximumWaypointCount))
+        guard !trimmed.isEmpty else { return [] }
+
+        let indices = await withTaskGroup(of: (offset: Int, isUnreachable: Bool).self) { group in
+            for (offset, waypoint) in trimmed.enumerated() {
+                group.addTask { (offset, await self.isUnreachable(from: origin, to: waypoint)) }
+            }
+
+            var found: Set<Int> = []
+            for await result in group where result.isUnreachable {
+                found.insert(result.offset)
+            }
+            return found
+        }
+
+        #if DEBUG
+        KakaoDirectionsDiagnostics.recordUnreachable(indices: indices, of: trimmed)
+        #endif
+
+        return indices
+    }
+
+    private func isUnreachable(
+        from origin: CLLocationCoordinate2D,
+        to waypoint: CLLocationCoordinate2D
+    ) async -> Bool {
+        do {
+            _ = try await directions(origin: origin, waypoints: [], destination: waypoint)
+            return false
+        } catch let error as RouteDirectionsError {
+            switch error {
+            // 업체가 "이 지점으로는 경로를 만들 수 없다"고 판단한 경우입니다.
+            // 코드가 무엇이든 결론은 같으므로 한데 묶습니다.
+            case .unreachableWaypoint, .providerError, .routeNotFound, .routeTooLong:
+                return true
+            // 네트워크나 키 문제는 이 지점의 잘못이 아닙니다.
+            // 여기서 true를 돌려주면 멀쩡한 장소를 경로에서 빼 버리게 됩니다.
+            case .networkFailure, .missingAPIKey, .invalidRequest:
+                return false
+            }
+        } catch {
+            return false
+        }
+    }
+
     // MARK: - 요청 만들기
 
     private func makeRequest(

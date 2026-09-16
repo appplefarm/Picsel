@@ -64,6 +64,24 @@ protocol RouteDirectionsProviding: Sendable {
         waypoints: [CLLocationCoordinate2D],
         destination: CLLocationCoordinate2D
     ) async throws -> RouteDirections
+
+    /// 자동차로 갈 수 없는 경유지를 골라냅니다. 돌려주는 값은 waypoints의 인덱스입니다.
+    ///
+    /// 업체는 "경유지 중에 못 가는 곳이 있다"고만 알려 주고 어느 것인지는 말해 주지 않습니다.
+    /// 그래서 지점마다 따로 물어봐야 합니다.
+    func unreachableWaypointIndices(
+        origin: CLLocationCoordinate2D,
+        waypoints: [CLLocationCoordinate2D]
+    ) async -> Set<Int>
+}
+
+extension RouteDirectionsProviding {
+    /// 골라내지 못하는 업체도 있으므로 기본값은 "모르겠음"입니다.
+    /// 빈 값을 돌려주면 호출한 쪽이 아무 경유지도 빼지 않습니다.
+    func unreachableWaypointIndices(
+        origin: CLLocationCoordinate2D,
+        waypoints: [CLLocationCoordinate2D]
+    ) async -> Set<Int> { [] }
 }
 
 enum RouteDirectionsError: LocalizedError {

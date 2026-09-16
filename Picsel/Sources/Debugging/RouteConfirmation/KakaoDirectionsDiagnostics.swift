@@ -57,6 +57,27 @@ nonisolated enum KakaoDirectionsDiagnostics {
         return isInKorea ? text : text + "  ⚠️ 한국 밖"
     }
 
+    /// 골라낸 "갈 수 없는 경유지"를 남깁니다.
+    ///
+    /// 전부 걸러졌다면 경유지가 아니라 출발지 쪽이 문제일 수 있다는 신호이기도 합니다.
+    static func recordUnreachable(indices: Set<Int>, of waypoints: [CLLocationCoordinate2D]) {
+        guard !indices.isEmpty else {
+            print("[Kakao ?] 갈 수 없는 경유지를 찾지 못했습니다 · 경유지 \(waypoints.count)개")
+            return
+        }
+
+        let listed = indices.sorted().map { index in
+            "  \(index + 1)번째: \(format(waypoints[index]))"
+        }
+
+        print(
+            """
+            [Kakao ✂︎] 갈 수 없는 경유지 \(indices.count)/\(waypoints.count)개
+            \(listed.joined(separator: "\n"))
+            """
+        )
+    }
+
     // MARK: - 응답
 
     static func record(
