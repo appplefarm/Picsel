@@ -45,7 +45,7 @@ struct TransitSwipeView: View {
                     ForEach(Array(viewModel.candidates.enumerated().reversed()), id: \.element.id) { index, place in
                         let angle = (index == 1) ? 6.0 : (index == 2) ? -4.5 : 0.0
                         
-                        SwipeCardView(place: place) {
+                        SwipeCardView(place: place, isTopCard: index == 0) {
                             withAnimation(.spring()) { viewModel.swipeLeft(on: place) }
                         } onSwipeRight: {
                             withAnimation(.spring()) { viewModel.swipeRight(on: place) }
