@@ -12,12 +12,21 @@ struct HomeView: View {
     @State private var locationManager = CurrentLocationManager()
     @State private var confirmedDestination: PhotoDestination?
     @State private var isSettingsPresented = false
+    @State private var isShowingManualSearch = false
+    @State private var manualLocation: CLLocation?
+    @State private var manualLocationName: String?
 
     private var mapCoordinate: CLLocationCoordinate2D {
-        locationManager.currentLocation?.coordinate ?? viewModel.fallbackCoordinate
+        if let manualLocation {
+            return manualLocation.coordinate
+        }
+        return locationManager.currentLocation?.coordinate ?? viewModel.fallbackCoordinate
     }
 
     private var mapLocationName: String {
+        if let manualLocationName {
+            return "\(manualLocationName) (수동 지정)"
+        }
         if locationManager.currentLocation != nil {
             return locationManager.localityName
         }
@@ -72,6 +81,13 @@ struct HomeView: View {
                 )
             }
         }
+        .sheet(isPresented: $isShowingManualSearch) {
+            ManualLocationSearchView { location, name in
+                manualLocation = location
+                manualLocationName = name
+                viewModel.updateMaximumRadius(from: location.coordinate)
+            }
+        }
     }
 
     private var headerSection: some View {
@@ -124,20 +140,33 @@ struct HomeView: View {
     }
 
     private var locationBadge: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "mappin.and.ellipse")
-                .foregroundStyle(PicselColor.radiusGreen)
+        Button {
+            if !locationManager.isLocationAuthorized {
+                isShowingManualSearch = true
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "mappin.and.ellipse")
+                    .foregroundStyle(PicselColor.radiusGreen)
 
-            Text("\(mapLocationName) · 반경 \(Int(viewModel.currentRadiusKm))km")
-                .font(.footnote)
-                .fontWeight(.semibold)
-                .foregroundStyle(PicselColor.homeText)
-                .contentTransition(.numericText())
+                Text("\(mapLocationName) · 반경 \(Int(viewModel.currentRadiusKm))km")
+                    .font(.footnote)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(PicselColor.homeText)
+                    .contentTransition(.numericText())
+                
+                if !locationManager.isLocationAuthorized {
+                    Image(systemName: "chevron.right")
+                        .font(.footnote)
+                        .foregroundStyle(.gray)
+                }
+            }
+            .padding(.horizontal, 10)
+            .frame(height: 34)
+            .background(.white, in: .capsule)
+            .shadow(color: .black.opacity(0.14), radius: 4)
         }
-        .padding(.horizontal, 10)
-        .frame(height: 34)
-        .background(.white, in: .capsule)
-        .shadow(color: .black.opacity(0.14), radius: 4)
+        .disabled(locationManager.isLocationAuthorized)
     }
 
     private var radiusSlider: some View {
@@ -170,7 +199,7 @@ struct HomeView: View {
             PhotoExploreView(
                 service: PhotoDestinationServiceFactory.make(),
                 sourceNotice: PhotoDestinationServiceFactory.sourceNotice,
-                originLocation: locationManager.isLocationAuthorized ? locationManager.currentLocation : nil
+                originLocation: manualLocation ?? (locationManager.isLocationAuthorized ? locationManager.currentLocation : nil)
             ) { destination in
                 guard destination.canSelectAsDestination else { return }
                 confirmedDestination = destination
