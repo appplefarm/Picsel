@@ -13,17 +13,15 @@ struct PhotoExploreLoadingView: View {
     @Environment(\.scenePhase) private var scenePhase
     @ScaledMetric(relativeTo: .subheadline) private var messageFontSize = 14
 
-    private let waveDuration = 8.0
-
     var body: some View {
         GeometryReader { geometry in
-            let waveSize = min(geometry.size.width * 1.2, geometry.size.height * 0.65)
+            let videoHeight = min(geometry.size.width * 4 / 3, geometry.size.height * 0.65)
 
             ZStack {
-                Color(.systemBackground)
+                PicselColor.photoLoadingBackground
 
-                animatedWave
-                    .frame(width: waveSize, height: waveSize)
+                loadingVisual
+                    .frame(width: videoHeight * 3 / 4, height: videoHeight)
                     .accessibilityHidden(true)
                     .allowsHitTesting(false)
             }
@@ -44,18 +42,15 @@ struct PhotoExploreLoadingView: View {
     }
 
     @ViewBuilder
-    private var animatedWave: some View {
-        if reduceMotion || scenePhase != .active {
-            PhotoExploreLoadingWave(phase: 0)
-        } else {
-            // 로딩 작업과 자원을 나누므로 갱신은 최대 30fps로 제한합니다.
-            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
-                // 시간은 일정하게 진행합니다. 반복 경계에 감속이나 역재생을 넣지 않습니다.
-                let progress = context.date.timeIntervalSinceReferenceDate
-                    .truncatingRemainder(dividingBy: waveDuration) / waveDuration
-                let phase = progress * 2 * .pi
+    private var loadingVisual: some View {
+        ZStack {
+            // 첫 프레임 준비 전·재생 실패·동작 줄이기에서는 빈 화면 대신 같은 정지 이미지를 표시합니다.
+            Image("PhotoExploreLoadingPoster")
+                .resizable()
+                .scaledToFit()
 
-                PhotoExploreLoadingWave(phase: phase)
+            if !reduceMotion {
+                PhotoExploreLoadingVideo(isPlaying: scenePhase == .active)
             }
         }
     }

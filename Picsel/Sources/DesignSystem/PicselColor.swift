@@ -131,7 +131,7 @@ enum PicselColor {
     static let travelMinutes = Color(hex: 0x858585)
 
     /// 사진 탐색 로딩 화면
-    static let photoLoadingWaveTint = Color(hex: 0x43C994)
+    static let photoLoadingBackground = Color(hex: 0xFFFFFF)
     static let photoLoadingText = Color(hex: 0x639580)
 
     // MARK: - 여행 진행 중 홈
