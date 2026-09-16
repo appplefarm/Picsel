@@ -78,3 +78,4 @@ Claude outputs/
 
 # 삭제 대기 (원격 세션에서 rm이 안 돼 옮겨두는 자리)
 _to_delete/
+Configs/Secrets.xcconfig
