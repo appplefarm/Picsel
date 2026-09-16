@@ -34,7 +34,7 @@ struct SpatialPhotoCanvas: View {
         destinations: [PhotoDestination],
         sourceNotice: String? = nil,
         originLocation: CLLocation? = nil,
-        directionsService: any RouteDirectionsProviding = NaverDirectionsService(),
+        directionsService: any RouteDirectionsProviding = KakaoDirectionsService(),
         onSceneLoadingChange: ((Bool) -> Void)? = nil,
         onConfirm: @escaping (PhotoDestination) -> Void
     ) {

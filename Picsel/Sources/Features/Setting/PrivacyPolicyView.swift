@@ -178,7 +178,7 @@ private enum PrivacyPolicyContent {
                 PolicyBlock(items: [
                     "Apple Core Location 및 지오코딩: 현재 위치 확인과 행정구역명 변환에 iOS 시스템 서비스를 사용합니다.",
                     "Google Maps Platform: 지도 화면과 지도 데이터를 제공하며, 서비스 요청 과정에서 Google이 접속 정보 등을 처리할 수 있습니다.",
-                    "NAVER Cloud Directions API: 경로 확인 시 현재 출발지, 경유지 및 목적지 좌표가 경로 계산을 위해 전송됩니다.",
+                    "카카오모빌리티 길찾기 API: 경로 확인 시 현재 출발지, 경유지 및 목적지 좌표가 경로 계산을 위해 전송됩니다.",
                     "카카오맵·네이버지도·티맵: 이용자가 길 안내를 직접 실행하면 목적지 이름과 좌표가 선택한 앱에 전달됩니다. 출발지는 해당 외부 앱이 현재 위치를 기준으로 결정합니다.",
                     "한국관광공사 관광정보 API: 여행지 추천을 위해 선택 지역과 시·군·구 조건이 요청에 포함될 수 있습니다."
                 ])
@@ -187,6 +187,10 @@ private enum PrivacyPolicyContent {
                 PolicyLink(
                     title: "Google 개인정보처리방침 확인",
                     url: URL(string: "https://policies.google.com/privacy")!
+                ),
+                PolicyLink(
+                    title: "카카오모빌리티 개인정보처리방침 확인",
+                    url: URL(string: "https://policy.kakaomobility.com/ko/privacy/")!
                 )
             ]
         ),

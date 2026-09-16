@@ -26,7 +26,7 @@ struct PhotoExploreView: View {
         service: any PhotoDestinationService,
         sourceNotice: String? = nil,
         originLocation: CLLocation? = nil,
-        directionsService: any RouteDirectionsProviding = NaverDirectionsService(),
+        directionsService: any RouteDirectionsProviding = KakaoDirectionsService(),
         onConfirm: @escaping (PhotoDestination) -> Void
     ) {
         self.onConfirm = onConfirm

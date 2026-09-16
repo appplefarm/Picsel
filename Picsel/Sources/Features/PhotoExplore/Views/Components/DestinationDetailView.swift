@@ -24,7 +24,7 @@ struct DestinationDetailView: View {
     init(
         destination: PhotoDestination,
         originLocation: CLLocation? = nil,
-        directionsService: any RouteDirectionsProviding = NaverDirectionsService(),
+        directionsService: any RouteDirectionsProviding = KakaoDirectionsService(),
         onConfirm: @escaping () -> Void
     ) {
         self.destination = destination
