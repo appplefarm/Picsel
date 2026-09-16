@@ -124,18 +124,20 @@ final class TransitSwipeViewModel {
         thumbnailURLsByStopID = thumbnails
     }
 
-    // MARK: - 여행 시작 (SwiftData 등록)
+    // MARK: - 여행 계획 저장 (SwiftData 등록)
 
-    /// 여행을 SwiftData에 등록하고 시작 시각을 남깁니다.
+    /// 확정한 여행 계획을 SwiftData에 준비 상태로 등록합니다.
     ///
     /// 여기서 저장해 두지 않으면 실제 여행 중(몇 시간)에 앱이 메모리에서 내려갈 때
     /// 목적지·경유지·경로가 통째로 사라집니다.
-    /// 목적지를 눌러보기만 한 여행이 쌓이지 않도록, 경로를 확정한 이 시점에 넣습니다.
+    /// `startTime == nil`은 준비 중, 값이 있으면 진행 중이라는 상태로 사용합니다.
     @discardableResult
-    func startTrip(in context: ModelContext) -> Bool {
-        if activeTrip.startTime == nil {
-            activeTrip.startTime = Date()
-        }
+    func saveTripPlan(in context: ModelContext) -> Bool {
+        // 경로 확정은 아직 실제 여행 시작이 아닙니다.
+        // 이 값들이 SwiftData에 저장되어 앱 재실행 시 준비 화면으로 판별됩니다.
+        activeTrip.startTime = nil
+        activeTrip.endTime = nil
+        activeTrip.isDone = false
 
         // 완료 화면에서 사용할 픽셀과 진행 중 홈의 도형이 같은 지역을 가리키게 합니다.
         activeTrip.targetPixelCode = activeTrip.pixelTile?.code

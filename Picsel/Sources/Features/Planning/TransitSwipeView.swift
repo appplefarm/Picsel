@@ -114,9 +114,9 @@ struct TransitSwipeView: View {
                 thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
             ) { _ in
                 // 경로가 확정된 여행은 여기서 저장합니다.
-                // 준비 화면은 현재 실행에만 남고, 앱 재실행 시에는 진행 중 홈으로 복원됩니다.
-                if viewModel.startTrip(in: modelContext) {
-                    router.showTripReadyHome(for: viewModel.activeTrip.id)
+                // 여행 시작 전 강제 종료 시에도 준비 홈으로 복원되도록 준비 상태 ID를 함께 저장합니다.
+                if viewModel.saveTripPlan(in: modelContext) {
+                    router.showTripReadyHome(for: viewModel.activeTrip)
                 } else {
                     tripStartErrorMessage = "여행 계획을 저장하지 못했어요. 잠시 후 다시 시도해주세요."
                 }
