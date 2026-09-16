@@ -41,10 +41,7 @@ struct NavigationAppSelectionView: View {
 
         case .settings:
             settingsContent
-                .navigationTitle("네비게이션")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(Color.white, for: .navigationBar)
-                .toolbarBackground(.visible, for: .navigationBar)
+                .settingsNavigationBar(title: "네비게이션")
         }
     }
 
@@ -77,20 +74,24 @@ struct NavigationAppSelectionView: View {
                 Text("길 안내에 사용할 기본 앱을 선택해주세요.\n여행 중 언제든 다시 변경할 수 있어요.")
                     .font(.system(size: 14))
                     .foregroundStyle(PicselColor.settingsSecondaryText)
-                    .lineSpacing(7)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top, 20)
 
                 appList
-                    .padding(.top, proxy.size.height < 700 ? 40 : 84)
+                    .padding(.leading, 24)
+                    .padding(.trailing, 16)
+                    .padding(.top, proxy.size.height < 700 ? 40 : 78)
 
                 Spacer(minLength: 24)
 
                 saveButton(title: "선택 저장")
-                    .padding(.bottom, proxy.safeAreaInsets.bottom + 28)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, proxy.safeAreaInsets.bottom + 41)
             }
-            .padding(.horizontal, 24)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(Color.white.ignoresSafeArea())
+            .background(PicselColor.settingsBackground.ignoresSafeArea())
         }
         .onAppear(perform: loadStoredSelection)
     }
@@ -163,7 +164,7 @@ private struct NavigationAppSelectionRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: 19) {
                 Image(app.assetName)
                     .resizable()
                     .scaledToFit()
@@ -171,11 +172,11 @@ private struct NavigationAppSelectionRow: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(app.displayName)
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(PicselColor.homeText)
 
                     Text(app.selectionDescription)
-                        .font(.system(size: 14))
+                        .font(.system(size: 12))
                         .foregroundStyle(PicselColor.navigationDescription)
                 }
 
@@ -183,7 +184,8 @@ private struct NavigationAppSelectionRow: View {
 
                 selectionIndicator
             }
-            .padding(.horizontal, 12)
+            .padding(.leading, 14)
+            .padding(.trailing, 16)
             .frame(maxWidth: .infinity)
             .frame(height: 76)
             .background(isSelected ? PicselColor.navigationSelectedBackground : Color.white)
@@ -204,17 +206,18 @@ private struct NavigationAppSelectionRow: View {
 
     private var selectionIndicator: some View {
         ZStack {
-            Circle()
-                .stroke(
-                    isSelected ? PicselColor.navigationSelectedBorder : PicselColor.navigationBorder,
-                    lineWidth: isSelected ? 2 : 1
-                )
-                .frame(width: 20, height: 20)
-
             if isSelected {
                 Circle()
                     .fill(PicselColor.navigationSelectedBorder)
-                    .frame(width: 10, height: 10)
+                    .frame(width: 22, height: 22)
+
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 7, height: 7)
+            } else {
+                Circle()
+                    .stroke(PicselColor.navigationBorder, lineWidth: 1.5)
+                    .frame(width: 22, height: 22)
             }
         }
         .accessibilityHidden(true)

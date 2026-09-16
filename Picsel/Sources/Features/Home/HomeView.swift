@@ -72,6 +72,10 @@ struct HomeView: View {
                 )
             }
         }
+        .navigationDestination(isPresented: $isSettingsPresented) {
+            SettingsView()
+                .toolbar(.hidden, for: .tabBar)
+        }
     }
 
     private var headerSection: some View {
@@ -90,9 +94,6 @@ struct HomeView: View {
             HomeSettingsButton {
                 isSettingsPresented = true
             }
-        }
-        .fullScreenCover(isPresented: $isSettingsPresented) {
-            SettingsView()
         }
     }
     

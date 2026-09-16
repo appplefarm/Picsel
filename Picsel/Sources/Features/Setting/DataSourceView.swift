@@ -6,71 +6,28 @@
 import SwiftUI
 
 struct DataSourceView: View {
-    @Environment(\.dismiss) private var dismiss
-
     var body: some View {
-        ZStack {
-            PicselColor.settingsBackground
-                .ignoresSafeArea()
+        SettingsModalScaffold(
+            title: "API 및 데이터 정보",
+            closeAccessibilityLabel: "API 및 데이터 정보 닫기"
+        ) {
+            LazyVStack(alignment: .leading, spacing: 28) {
+                header
 
-            VStack(spacing: 0) {
-                closeBar
-
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 28) {
-                        header
-
-                        ForEach(Array(DataSourceContent.sections.enumerated()), id: \.offset) { _, section in
-                            DataSourceSectionView(section: section)
-                        }
-                    }
-                    .padding(.horizontal, 27)
-                    .padding(.top, 66)
-                    .padding(.bottom, 48)
+                ForEach(Array(DataSourceContent.sections.enumerated()), id: \.offset) { _, section in
+                    DataSourceSectionView(section: section)
                 }
-                .scrollIndicators(.hidden)
-                .background(Color.white)
-                .clipShape(
-                    UnevenRoundedRectangle(
-                        topLeadingRadius: 30,
-                        topTrailingRadius: 30
-                    )
-                )
             }
         }
-        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
 private extension DataSourceView {
-    var closeBar: some View {
-        HStack {
-            Button(action: dismiss.callAsFunction) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(PicselColor.homeText)
-                    .frame(width: 36, height: 36)
-                    .background(.ultraThinMaterial, in: Circle())
-                    .shadow(color: .black.opacity(0.08), radius: 8, y: 3)
-            }
-            .accessibilityLabel("API 및 데이터 정보 닫기")
-
-            Spacer()
-        }
-        .padding(.horizontal, 8)
-        .frame(height: 52)
-    }
-
     var header: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("API 및 데이터 정보")
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(Color(hex: 0x303B37))
-
             Text("시행일: \(DataSourceContent.effectiveDate) | Picsel")
                 .font(.system(size: 12))
                 .foregroundStyle(Color(hex: 0x8D9795))
-                .padding(.top, 8)
 
             Text("Picsel은 정확하고 다양한 여행 정보를 제공하기 위해 공공데이터와 외부 서비스의 API를 활용합니다.")
                 .font(.system(size: 13, weight: .medium))
