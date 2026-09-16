@@ -5,9 +5,14 @@
 
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct MainTabView: View {
     @Environment(AppRouter.self) private var router
+
+    init() {
+        UITabBar.appearance().unselectedItemTintColor = UIColor(Constants.labelsVibrantTertiary)
+    }
 
     var body: some View {
         @Bindable var router = router
@@ -31,8 +36,17 @@ struct MainTabView: View {
             }
             .tag(AppRouter.Tab.picselMap)
         }
-        .tint(.primary)
+        .tint(Constants.selectedTabColor)
     }
+}
+
+private enum Constants {
+    static let selectedTabColor = Color(red: 0.17, green: 0.55, blue: 0.45)
+    static let labelsVibrantTertiary = Color(
+        red: 191 / 255,
+        green: 191 / 255,
+        blue: 191 / 255
+    )
 }
 
 #Preview {

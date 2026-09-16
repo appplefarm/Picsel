@@ -191,9 +191,8 @@ struct RouteConfirmationView: View {
                 .font(.system(size: 16, weight: .bold))
         }
         .buttonStyle(.primaryGradient)
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
+        .padding(.horizontal, 24)
+        .padding(.bottom, 24)
         .background(Color.white)
     }
 

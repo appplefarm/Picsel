@@ -48,7 +48,7 @@ struct PixelUnlockedView: View {
 
             actionButtons
                 .padding(.horizontal, 24)
-                .padding(.bottom, 20)
+                .padding(.bottom, 24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(PicselColor.backgroundWarmWhite)
@@ -126,7 +126,7 @@ struct PixelUnlockedView: View {
                 Text("픽셀맵 확인하기")
                     .font(PicselFont.label01)
             }
-            .buttonStyle(.primaryGradient)
+            .buttonStyle(PrimaryGradientButtonStyle(height: 56))
         }
         // 자리는 그대로 두고 나타나기만 해서 레이아웃이 흔들리지 않습니다.
         .opacity(areActionsVisible ? 1 : 0)

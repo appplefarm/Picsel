@@ -81,9 +81,8 @@ struct DestinationDetailView: View {
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 confirmButton
-                    .padding(.horizontal, 20)
-                    .padding(.top, 12)
-                    .padding(.bottom, 8)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 24)
             }
             .background {
                 // 직전 RealityKit 공간은 부모에서 흐리게 유지하고 이 화면에서는 딤만 더합니다.
@@ -203,7 +202,7 @@ struct DestinationDetailView: View {
         case let .loaded(info):
             VStack(spacing: 8) {
                 travelChips(info.chips)
-                Text("자동차 기준 · 교통 상황에 따라 달라질 수 있어요")
+                Text("이동 수단 · 교통 상황에 따라 달라질 수 있어요")
                     .font(PicselFont.caption01)
                     .multilineTextAlignment(.center)
             }
