@@ -77,6 +77,12 @@ enum RouteDirectionsError: LocalizedError {
     case routeNotFound
     /// 업체가 허용하는 총 경로 길이를 넘은 경우입니다.
     case routeTooLong
+    /// 경유지 주변에 자동차로 갈 수 있는 도로가 없는 경우입니다.
+    ///
+    /// 관광 API가 주는 좌표에는 산·해상·등산로처럼 도로에서 떨어진 지점이 섞입니다.
+    /// 좌표가 바뀌지 않는 한 몇 번을 보내도 같은 대답이 오므로,
+    /// 잠시 후 다시 해보면 되는 실패와 구분해서 다룹니다.
+    case unreachableWaypoint
 
     var requestFailure: RequestFailure {
         switch self {
@@ -84,6 +90,7 @@ enum RouteDirectionsError: LocalizedError {
         case .missingAPIKey, .invalidRequest: .configuration
         case .providerError: .server
         case .routeNotFound, .routeTooLong: .unavailable
+        case .unreachableWaypoint: .unreachableWaypoint
         }
     }
 
@@ -101,6 +108,8 @@ enum RouteDirectionsError: LocalizedError {
             "이 경로는 길찾기를 지원하지 않아요."
         case .routeTooLong:
             "경로가 너무 길어요. 목적지나 경유지를 줄여 주세요."
+        case .unreachableWaypoint:
+            "자동차로 갈 수 없는 장소가 있어요."
         }
     }
 }
