@@ -16,6 +16,7 @@ struct TripStopCard: View {
     let regionText: String?
     let photoURL: URL?
     let onNavigateTapped: () -> Void
+    var tripID: UUID? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -56,19 +57,7 @@ struct TripStopCard: View {
 
     private var photo: some View {
         // 사진이 없거나 로딩 중일 때도 카드 높이가 흔들리지 않게 고정 높이를 씁니다.
-        Rectangle()
-            .fill(Color(.systemGray5))
-            .overlay {
-                if let photoURL {
-                    AsyncImage(url: photoURL) { phase in
-                        if case .success(let image) = phase {
-                            image
-                                .resizable()
-                                .scaledToFill()
-                        }
-                    }
-                }
-            }
+        RemotePlacePhoto(url: photoURL, tripID: tripID)
             .frame(height: Metric.photoHeight)
             .clipped()
     }

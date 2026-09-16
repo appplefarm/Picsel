@@ -113,6 +113,8 @@ final class TripRecordViewModel {
 
         do {
             try context.save()
+            let tripID = trip.id
+            Task { await TripImageStore.shared.removeTrip(tripID) }
             return true
         } catch {
             // 저장에 실패했는데 완료 표시만 남으면 픽셀맵에 빈 기록이 뜨므로 되돌린다.

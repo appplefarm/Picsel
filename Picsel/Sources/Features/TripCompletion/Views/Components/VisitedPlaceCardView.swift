@@ -13,22 +13,10 @@ struct VisitedPlaceCardView: View {
     var body: some View {
         VStack(spacing: 0) {
             // 상단 썸네일 이미지
-            AsyncImage(url: photoURL) { phase in
-                switch phase {
-                case .empty:
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.2))
-                        .overlay(ProgressView())
-                case .success(let image):
-                    image.resizable().scaledToFill()
-                case .failure:
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.2))
-                @unknown default:
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.2))
-                }
-            }
+            RemotePlacePhoto(
+                url: photoURL ?? stop.photoURL.flatMap(URL.init(string:)),
+                tripID: stop.trip?.id
+            )
             .frame(maxWidth: .infinity)
             .frame(height: 220)
             .clipped()
