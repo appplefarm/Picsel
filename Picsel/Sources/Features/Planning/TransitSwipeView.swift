@@ -154,6 +154,11 @@ struct TransitSwipeView: View {
             , alignment: .bottom
         )
         .onAppear {
+            // 경로 확인 화면에서 뒤로 오면 이 onAppear가 다시 돌면서 추천 목록을
+            // 처음부터 받아옵니다. 고른 장소를 남겨 두면 그 위에 계속 쌓이므로
+            // 목록과 선택을 함께 0곳으로 되돌립니다.
+            viewModel.resetSelection()
+
             // 화면 진입 시 추천 장소 로드
             Task {
                 // 목적지가 없거나 지역을 판별할 수 없으면 임의 지역을 추천하지 않습니다.
