@@ -11,6 +11,8 @@ struct HomeView: View {
     @State private var viewModel = HomeViewModel()
     @State private var locationManager = CurrentLocationManager()
     @State private var confirmedDestination: PhotoDestination?
+    @State private var photoExploreRequest: PhotoExploreRequest?
+    @State private var isLocationAlertPresented = false
     @State private var isSettingsPresented = false
     @State private var isShowingManualSearch = false
     @State private var manualLocation: CLLocation?
@@ -25,6 +27,15 @@ struct HomeView: View {
             return manualLocation.coordinate
         }
         return locationManager.currentLocation?.coordinate ?? viewModel.fallbackCoordinate
+    }
+
+    /// 지도 표시용 기본 좌표를 실제 추천 기준 위치로 오인하지 않습니다.
+    private var recommendationOrigin: CLLocation? {
+        guard locationManager.isLocationAuthorized,
+              let location = locationManager.currentLocation,
+              location.horizontalAccuracy >= 0,
+              CLLocationCoordinate2DIsValid(location.coordinate) else { return nil }
+        return location
     }
 
     private var mapLocationName: String {
@@ -96,6 +107,32 @@ struct HomeView: View {
                 viewModel.updateMaximumRadius(from: location.coordinate)
             }
         }
+        .navigationDestination(item: $photoExploreRequest) { request in
+            let origin = request.originLocation
+
+            PhotoExploreView(
+                service: PhotoDestinationServiceFactory.make(),
+                sourceNotice: PhotoDestinationServiceFactory.sourceNotice,
+                originLocation: origin
+            ) { destination in
+                guard destination.canSelectAsDestination else { return }
+                confirmedDestination = destination
+            }
+        }
+        .alert(
+            "위치를 확인할 수 없음",
+            isPresented: $isLocationAlertPresented
+        ) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text(
+                "현재 위치를 확인한 뒤 다시 시도해주세요. 위치 권한이 꺼져 있다면 설정에서 허용해주세요."
+            )
+        }
+        .navigationDestination(isPresented: $isSettingsPresented) {
+            SettingsView()
+                .toolbar(.hidden, for: .tabBar)
+        }
     }
 
     private var headerSection: some View {
@@ -114,9 +151,6 @@ struct HomeView: View {
             HomeSettingsButton {
                 isSettingsPresented = true
             }
-        }
-        .fullScreenCover(isPresented: $isSettingsPresented) {
-            SettingsView()
         }
     }
     
@@ -250,15 +284,22 @@ struct HomeView: View {
     }
 
     private var destinationButton: some View {
-        NavigationLink {
-            PhotoExploreView(
-                service: PhotoDestinationServiceFactory.make(),
-                sourceNotice: PhotoDestinationServiceFactory.sourceNotice,
-                originLocation: manualLocation ?? (locationManager.isLocationAuthorized ? locationManager.currentLocation : nil)
-            ) { destination in
-                guard destination.canSelectAsDestination else { return }
-                confirmedDestination = destination
+        Button {
+            let origin: CLLocation
+            if let manual = manualLocation {
+                origin = manual
+            } else if let recOrigin = recommendationOrigin {
+                origin = recOrigin
+            } else {
+                locationManager.requestCurrentLocation()
+                isLocationAlertPresented = true
+                return
             }
+
+            photoExploreRequest = PhotoExploreRequest(
+                originLocation: origin,
+                radiusMeters: viewModel.currentRadiusMeters
+            )
         } label: {
             ZStack {
                 // 텍스트는 ZStack의 기본 속성으로 버튼 정중앙에 위치
@@ -303,6 +344,24 @@ struct HomeView: View {
         stop.trip = trip
         trip.stops.append(stop)
         return trip
+    }
+}
+
+/// 목적지 고르기 버튼을 누른 순간의 위치와 반경을 고정해 다음 화면에 전달합니다.
+private struct PhotoExploreRequest: Hashable, Identifiable {
+    let id = UUID()
+    let latitude: CLLocationDegrees
+    let longitude: CLLocationDegrees
+    let radiusMeters: CLLocationDistance
+
+    init(originLocation: CLLocation, radiusMeters: CLLocationDistance) {
+        latitude = originLocation.coordinate.latitude
+        longitude = originLocation.coordinate.longitude
+        self.radiusMeters = radiusMeters
+    }
+
+    var originLocation: CLLocation {
+        CLLocation(latitude: latitude, longitude: longitude)
     }
 }
 
