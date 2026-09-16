@@ -7,16 +7,20 @@ import SwiftUI
 struct GoogleMapView: View {
     let coordinate: CLLocationCoordinate2D
     let radiusMeters: Double
+    var isValidOrigin: Bool = true
 
     var body: some View {
         ZStack {
             GoogleMapRepresentable(
                 coordinate: coordinate,
                 radiusMeters: radiusMeters,
-                circleDiameterPoints: HomeMapStyle.radiusCircleDiameter
+                circleDiameterPoints: HomeMapStyle.radiusCircleDiameter,
+                isValidOrigin: isValidOrigin
             )
 
-            FixedRadiusOverlay()
+            if isValidOrigin {
+                FixedRadiusOverlay()
+            }
         }
     }
 }
@@ -25,13 +29,17 @@ private struct GoogleMapRepresentable: UIViewRepresentable {
     let coordinate: CLLocationCoordinate2D
     let radiusMeters: Double
     let circleDiameterPoints: CGFloat
+    let isValidOrigin: Bool
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIView(context: Context) -> GMSMapView {
+        let initialCoordinate = isValidOrigin ? coordinate : CLLocationCoordinate2D(latitude: 36.5, longitude: 127.8)
+        let initialZoom = isValidOrigin ? HomeMapStyle.initialZoom : 6.5
+        
         let camera = GMSCameraPosition.camera(
-            withTarget: coordinate,
-            zoom: HomeMapStyle.initialZoom
+            withTarget: initialCoordinate,
+            zoom: initialZoom
         )
         let mapView = GMSMapView(frame: .zero, camera: camera)
         mapView.mapType = .normal
@@ -50,6 +58,7 @@ private struct GoogleMapRepresentable: UIViewRepresentable {
 
         context.coordinator.previousCoordinate = coordinate
         context.coordinator.previousRadiusMeters = radiusMeters
+        context.coordinator.previousIsValidOrigin = isValidOrigin
 
         // makeUIView 시점에는 뷰 크기가 아직 0일 수 있으므로 다음 run loop에서 적용합니다.
         DispatchQueue.main.async {
@@ -64,23 +73,28 @@ private struct GoogleMapRepresentable: UIViewRepresentable {
         let coordinateChanged = coordinator.previousCoordinate.map {
             $0.latitude != coordinate.latitude || $0.longitude != coordinate.longitude
         } ?? true
-        guard radiusChanged || coordinateChanged else { return }
+        let isValidOriginChanged = coordinator.previousIsValidOrigin != isValidOrigin
+        
+        guard radiusChanged || coordinateChanged || isValidOriginChanged else { return }
 
         // Slider 드래그 중 animate를 반복하면 애니메이션이 누적됩니다.
         // moveCamera를 사용해 현재 값과 지도를 즉시 동기화합니다.
-        applyCamera(to: mapView, animated: coordinateChanged && !radiusChanged)
+        applyCamera(to: mapView, animated: (coordinateChanged || isValidOriginChanged) && !radiusChanged)
         coordinator.previousCoordinate = coordinate
         coordinator.previousRadiusMeters = radiusMeters
+        coordinator.previousIsValidOrigin = isValidOrigin
     }
 
     private func applyCamera(to mapView: GMSMapView, animated: Bool) {
-        let zoom = zoomLevel(
+        let targetCoordinate = isValidOrigin ? coordinate : CLLocationCoordinate2D(latitude: 36.5, longitude: 127.8)
+        let zoom = isValidOrigin ? zoomLevel(
             radiusMeters: radiusMeters,
             latitude: coordinate.latitude,
             circleDiameterPoints: circleDiameterPoints
-        )
+        ) : 6.5
+        
         let camera = GMSCameraPosition(
-            target: coordinate,
+            target: targetCoordinate,
             zoom: zoom,
             bearing: mapView.camera.bearing,
             viewingAngle: mapView.camera.viewingAngle
@@ -114,6 +128,7 @@ private struct GoogleMapRepresentable: UIViewRepresentable {
     final class Coordinator {
         var previousCoordinate: CLLocationCoordinate2D?
         var previousRadiusMeters: Double?
+        var previousIsValidOrigin: Bool?
     }
 }
 

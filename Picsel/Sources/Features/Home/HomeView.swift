@@ -16,6 +16,10 @@ struct HomeView: View {
     @State private var manualLocation: CLLocation?
     @State private var manualLocationName: String?
 
+    private var hasValidOrigin: Bool {
+        manualLocation != nil || locationManager.isLocationAuthorized
+    }
+
     private var mapCoordinate: CLLocationCoordinate2D {
         if let manualLocation {
             return manualLocation.coordinate
@@ -53,11 +57,15 @@ struct HomeView: View {
                 radiusSlider
                     .padding(.horizontal, HomeStyle.horizontalPadding)
                     .padding(.top, 16)
+                    .opacity(hasValidOrigin ? 1.0 : 0.5)
+                    .disabled(!hasValidOrigin)
 
                 destinationButton
                     .padding(.horizontal, HomeStyle.horizontalPadding)
                     .padding(.top, 20)
                     .padding(.bottom, 10)
+                    .opacity(hasValidOrigin ? 1.0 : 0.5)
+                    .disabled(!hasValidOrigin)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
@@ -117,7 +125,8 @@ struct HomeView: View {
         ZStack(alignment: .topLeading) {
             GoogleMapView(
                 coordinate: mapCoordinate,
-                radiusMeters: viewModel.currentRadiusMeters
+                radiusMeters: viewModel.currentRadiusMeters,
+                isValidOrigin: hasValidOrigin
             )
 
             LinearGradient(
@@ -132,11 +141,49 @@ struct HomeView: View {
             )
             .allowsHitTesting(false)
 
-            locationBadge
-                .padding(.leading, HomeStyle.horizontalPadding)
-                .padding(.top, 18)
+            if hasValidOrigin {
+                locationBadge
+                    .padding(.leading, HomeStyle.horizontalPadding)
+                    .padding(.top, 18)
+            } else {
+                manualSearchPrompt
+            }
         }
         .clipped()
+    }
+    
+    private var manualSearchPrompt: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("현재 위치를 가져올 수 없습니다.\n출발하실 지역이나 장소를 직접 검색해 주세요.")
+                .font(.subheadline)
+                .foregroundStyle(PicselColor.homeText)
+                .multilineTextAlignment(.leading)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .background(.ultraThinMaterial)
+                .cornerRadius(8)
+            
+            Button {
+                isShowingManualSearch = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(PicselColor.radiusGreen)
+                    Text("어디에서 출발하시나요?")
+                        .font(.callout)
+                        .foregroundStyle(.gray)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .frame(height: 52)
+                .background(Color.white)
+                .clipShape(Capsule())
+                .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
+            }
+        }
+        .padding(.horizontal, HomeStyle.horizontalPadding)
+        .padding(.top, 8)
     }
 
     private var locationBadge: some View {
