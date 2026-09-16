@@ -52,84 +52,57 @@ struct SpatialPhotoCanvas: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let viewportSize = geometry.size
-            let camera = viewModel.camera
-
-            ZStack {
-                PhotoExploreBackground()
-
-                RealityView { content in
-                    content.camera = .virtual
-                    // 사진별 초점 셰이더와 시스템 심도 효과가 중복되지 않게 합니다.
-                    content.renderingEffects.depthOfField = .disabled
-                    content.add(renderer.root)
-                    content.add(renderer.camera)
-                    renderer.render(
-                        camera: camera,
-                        selectedPlaceID: viewModel.selectedPlaceID,
-                        photoScale: Float(settings.photoScale),
-                        viewportSize: viewportSize
-                    )
-                } update: { content in
-                    if viewModel.isInteracting {
-                        renderer.render(
-                            camera: camera,
-                            selectedPlaceID: viewModel.selectedPlaceID,
-                            photoScale: Float(settings.photoScale),
-                            viewportSize: viewportSize
-                        )
-                    } else {
-                        content.animate {
-                            renderer.render(
-                                camera: camera,
-                                selectedPlaceID: viewModel.selectedPlaceID,
-                                photoScale: Float(settings.photoScale),
-                                viewportSize: viewportSize
-                            )
-                        }
-                    }
-                }
-                .realityViewCameraControls(.none)
-                .mask {
-                    // 사진이 상단 안내를 가리지 않게 공간의 위쪽만 부드럽게 걷어냅니다.
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0.12),
-                            .init(color: .white, location: 0.28)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                }
-
-                sceneStatusOverlay
+            canvas(in: geometry.size)
+        }
+        .ignoresSafeArea(edges: .bottom)
+        .sensoryFeedback(.selection, trigger: viewModel.selectedPlaceID)
+        .fullScreenCover(item: $presentedPlace) { item in
+            DestinationDetailView(
+                destination: item.destination,
+                originLocation: originLocation,
+                directionsService: directionsService
+            ) {
+                onConfirm(item.destination)
             }
-            .contentShape(Rectangle())
-            .simultaneousGesture(selectionGesture(in: viewportSize))
-            .simultaneousGesture(cameraGesture(in: viewportSize))
-            .clipped()
-            .onChange(of: camera) { _, newCamera in
-                withAnimation(standardAnimation) {
-                    viewModel.updateAutomaticSelection(
-                        for: newCamera,
-                        in: viewportSize
-                    )
-                }
-            }
-            .onChange(of: isCameraGestureActive) { wasActive, isActive in
-                guard wasActive, !isActive else { return }
-                viewModel.cancelGesture()
-            }
-            .onChange(of: viewportSize) { _, newSize in
-                guard viewModel.canInteract else { return }
+        }
+    }
 
-                withAnimation(standardAnimation) {
-                    viewModel.updateAutomaticSelection(
-                        for: viewModel.camera,
-                        in: newSize
-                    )
-                }
+    private func interactiveScene(in viewportSize: CGSize) -> some View {
+        ZStack {
+            PhotoExploreBackground()
+            photoScene(in: viewportSize)
+            sceneStatusOverlay
+        }
+        .contentShape(Rectangle())
+        .simultaneousGesture(selectionGesture(in: viewportSize))
+        .simultaneousGesture(cameraGesture(in: viewportSize))
+        .clipped()
+        .onChange(of: viewModel.camera) { _, newCamera in
+            withAnimation(standardAnimation) {
+                viewModel.updateAutomaticSelection(
+                    for: newCamera,
+                    in: viewportSize
+                )
             }
+        }
+        .onChange(of: isCameraGestureActive) { wasActive, isActive in
+            guard wasActive, !isActive else { return }
+            withAnimation(momentumAnimation) { viewModel.cancelGesture() }
+        }
+        .onChange(of: viewportSize) { _, newSize in
+            guard viewModel.canInteract else { return }
+
+            withAnimation(standardAnimation) {
+                viewModel.updateAutomaticSelection(
+                    for: viewModel.camera,
+                    in: newSize
+                )
+            }
+        }
+    }
+
+    private func canvas(in viewportSize: CGSize) -> some View {
+        interactiveScene(in: viewportSize)
             .overlay(alignment: .topLeading) {
                 if viewModel.canInteract {
                     header
@@ -170,17 +143,65 @@ struct SpatialPhotoCanvas: View {
             .task(id: viewModel.sceneLoadRequest) {
                 await loadScene()
             }
-        }
-        .ignoresSafeArea(edges: .bottom)
-        .sensoryFeedback(.selection, trigger: viewModel.selectedPlaceID)
-        .fullScreenCover(item: $presentedPlace) { item in
-            DestinationDetailView(
-                destination: item.destination,
-                originLocation: originLocation,
-                directionsService: directionsService
-            ) {
-                onConfirm(item.destination)
+            .task(id: viewModel.canInteract) {
+                guard viewModel.canInteract else { return }
+                // 부모 로딩 화면의 페이드아웃 뒤, 기존 초기 카메라에서 천천히 접근합니다.
+                if !reduceMotion {
+                    do { try await Task.sleep(for: .milliseconds(350)) }
+                    catch { return }
+                }
+                guard !Task.isCancelled else { return }
+                withAnimation(introAnimation) {
+                    viewModel.startIntroZoom(settings: settings)
+                }
             }
+    }
+
+    private func photoScene(in viewportSize: CGSize) -> some View {
+        let camera = viewModel.camera
+
+        return RealityView { content in
+            content.camera = .virtual
+            // 사진별 초점 셰이더와 시스템 심도 효과가 중복되지 않게 합니다.
+            content.renderingEffects.depthOfField = .disabled
+            content.add(renderer.root)
+            content.add(renderer.camera)
+            renderer.render(
+                camera: camera,
+                selectedPlaceID: viewModel.selectedPlaceID,
+                photoScale: Float(settings.photoScale),
+                viewportSize: viewportSize
+            )
+        } update: { content in
+            if viewModel.isInteracting || reduceMotion {
+                renderer.render(
+                    camera: camera,
+                    selectedPlaceID: viewModel.selectedPlaceID,
+                    photoScale: Float(settings.photoScale),
+                    viewportSize: viewportSize
+                )
+            } else {
+                content.animate {
+                    renderer.render(
+                        camera: camera,
+                        selectedPlaceID: viewModel.selectedPlaceID,
+                        photoScale: Float(settings.photoScale),
+                        viewportSize: viewportSize
+                    )
+                }
+            }
+        }
+        .realityViewCameraControls(.none)
+        .mask {
+            // 사진이 상단 안내를 가리지 않게 공간의 위쪽만 부드럽게 걷어냅니다.
+            LinearGradient(
+                stops: [
+                    .init(color: .clear, location: 0.12),
+                    .init(color: .white, location: 0.28)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
         }
     }
 
@@ -188,10 +209,18 @@ struct SpatialPhotoCanvas: View {
         reduceMotion ? nil : .default
     }
 
+    private var introAnimation: Animation? {
+        // 초반 가속 없이 거의 일정하게 접근하고, 끝으로 갈수록 감속합니다.
+        reduceMotion ? nil : .timingCurve(
+            0.4, 0.5, 0.8, 1,
+            duration: settings.initialZoomDuration
+        )
+    }
+
     private var momentumAnimation: Animation? {
         reduceMotion
             ? nil
-            : .snappy(duration: settings.settlingDuration, extraBounce: 0)
+            : .smooth(duration: settings.settlingDuration, extraBounce: 0)
     }
 
     private var header: some View {
@@ -203,7 +232,7 @@ struct SpatialPhotoCanvas: View {
             VStack(alignment: .leading, spacing: 0) {
                 // 실제 거리 필터가 연결되기 전에는 시안의 80km를 고정 표기하지 않습니다.
                 Text(sourceNotice ?? "관광사진 \(viewModel.places.count)장을 둘러보세요")
-                Text("공간을 자유롭게 탐색하고 사진을 눌러 목적지를 확인해보세요")
+                Text("사진을 밀어 이동하고, 선택된 사진을 눌러 목적지를 확인해보세요")
             }
             .font(PicselFont.body01)
             .fixedSize(horizontal: false, vertical: true)
@@ -263,7 +292,7 @@ struct SpatialPhotoCanvas: View {
                     return
                 }
 
-                withAnimation(standardAnimation) {
+                withAnimation(momentumAnimation) {
                     viewModel.select(placeID: id, in: viewportSize)
                 }
             }
