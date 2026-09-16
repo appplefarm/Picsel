@@ -54,18 +54,18 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: HomeStyle.mapHeight(for: proxy.size.height))
 
-                radiusSlider
-                    .padding(.horizontal, HomeStyle.horizontalPadding)
-                    .padding(.top, 16)
-                    .opacity(hasValidOrigin ? 1.0 : 0.5)
-                    .disabled(!hasValidOrigin)
+                if hasValidOrigin {
+                    radiusSlider
+                        .padding(.horizontal, HomeStyle.horizontalPadding)
+                        .padding(.top, 16)
 
-                destinationButton
-                    .padding(.horizontal, HomeStyle.horizontalPadding)
-                    .padding(.top, 20)
-                    .padding(.bottom, 10)
-                    .opacity(hasValidOrigin ? 1.0 : 0.5)
-                    .disabled(!hasValidOrigin)
+                    destinationButton
+                        .padding(.horizontal, HomeStyle.horizontalPadding)
+                        .padding(.top, 20)
+                        .padding(.bottom, 10)
+                } else {
+                    manualSearchBottomSection
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
@@ -145,24 +145,13 @@ struct HomeView: View {
                 locationBadge
                     .padding(.leading, HomeStyle.horizontalPadding)
                     .padding(.top, 18)
-            } else {
-                manualSearchPrompt
             }
         }
         .clipped()
     }
     
-    private var manualSearchPrompt: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("현재 위치를 가져올 수 없습니다.\n출발하실 지역이나 장소를 직접 검색해 주세요.")
-                .font(.subheadline)
-                .foregroundStyle(PicselColor.homeText)
-                .multilineTextAlignment(.leading)
-                .padding(.vertical, 8)
-                .padding(.horizontal, 12)
-                .background(.ultraThinMaterial)
-                .cornerRadius(8)
-            
+    private var manualSearchBottomSection: some View {
+        VStack(spacing: 24) {
             Button {
                 isShowingManualSearch = true
             } label: {
@@ -181,9 +170,28 @@ struct HomeView: View {
                 .clipShape(Capsule())
                 .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
             }
+            .padding(.horizontal, HomeStyle.horizontalPadding)
+            
+            VStack(spacing: 8) {
+                Text("현재 위치를 가져올 수 없어요 :(")
+                Text("출발할 지역이나 장소를 직접 검색해주세요")
+            }
+            .font(.footnote)
+            .foregroundColor(Color(red: 85/255, green: 135/255, blue: 110/255))
+            .multilineTextAlignment(.center)
+            
+            Spacer()
         }
-        .padding(.horizontal, HomeStyle.horizontalPadding)
-        .padding(.top, 8)
+        .padding(.top, 60) // 그라데이션이 시작되는 곳으로부터 콘텐츠를 살짝 내림
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            LinearGradient(
+                colors: [Color.white.opacity(0.0), Color(red: 168/255, green: 226/255, blue: 198/255).opacity(1.0)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .padding(.top, -40) // 뷰 전체(배경 포함)를 맵 위로 끌어올림
     }
 
     private var locationBadge: some View {
