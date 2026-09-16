@@ -20,24 +20,7 @@ struct SwipeCardView: View {
     
     var body: some View {
         ZStack {
-//            RoundedRectangle(cornerRadius: 20)
-//                .fill(.gray)
-            AsyncImage(url: URL(string: place.photoURL ?? "")) { phase in
-                switch phase {
-                case .empty:
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color.gray)
-                case .success(let image):
-                    image
-                        .resizable()
-                        .scaledToFill()
-                case .failure:
-                    Color.gray.opacity(0.3)
-                @unknown default:
-                    Color.gray.opacity(0.3)
-                }
-            }
+            RemotePlacePhoto(url: place.photoURL.flatMap(URL.init(string:)))
             .frame(width: 334, height: 239) // 명시적으로 크기를 고정해 튀어나가는 현상 방지
             .clipped()
             .cornerRadius(10)
@@ -89,6 +72,7 @@ struct SwipeCardView: View {
                 }
             }
             .cornerRadius(10) // 사진 밖으로 삐져나가지 않도록 마스크 처리
+            .allowsHitTesting(false)
         }
         .frame(width: 334, height: 239) // 피그마 가로형 디자인 고정 사이즈로 복구 (레이아웃 붕괴 방지)
         // 1. 드래그 거리에 따른 위치 이동 및 약간의 회전 효과 (자연스러움 추가)

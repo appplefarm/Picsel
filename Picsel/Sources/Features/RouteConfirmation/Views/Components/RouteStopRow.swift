@@ -221,19 +221,7 @@ struct RouteStopRow: View {
 
     @ViewBuilder
     private var thumbnail: some View {
-        RoundedRectangle(cornerRadius: Metric.thumbnailCornerRadius, style: .continuous)
-            .fill(Color(.systemGray5))
-            .overlay {
-                if let thumbnailURL {
-                    AsyncImage(url: thumbnailURL) { phase in
-                        if case .success(let image) = phase {
-                            image
-                                .resizable()
-                                .scaledToFill()
-                        }
-                    }
-                }
-            }
+        RemotePlacePhoto(url: thumbnailURL ?? stop.photoURL.flatMap(URL.init(string:)), compact: true)
             .frame(width: Metric.thumbnailSize, height: Metric.thumbnailSize)
             .clipShape(RoundedRectangle(cornerRadius: Metric.thumbnailCornerRadius, style: .continuous))
     }

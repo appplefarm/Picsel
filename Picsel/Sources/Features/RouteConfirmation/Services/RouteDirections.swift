@@ -78,6 +78,15 @@ enum RouteDirectionsError: LocalizedError {
     /// 업체가 허용하는 총 경로 길이를 넘은 경우입니다.
     case routeTooLong
 
+    var requestFailure: RequestFailure {
+        switch self {
+        case .networkFailure(let error): RequestFailure(error)
+        case .missingAPIKey, .invalidRequest: .configuration
+        case .providerError: .server
+        case .routeNotFound, .routeTooLong: .unavailable
+        }
+    }
+
     var errorDescription: String? {
         switch self {
         case .missingAPIKey:

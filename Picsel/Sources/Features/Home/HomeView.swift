@@ -22,6 +22,10 @@ struct HomeView: View {
         manualLocation != nil || locationManager.isLocationAuthorized
     }
 
+    private var hasValidMapOrigin: Bool {
+        manualLocation != nil || recommendationOrigin != nil
+    }
+
     private var mapCoordinate: CLLocationCoordinate2D {
         if let manualLocation {
             return manualLocation.coordinate
@@ -167,10 +171,10 @@ struct HomeView: View {
 
     private var mapSection: some View {
         ZStack(alignment: .topLeading) {
-            GoogleMapView(
+            NaverMapView(
                 coordinate: mapCoordinate,
                 radiusMeters: viewModel.currentRadiusMeters,
-                isValidOrigin: hasValidOrigin
+                isValidOrigin: hasValidMapOrigin
             )
 
             LinearGradient(

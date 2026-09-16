@@ -12,7 +12,7 @@ import SwiftUI
 struct TripProgressView: View {
 
     let trip: Trip
-    /// 경유지 사진입니다. RouteStop에 사진 필드가 없어 화면 사이로 전달받습니다.
+    /// 전달된 사진 URL을 우선 사용하고, 재실행 후에는 RouteStop에 저장된 URL을 사용합니다.
     let thumbnailURLsByStopID: [UUID: URL]
     let onFinishTrip: () -> Void
 
@@ -63,8 +63,9 @@ struct TripProgressView: View {
                     TripStopCard(
                         name: stop.name,
                         regionText: ShortAddress.make(from: stop.address),
-                        photoURL: thumbnailURLsByStopID[stop.id],
-                        onNavigateTapped: { startNavigation(to: stop) }
+                        photoURL: thumbnailURLsByStopID[stop.id] ?? stop.photoURL.flatMap(URL.init(string:)),
+                        onNavigateTapped: { startNavigation(to: stop) },
+                        tripID: trip.id
                     )
                     // 카드에만 간격을 주어야 행 높이가 늘어나고,
                     // 그래야 점선이 다음 카드 자리까지 내려옵니다.

@@ -87,6 +87,7 @@ private struct TripPhotoFullImage: View {
     }
 }
 
+#if DEBUG
 #Preview {
     Color.gray
         .ignoresSafeArea()
@@ -97,3 +98,4 @@ private struct TripPhotoFullImage: View {
             )
         }
 }
+#endif

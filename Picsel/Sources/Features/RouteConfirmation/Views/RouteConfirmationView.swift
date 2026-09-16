@@ -13,6 +13,8 @@ struct RouteConfirmationView: View {
     @State private var viewModel: RouteConfirmationViewModel
     @State private var editMode: EditMode
     @State private var locationManager = CurrentLocationManager()
+    @State private var retryAttempt = 0
+    @State private var mapReloadID = 0
 
     /// 앞 화면에서 정해 준 출발지입니다.
     ///
@@ -92,17 +94,21 @@ struct RouteConfirmationView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .task {
-            // 앞 화면에서 출발지를 받았으면 권한을 다시 물을 이유가 없습니다.
+        .onAppear {
+            // 앞 화면에서 수동 출발지를 받았으면 권한을 다시 물을 이유가 없습니다.
             if originCoordinate == nil {
                 locationManager.requestCurrentLocation()
             }
+        }
+        .task(id: RouteRequestID(timestamp: originCoordinate == nil ? locationManager.currentLocation?.timestamp : nil, attempt: retryAttempt)) {
             await viewModel.loadDirections(origin: resolvedOrigin)
         }
-        .onChange(of: locationManager.currentLocation?.timestamp) { _, _ in
-            // 현재 위치가 뒤늦게 도착하면 출발지를 반영해 다시 계산합니다.
-            Task {
-                await viewModel.loadDirections(origin: resolvedOrigin)
+        .onDisappear { viewModel.cancelDirections() }
+        .onNetworkRecovery {
+            // SDK의 지도 타일과 경로 API는 별개입니다. 연결 복구 시 지도만 별도로 다시 만듭니다.
+            mapReloadID = NetworkRecovery.shared.generation
+            if viewModel.directionsFailure?.retriesOnReconnect == true {
+                retryAttempt += 1
             }
         }
     }
@@ -113,6 +119,11 @@ struct RouteConfirmationView: View {
     /// 여기서 GPS를 다시 우선하면 두 화면의 출발지가 달라집니다.
     private var resolvedOrigin: CLLocationCoordinate2D? {
         originCoordinate ?? locationManager.currentLocation?.coordinate
+    }
+
+    private struct RouteRequestID: Equatable {
+        let timestamp: Date?
+        let attempt: Int
     }
 
     private var headerSection: some View {
@@ -149,6 +160,11 @@ struct RouteConfirmationView: View {
             .multilineTextAlignment(.center)
             .padding(.top, 14)
 
+            if let failure = viewModel.directionsFailure {
+                RequestFailureView(failure: failure) { retryAttempt += 1 }
+                    .frame(maxWidth: .infinity)
+            }
+
             HStack {
                 Spacer()
 
@@ -181,8 +197,15 @@ struct RouteConfirmationView: View {
                 path: viewModel.mapPath,
                 markers: viewModel.mapMarkers
             )
+            .id(mapReloadID)
             .overlay {
-                if viewModel.isCalculatingFirstRoute {
+                if NetworkRecovery.shared.isConnected == false {
+                    Text("인터넷 연결이 없어 지도가 일부 표시되지 않을 수 있어요.")
+                        .font(.caption)
+                        .padding(12)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                        .padding()
+                } else if viewModel.isCalculatingFirstRoute {
                     routeLoadingOverlay
                 }
             }
