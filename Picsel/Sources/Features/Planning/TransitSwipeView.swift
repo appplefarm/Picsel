@@ -9,6 +9,7 @@
 import CoreLocation
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct TransitSwipeView: View {
     @Environment(\.modelContext) private var modelContext
@@ -113,6 +114,7 @@ struct TransitSwipeView: View {
             )
         }
         .navigationBarTitleDisplayMode(.inline)
+        .background(PlanningBackGestureGuard())
         .toolbar(.hidden, for: .tabBar)
         .navigationDestination(isPresented: $isShowingRouteConfirmation) {
             RouteConfirmationView(
@@ -202,6 +204,51 @@ struct TransitSwipeView: View {
             withAnimation {
                 showSwipeToast = false
             }
+        }
+    }
+}
+
+/// 카드 드래그와 충돌하는 시스템 뒤로가기만 화면 수명 동안 제한합니다.
+private struct PlanningBackGestureGuard: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> Controller { Controller() }
+    func updateUIViewController(_ controller: Controller, context: Context) {}
+
+    static func dismantleUIViewController(_ controller: Controller, coordinator: ()) {
+        controller.restoreGestures()
+    }
+
+    final class Controller: UIViewController {
+        private var savedGestures: [(recognizer: UIGestureRecognizer, wasEnabled: Bool)] = []
+
+        override func viewDidLoad() {
+            super.viewDidLoad()
+            view.isUserInteractionEnabled = false
+        }
+
+        override func viewDidAppear(_ animated: Bool) {
+            super.viewDidAppear(animated)
+            guard savedGestures.isEmpty, let navigationController else { return }
+            var gestures = [navigationController.interactivePopGestureRecognizer]
+            if #available(iOS 26.0, *) {
+                gestures.append(navigationController.interactiveContentPopGestureRecognizer)
+            }
+            for recognizer in gestures.compactMap({ $0 }) {
+                guard !savedGestures.contains(where: { $0.recognizer === recognizer }) else { continue }
+                savedGestures.append((recognizer, recognizer.isEnabled))
+                recognizer.isEnabled = false
+            }
+        }
+
+        override func viewWillDisappear(_ animated: Bool) {
+            super.viewWillDisappear(animated)
+            restoreGestures()
+        }
+
+        func restoreGestures() {
+            for gesture in savedGestures {
+                gesture.recognizer.isEnabled = gesture.wasEnabled
+            }
+            savedGestures.removeAll()
         }
     }
 }

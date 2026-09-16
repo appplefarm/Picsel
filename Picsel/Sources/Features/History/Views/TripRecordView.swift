@@ -139,9 +139,8 @@ struct TripRecordView: View {
             .buttonStyle(.primaryGradient)
             .disabled(!viewModel.canSave)
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
+        .padding(.horizontal, 24)
+        .padding(.bottom, 24)
         .background(PicselColor.backgroundWarmWhite)
     }
 

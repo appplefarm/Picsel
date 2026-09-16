@@ -52,6 +52,7 @@ struct PhotoExploreView: View {
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: isLoading)
         .task(id: viewModel.loadRequest) {
+            guard case .loading = viewModel.phase else { return }
             isSceneLoading = true
             await viewModel.load()
             if case .empty = viewModel.phase {

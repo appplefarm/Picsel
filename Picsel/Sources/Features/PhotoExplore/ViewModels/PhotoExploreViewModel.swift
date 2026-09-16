@@ -29,7 +29,8 @@ final class PhotoExploreViewModel {
     }
 
     func load() async {
-        phase = .loading
+        // 같은 탐색 세션으로 돌아오면 사진 순서와 캔버스 상태를 유지합니다.
+        guard case .loading = phase else { return }
 
         do {
             let destinations = try await service.fetchDestinations(
@@ -47,6 +48,7 @@ final class PhotoExploreViewModel {
     }
 
     func retry() {
+        phase = .loading
         loadRequest += 1
     }
 }

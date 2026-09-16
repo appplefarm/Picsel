@@ -113,6 +113,8 @@ final class RealityPhotoRenderer {
     func stopCameraAnimation() -> PhotoCameraState {
         let currentPosition = camera.position
         camera.stopAllAnimations(recursive: false)
+        // 초기 접근 중 다시 잡아도 사진 크기/회전 애니메이션이 뒤늦게 계속되지 않게 합니다.
+        root.stopAllAnimations(recursive: true)
         camera.position = currentPosition
         return PhotoCameraState(position: currentPosition)
     }

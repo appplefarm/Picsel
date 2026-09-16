@@ -116,6 +116,14 @@ final class RouteConfirmationViewModel {
         directions?.path ?? []
     }
 
+    /// 편집으로 장소가 하나도 남지 않은 상태입니다.
+    ///
+    /// 경로를 "불러오지 못한" 것과는 다릅니다. 다시 시도해도 달라질 것이 없고,
+    /// 사용자가 장소를 다시 고르는 것 말고는 할 수 있는 일이 없습니다.
+    var isRouteEmpty: Bool {
+        routeStops.isEmpty
+    }
+
     /// 좌표를 가진 장소만 추립니다. API 응답에 좌표가 빠진 경우를 걸러 냅니다.
     private var locatedStops: [RouteStop] {
         routeStops.filter { $0.latitude != 0 || $0.longitude != 0 }
@@ -136,7 +144,11 @@ final class RouteConfirmationViewModel {
             directions = nil
             startsFromCurrentLocation = false
             routeOriginCoordinate = nil
-            directionsFailure = .unavailable
+            // 장소를 다시 넣었을 때 같은 조건이라도 반드시 다시 계산하도록 표식을 지웁니다.
+            lastRequestSignature = nil
+            // 장소가 아예 없는 것과, 장소는 있는데 좌표가 없는 것은 다릅니다.
+            // 전자는 다시 시도할 것이 없으므로 실패로 표시하지 않습니다.
+            directionsFailure = isRouteEmpty ? nil : .unavailable
             return
         }
 
@@ -227,6 +239,9 @@ final class RouteConfirmationViewModel {
     }
 
     var routeSummary: String {
+        // 저장해 둔 거리·시간이 남아 있어도 보여 주면 안 됩니다.
+        // 지금 화면에 아무 장소도 없는데 지난 경로의 숫자가 남으면 그걸 믿고 진행하게 됩니다.
+        if isRouteEmpty { return "남은 장소가 없어요" }
         if isLoadingDirections { return "경로 정보를 계산하고 있어요" }
         if directionsFailure != nil { return "경로 정보를 불러오지 못했어요" }
         if needsOrigin { return "출발 위치를 확인하면 거리·시간을 표시할 수 있어요" }
@@ -250,9 +265,8 @@ final class RouteConfirmationViewModel {
 
     /// 요약 숫자가 어림값임을 알려 주는 문구입니다.
     var routeSummaryCaption: String? {
-        directions == nil
-            ? nil
-            : "실제 소요 시간은 출발 시각과 교통 상황에 따라 달라져요"
+        guard !isRouteEmpty, directions != nil else { return nil }
+        return "실제 소요 시간은 출발 시각과 교통 상황에 따라 달라져요"
     }
 
     /// 직전 지점에서 이 장소까지 걸리는 시간(분)입니다.
@@ -318,10 +332,32 @@ final class RouteConfirmationViewModel {
         trip.targetPixelCode = trip.pixelTile?.code
     }
 
+    /// 목록을 비워 버린 삭제 직전의 상태입니다. 되돌리기에만 씁니다.
+    ///
+    /// routeStops에서 빼는 것은 배열 조작일 뿐이고 SwiftData에서 지우는 것은
+    /// commitEditing 시점이라, 배열만 되돌려 놓으면 그대로 복구됩니다.
+    private var routeStopsBeforeEmptying: [RouteStop]?
+
     func removeStops(at offsets: IndexSet) {
+        let before = routeStops
+
         for index in offsets.sorted(by: >) where routeStops.indices.contains(index) {
             routeStops.remove(at: index)
         }
+
+        // 마지막 하나까지 지운 경우에만 되돌릴 거리를 남깁니다.
+        // 중간 삭제까지 기억해 두면 언제 되돌려야 할지가 모호해집니다.
+        routeStopsBeforeEmptying = routeStops.isEmpty ? before : nil
+    }
+
+    /// 목록을 비운 그 삭제를 되돌립니다.
+    ///
+    /// 장소를 모두 지웠을 때 안내에서 "취소"를 고른 경우입니다.
+    /// 지우기 전 전체가 아니라 마지막 삭제 한 번만 되돌립니다.
+    func undoEmptyingRemoval() {
+        guard let routeStopsBeforeEmptying else { return }
+        routeStops = routeStopsBeforeEmptying
+        self.routeStopsBeforeEmptying = nil
     }
 
     func moveStops(from offsets: IndexSet, to destination: Int) {

@@ -21,8 +21,13 @@ final class SpatialPhotoCanvasViewModel {
     let places: [SpatialPlaceItem]
 
     private let selectionPolicy = PhotoSelectionPolicy()
+    private let snapNavigation = PhotoSnapNavigation()
     private var gestureOrigin: PhotoCameraState?
     private var activeGesture = PhotoCameraGesture()
+    private var snapAnchorID: PhotoDestination.ID?
+    private var gestureAnchorID: PhotoDestination.ID?
+    private var didPinch = false
+    private var hasStartedExploration = false
 
     private(set) var selectedPlaceID: PhotoDestination.ID?
     private(set) var camera = PhotoCameraState.initial
@@ -50,11 +55,14 @@ final class SpatialPhotoCanvasViewModel {
     }
 
     func beginGesture(at renderedCamera: PhotoCameraState) {
-        guard !isInteracting else { return }
+        guard canInteract, !isInteracting else { return }
 
+        hasStartedExploration = true
         camera = renderedCamera
         gestureOrigin = renderedCamera
+        gestureAnchorID = snapAnchorID
         activeGesture = PhotoCameraGesture()
+        didPinch = false
         isInteracting = true
     }
 
@@ -63,11 +71,13 @@ final class SpatialPhotoCanvasViewModel {
         in viewportSize: CGSize,
         settings: PhotoInteractionSettings
     ) {
+        guard canInteract else { return }
         if gestureOrigin == nil {
             beginGesture(at: camera)
         }
 
         activeGesture.merge(update)
+        if abs(activeGesture.magnification - 1) > 0.02 { didPinch = true }
         camera = (gestureOrigin ?? camera).applying(
             activeGesture,
             in: viewportSize,
@@ -79,6 +89,9 @@ final class SpatialPhotoCanvasViewModel {
         finishInteraction()
         scenePhase = .loading
         selectedPlaceID = nil
+        snapAnchorID = nil
+        hasStartedExploration = false
+        camera = .initial
     }
 
     func sceneDidLoad(availableIDs: Set<PhotoDestination.ID>) {
@@ -95,10 +108,34 @@ final class SpatialPhotoCanvasViewModel {
         sceneLoadRequest += 1
     }
 
+    /// 초점/마그넷 영역 밖에서 조금만 접근합니다. 특정 사진을 선택하거나 가로·세로로 이동하지 않습니다.
+    func startIntroZoom(settings: PhotoInteractionSettings) {
+        guard !hasStartedExploration, !isInteracting,
+              let nearestDepth = availablePlaces.map({ PhotoSpace.position(for: $0).z }).max() else { return }
+
+        hasStartedExploration = true
+        snapAnchorID = nil
+        selectedPlaceID = nil
+        let initial = PhotoCameraState.initial
+        // 확대량을 튜닝해도 가장 가까운 사진에 초점이 붙지 않도록 여유 깊이를 확보합니다.
+        let unfocusedDepth = nearestDepth + PhotoSpace.focusDistance
+            + max(PhotoSpace.selectionDepthTolerance, Float(settings.magnetDepthTolerance)) + 0.1
+        camera = initial
+        camera.position.z = min(initial.position.z, max(
+            initial.position.z - max(0, Float(settings.initialZoomDistance)),
+            unfocusedDepth
+        ))
+    }
+
     func updateAutomaticSelection(
         for camera: PhotoCameraState,
         in viewportSize: CGSize
     ) {
+        guard !isInteracting else { return }
+        if let snapAnchorID {
+            selectedPlaceID = snapAnchorID
+            return
+        }
         let nearestID = nearestPlace(
             from: camera,
             keeping: selectedPlaceID,
@@ -110,12 +147,15 @@ final class SpatialPhotoCanvasViewModel {
     }
 
     func select(placeID: PhotoDestination.ID, in viewportSize: CGSize) {
-        guard let place = availablePlaces.first(where: { $0.id == placeID }),
-              selectionPolicy.isSelectable(
-                place,
-                from: camera,
-                viewportSize: viewportSize
-              ) else { return }
+        // minimumDistance가 0인 드래그와 탭이 동시에 인식돼도, 실제 이동 없는 탭은 허용합니다.
+        guard !didPinch, hypot(activeGesture.translation.width, activeGesture.translation.height) < 8,
+              let place = availablePlaces.first(where: { $0.id == placeID }) else { return }
+        if let anchor = availablePlaces.first(where: { $0.id == snapAnchorID }) {
+            guard place.id == anchor.id
+                    || snapNavigation.neighbors(of: anchor, among: availablePlaces).contains(place) else { return }
+        } else {
+            guard selectionPolicy.isSelectable(place, from: camera, viewportSize: viewportSize) else { return }
+        }
 
         commitSelection(place, from: camera)
     }
@@ -126,18 +166,32 @@ final class SpatialPhotoCanvasViewModel {
         in viewportSize: CGSize,
         settings: PhotoInteractionSettings
     ) {
+        guard canInteract, isInteracting else { return }
         let origin = gestureOrigin ?? camera
         activeGesture.merge(update)
+        if abs(activeGesture.magnification - 1) > 0.02 { didPinch = true }
 
         let finalGesture = projectsMomentum
             ? activeGesture.projected(using: settings)
             : activeGesture
+        if !didPinch, let anchor = availablePlaces.first(where: { $0.id == gestureAnchorID }) {
+            let target = snapNavigation.target(
+                from: anchor,
+                translation: finalGesture.translation,
+                among: availablePlaces,
+                minimumDistance: CGFloat(settings.snapDragThreshold)
+            )
+            commitSelection(target, from: camera)
+            return
+        }
+
         let projectedCamera = origin.applying(
             finalGesture,
             in: viewportSize,
             settings: settings
         )
-        let magnetTarget = selectionPolicy.nearestMagnetTarget(
+        // 의도적인 줌아웃은 즉시 되붙이지 않고 전체 공간을 둘러보게 합니다.
+        let magnetTarget = activeGesture.magnification < 0.98 ? nil : selectionPolicy.nearestMagnetTarget(
             from: projectedCamera,
             among: availablePlaces,
             viewportSize: viewportSize,
@@ -148,6 +202,7 @@ final class SpatialPhotoCanvasViewModel {
         } ?? projectedCamera
 
         finishInteraction()
+        snapAnchorID = magnetTarget?.id
         camera = finalCamera
 
         guard let nearest = magnetTarget ?? nearestPlace(
@@ -163,11 +218,17 @@ final class SpatialPhotoCanvasViewModel {
     }
 
     func cancelGesture() {
+        guard isInteracting else { return }
         finishInteraction()
+        if let anchor = availablePlaces.first(where: { $0.id == snapAnchorID }) {
+            commitSelection(anchor, from: camera)
+        }
     }
 
     func reset(in viewportSize: CGSize) {
         finishInteraction()
+        hasStartedExploration = true
+        snapAnchorID = nil
         camera = .initial
         selectedPlaceID = nearestPlace(
             from: .initial,
@@ -194,12 +255,16 @@ final class SpatialPhotoCanvasViewModel {
         from camera: PhotoCameraState
     ) {
         finishInteraction()
+        hasStartedExploration = true
+        snapAnchorID = place.id
         selectedPlaceID = place.id
         self.camera = selectionPolicy.focusedCamera(from: camera, on: place)
     }
 
     private func finishInteraction() {
         gestureOrigin = nil
+        gestureAnchorID = nil
+        didPinch = false
         activeGesture = PhotoCameraGesture()
         isInteracting = false
     }

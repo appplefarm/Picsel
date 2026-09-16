@@ -175,7 +175,7 @@ struct TripStatusHomeView: View {
 
     private var primaryButton: some View {
         Button(action: onPrimaryActionTapped) {
-            HStack(spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
                 Text(presentation.actionTitle)
                     .font(PicselFont.label01)
 
@@ -183,21 +183,25 @@ struct TripStatusHomeView: View {
                     .font(.system(size: 13, weight: .semibold))
             }
             .foregroundStyle(PicselColor.tripHomeTitle)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 20)
-            .frame(height: Metric.primaryButtonHeight)
+            .padding(20)
+            .frame(width: 362, alignment: .leading)
             .background(
                 LinearGradient(
                     stops: [
-                        .init(color: PicselColor.tripHomeButtonStart, location: 0),
-                        .init(color: PicselColor.tripHomeButtonStart, location: 0.60),
-                        .init(color: PicselColor.tripHomeButtonEnd, location: 1)
+                        .init(
+                            color: Color(red: 0.22, green: 0.70, blue: 0.53),
+                            location: 0.60
+                        ),
+                        .init(
+                            color: Color(red: 0.50, green: 0.82, blue: 0.71),
+                            location: 1
+                        )
                     ],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                ),
-                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    startPoint: UnitPoint(x: 0, y: 0.5),
+                    endPoint: UnitPoint(x: 1, y: 0.5)
+                )
             )
+            .cornerRadius(18)
         }
         .buttonStyle(.plain)
         .accessibilityHint(presentation.actionHint)
@@ -297,6 +301,5 @@ private enum Metric {
     static let titleToPixelMinimumSpacing: CGFloat = 72
     static let pixelToButtonMinimumSpacing: CGFloat = 64
     static let pixelStrokeWidth: CGFloat = 0.9
-    static let primaryButtonHeight: CGFloat = 60
     static let bottomSpacing: CGFloat = 20
 }
