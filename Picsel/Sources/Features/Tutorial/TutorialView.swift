@@ -24,20 +24,25 @@ struct TutorialView: View {
     }
 
     var body: some View {
-        TabView(selection: $selectedPageIndex) {
-            ForEach(Array(pages.enumerated()), id: \.element.id) { index, page in
-                TutorialPageView(
-                    page: page,
-                    isContentVisible: isContentVisible,
-                    reduceMotion: reduceMotion
-                ) {
-                    advance(from: index)
+        GeometryReader { geometry in
+            TabView(selection: $selectedPageIndex) {
+                ForEach(Array(pages.enumerated()), id: \.element.id) { index, page in
+                    TutorialPageView(
+                        page: page,
+                        isSelected: selectedPageIndex == index,
+                        bottomInset: geometry.safeAreaInsets.bottom,
+                        isContentVisible: isContentVisible,
+                        reduceMotion: reduceMotion
+                    ) {
+                        advance(from: index)
+                    }
+                    .tag(index)
                 }
-                .tag(index)
             }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .ignoresSafeArea(.container, edges: .vertical)
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        .background(Color.white.ignoresSafeArea())
+        .background(PicselColor.surface.ignoresSafeArea())
         .task {
             guard !hasPresentedContent else { return }
             hasPresentedContent = true
@@ -59,7 +64,7 @@ struct TutorialView: View {
             return
         }
 
-        withAnimation(.easeInOut(duration: 0.3)) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
             selectedPageIndex = index + 1
         }
     }
@@ -67,41 +72,72 @@ struct TutorialView: View {
 
 private struct TutorialPageView: View {
     let page: TutorialPage
+    let isSelected: Bool
+    let bottomInset: CGFloat
     let isContentVisible: Bool
     let reduceMotion: Bool
     let onContinue: () -> Void
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var hasPlayedIntro = false
+
+    private var isContinueVisible: Bool {
+        reduceMotion || hasPlayedIntro
+    }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Color.white
-                .ignoresSafeArea()
+        GeometryReader { geometry in
+            let videoScale = geometry.size.width / 402
+            let videoFrame = page.videoFrame
+            ZStack(alignment: .bottom) {
+                page.background
 
-            tutorialGradient
+                ZStack {
+                    Image(page.posterName)
+                        .resizable()
+                        .scaledToFill()
+                    if isSelected, !reduceMotion {
+                        TutorialVideo(
+                            resourceName: page.videoName,
+                            isPlaying: scenePhase == .active,
+                            introDuration: page.continueDelay
+                        ) { hasPlayedIntro = true }
+                    }
+                }
+                .frame(width: videoFrame.width * videoScale, height: videoFrame.height * videoScale)
+                .clipped()
+                .offset(x: videoFrame.minX * videoScale, y: videoFrame.minY * videoScale)
+                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+                .accessibilityHidden(true)
+                .allowsHitTesting(false)
 
-            content
-                .opacity(isContentVisible ? 1 : 0)
-                .offset(y: reduceMotion || isContentVisible ? 0 : 18)
+                tutorialGradient
+                    .frame(height: geometry.size.height * page.gradientHeightRatio)
+
+                content
+                    .opacity(isContentVisible ? 1 : 0)
+                    .offset(y: reduceMotion || isContentVisible ? 0 : 18)
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .clipped()
         }
+        .ignoresSafeArea(.container, edges: .vertical)
     }
 
     private var tutorialGradient: some View {
         LinearGradient(
             stops: [
                 Gradient.Stop(
-                    color: Color(red: 0.95, green: 0.95, blue: 0.95),
+                    color: page.background.opacity(0),
                     location: 0
                 ),
                 Gradient.Stop(
-                    color: Color(red: 0.22, green: 0.75, blue: 0.5),
+                    color: Color(hex: 0x38C07F),
                     location: 0.45
                 )
             ],
             startPoint: UnitPoint(x: 0.5, y: 0),
             endPoint: UnitPoint(x: 0.5, y: 1)
         )
-        .frame(maxWidth: .infinity)
-        .frame(height: 331)
-        .ignoresSafeArea(edges: .bottom)
         .accessibilityHidden(true)
     }
 
@@ -128,17 +164,36 @@ private struct TutorialPageView: View {
                     .foregroundStyle(PicselColor.textSecondary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 66)
+                    .background(
+                        Color.white.opacity(0.8),
+                        in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    )
+                    .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
             .buttonStyle(.plain)
-            .background(Color.white.opacity(0.8))
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .opacity(isContinueVisible ? 1 : 0)
+            .scaleEffect(isContinueVisible ? 1 : 0.86)
+            .animation(
+                reduceMotion ? nil : .spring(response: 0.55, dampingFraction: 0.64),
+                value: isContinueVisible
+            )
+            .allowsHitTesting(isContinueVisible)
+            .accessibilityHidden(!isContinueVisible)
             .padding(.top, 22)
         }
         .padding(.horizontal, 20)
-        .padding(.bottom, 1)
+        .padding(.bottom, max(35, bottomInset + 1))
     }
 }
 
 #Preview {
     TutorialView(onCompletion: { })
+}
+
+#Preview("공간 갤러리") {
+    TutorialView(pages: [.photoExplore], onCompletion: { })
+}
+
+#Preview("픽셀맵") {
+    TutorialView(pages: [.pixelMap], onCompletion: { })
 }
