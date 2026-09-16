@@ -9,7 +9,8 @@ import CoreLocation
 import Foundation
 import OSLog
 
-/// 관광공사 수상작 API에서 사진을 실시간으로 받고, 반경 안의 CloudKit 좌표와 짝지어 목적지 후보를 만듭니다.
+/// 관광공사의 수상작·관광사진 API에서 고화질 사진을 실시간으로 받고,
+/// 반경 안의 CloudKit 좌표와 짝지어 목적지 후보를 만듭니다.
 ///
 /// 두 조각이 만나야 화면에 띄울 수 있습니다.
 ///
@@ -23,6 +24,7 @@ import OSLog
 nonisolated struct LivePhotoDestinationService: PhotoDestinationService {
 
     private let awardService: AwardPhotoService
+    private let galleryService: GalleryPhotoService
     private let originLocation: CLLocation?
     private let selectedRadiusMeters: CLLocationDistance
     private let logger = Logger(subsystem: "com.applefarm.picsel", category: "PhotoDestination")
@@ -30,13 +32,15 @@ nonisolated struct LivePhotoDestinationService: PhotoDestinationService {
     init(
         originLocation: CLLocation?,
         selectedRadiusMeters: CLLocationDistance,
-        awardService: AwardPhotoService = AwardPhotoService()
+        awardService: AwardPhotoService = AwardPhotoService(),
+        galleryService: GalleryPhotoService = GalleryPhotoService()
     ) {
         self.originLocation = originLocation
         self.selectedRadiusMeters = selectedRadiusMeters.isFinite
             ? max(selectedRadiusMeters, PhotoRecommendationPolicy.minimumRadiusMeters)
             : PhotoRecommendationPolicy.minimumRadiusMeters
         self.awardService = awardService
+        self.galleryService = galleryService
     }
 
     func fetchDestinations(limit: Int) async throws -> [PhotoDestination] {
@@ -47,14 +51,14 @@ nonisolated struct LivePhotoDestinationService: PhotoDestinationService {
             throw PhotoDestinationError.missingOrigin
         }
 
-        // ① 좌표를 먼저 확보하고 수상작 중 선택 반경 안의 후보만 남깁니다.
+        // ① 좌표를 먼저 확보하고 award와 gallery 모두 선택 반경 안의 후보로 남깁니다.
         let catalog = await PhotoCoordinateCatalogStore.shared.catalog()
 
         guard !catalog.isEmpty else {
             throw PhotoDestinationError.missingCoordinates
         }
 
-        let coordinates = PhotoRecommendationPolicy.awardCoordinates(
+        let coordinates = PhotoRecommendationPolicy.photoExploreCoordinates(
             in: catalog,
             from: originLocation,
             radiusMeters: selectedRadiusMeters
@@ -63,12 +67,39 @@ nonisolated struct LivePhotoDestinationService: PhotoDestinationService {
         // 반경 안 후보가 없으면 네트워크 오류가 아닌 정상적인 Empty 결과입니다.
         guard !coordinates.isEmpty else { return [] }
 
-        // ② 실제 표시할 제목과 이미지 주소는 공모전 규정에 따라 API에서 실시간으로 받습니다.
-        let remotePhotos = try await awardService.fetchAll()
+        let awardPhotoIDs = Set(
+            coordinates.lazy.filter { $0.source == .award }.map(\.photoID)
+        )
+        let galleryPhotoIDs = Set(
+            coordinates.lazy.filter { $0.source == .gallery }.map(\.photoID)
+        )
+
+        // ② 제목과 고화질 이미지 주소는 각 관광공사 API에서 실시간으로 받습니다.
+        async let awardResult = load(.award) {
+            guard !awardPhotoIDs.isEmpty else { return [] }
+            return try await awardService.fetchAll()
+        }
+        async let galleryResult = load(.gallery) {
+            guard !galleryPhotoIDs.isEmpty else { return [] }
+            return try await galleryService.fetch(
+                matching: galleryPhotoIDs,
+                minimumCount: min(galleryPhotoIDs.count, max(limit * 2, limit))
+            )
+        }
+
+        let results = await [awardResult, galleryResult]
+        let remotePhotos = results.flatMap { (try? $0.get()) ?? [] }
         try Task.checkCancellation()
 
-        // ③ API와 결합 가능한 후보만 섞고 최대 7개를 반환합니다.
-        let destinations = PhotoRecommendationPolicy.destinations(
+        guard !remotePhotos.isEmpty else {
+            if let failure = results.compactMap(\.failureError).first {
+                throw failure
+            }
+            return []
+        }
+
+        // ③ source와 photoID가 모두 일치하는 후보만 섞고 최대 7개를 반환합니다.
+        let destinations = PhotoRecommendationPolicy.photoExploreDestinations(
             coordinates: coordinates,
             remotePhotos: remotePhotos,
             limit: limit
@@ -78,6 +109,26 @@ nonisolated struct LivePhotoDestinationService: PhotoDestinationService {
             "반경 후보 \(coordinates.count)장 → 표시 가능 \(destinations.count)장"
         )
         return destinations
+    }
+
+    /// 한쪽 API가 일시적으로 실패해도 다른 출처의 사진은 계속 사용할 수 있게 합니다.
+    private func load(
+        _ source: PhotoAPISource,
+        _ operation: () async throws -> [RemotePhoto]
+    ) async -> Result<[RemotePhoto], Error> {
+        do {
+            return .success(try await operation())
+        } catch {
+            logger.error("\(source.rawValue) 실패: \(error.localizedDescription)")
+            return .failure(error)
+        }
+    }
+}
+
+private extension Result {
+    var failureError: Failure? {
+        guard case .failure(let error) = self else { return nil }
+        return error
     }
 }
 

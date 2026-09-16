@@ -2,19 +2,33 @@ import CoreLocation
 import Foundation
 import OSLog
 
-/// 좌표 카탈로그와 실시간 수상작 응답에서 반경 기반 추천 후보를 만드는 순수 정책입니다.
+/// 좌표 카탈로그와 실시간 고화질 사진 API 응답에서 반경 기반 추천 후보를 만드는 순수 정책입니다.
 nonisolated enum PhotoRecommendationPolicy {
     static let minimumRadiusMeters: CLLocationDistance = 10_000
     static let maximumResultCount = 7
-    static let maximumGalleryResultCount = 10
 
     private static let logger = Logger(
         subsystem: "com.applefarm.picsel",
         category: "PhotoRecommendation"
     )
 
-    static func awardCoordinates(
+    /// PhotoExplore에서는 CloudKit 좌표 카탈로그의 award와 gallery를 모두 후보로 사용합니다.
+    static func photoExploreCoordinates(
         in catalog: PhotoCoordinateCatalog,
+        from origin: CLLocation,
+        radiusMeters: CLLocationDistance
+    ) -> [PhotoCoordinate] {
+        coordinates(
+            in: catalog,
+            sources: Set(PhotoAPISource.allCases),
+            from: origin,
+            radiusMeters: radiusMeters
+        )
+    }
+
+    private static func coordinates(
+        in catalog: PhotoCoordinateCatalog,
+        sources: Set<PhotoAPISource>,
         from origin: CLLocation,
         radiusMeters: CLLocationDistance
     ) -> [PhotoCoordinate] {
@@ -22,21 +36,18 @@ nonisolated enum PhotoRecommendationPolicy {
               radiusMeters.isFinite else { return [] }
 
         let effectiveRadius = max(radiusMeters, minimumRadiusMeters)
-        return validUniqueCoordinates(in: catalog, source: .award).filter { photo in
-            let location = CLLocation(
-                latitude: photo.latitude,
-                longitude: photo.longitude
-            )
-            return origin.distance(from: location) <= effectiveRadius
-        }
+        return sources
+            .flatMap { validUniqueCoordinates(in: catalog, source: $0) }
+            .filter { photo in
+                let location = CLLocation(
+                    latitude: photo.latitude,
+                    longitude: photo.longitude
+                )
+                return origin.distance(from: location) <= effectiveRadius
+            }
     }
 
-    /// TransitSwipe에서 동일 시·군·구로 좁힌 gallery 좌표를 검증하고 중복 제거합니다.
-    static func galleryCoordinates(in catalog: PhotoCoordinateCatalog) -> [PhotoCoordinate] {
-        validUniqueCoordinates(in: catalog, source: .gallery)
-    }
-
-    static func destinations(
+    static func photoExploreDestinations(
         coordinates: [PhotoCoordinate],
         remotePhotos: [RemotePhoto],
         limit: Int
@@ -44,23 +55,9 @@ nonisolated enum PhotoRecommendationPolicy {
         makeDestinations(
             coordinates: coordinates,
             remotePhotos: remotePhotos,
-            source: .award,
+            sources: Set(PhotoAPISource.allCases),
             limit: limit,
             maximumCount: maximumResultCount
-        )
-    }
-
-    static func galleryDestinations(
-        coordinates: [PhotoCoordinate],
-        remotePhotos: [RemotePhoto],
-        limit: Int
-    ) -> [PhotoDestination] {
-        makeDestinations(
-            coordinates: coordinates,
-            remotePhotos: remotePhotos,
-            source: .gallery,
-            limit: limit,
-            maximumCount: maximumGalleryResultCount
         )
     }
 
@@ -99,26 +96,27 @@ nonisolated enum PhotoRecommendationPolicy {
     private static func makeDestinations(
         coordinates: [PhotoCoordinate],
         remotePhotos: [RemotePhoto],
-        source: PhotoAPISource,
+        sources: Set<PhotoAPISource>,
         limit: Int,
         maximumCount: Int
     ) -> [PhotoDestination] {
         let resultLimit = min(max(limit, 0), maximumCount)
         guard resultLimit > 0 else { return [] }
 
-        var remoteByPhotoID: [String: RemotePhoto] = [:]
-        for photo in remotePhotos where photo.source == source {
+        var remoteByID: [String: RemotePhoto] = [:]
+        for photo in remotePhotos where sources.contains(photo.source) {
             let photoID = photo.photoID.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !photoID.isEmpty,
                   isDisplayableImageURL(photo.displayImageURL),
-                  remoteByPhotoID[photoID] == nil else { continue }
-            remoteByPhotoID[photoID] = photo
+                  remoteByID[photo.id] == nil else { continue }
+            remoteByID[photo.id] = photo
         }
 
         let destinations = coordinates.compactMap { place -> PhotoDestination? in
-            guard place.source == source else { return nil }
+            guard sources.contains(place.source) else { return nil }
             let photoID = place.photoID.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard let photo = remoteByPhotoID[photoID] else { return nil }
+            let id = "\(place.source.rawValue):\(photoID)"
+            guard let photo = remoteByID[id] else { return nil }
 
             return PhotoDestination(
                 id: photo.id,
