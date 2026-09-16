@@ -15,6 +15,10 @@ xcrun swiftc -swift-version 5 -default-isolation MainActor \
   Picsel/Sources/Features/RouteConfirmation/Services/RouteDirections.swift \
   Picsel/Sources/Features/RouteConfirmation/Support/Trip+RouteOrder.swift \
   Picsel/Sources/Features/RouteConfirmation/ViewModels/RouteConfirmationViewModel.swift \
+  Picsel/Sources/Features/PhotoExplore/Models/PhotoDestination.swift \
+  Picsel/Sources/Features/PhotoExplore/Models/DestinationDetailInfo.swift \
+  Picsel/Sources/Features/PhotoExplore/ViewModels/DestinationDetailViewModel.swift \
+  Picsel/Sources/Features/PhotoExplore/Services/RemotePhotoImageLoader.swift \
   Tools/NetworkRecovery/validate_network_recovery.swift \
   -o "$test_dir/validate"
 "$test_dir/validate"

@@ -79,6 +79,8 @@ struct Checks {
         try await checkRecommendations(session)
         try await checkRoutes()
         try await checkCache(session)
+        try await checkDestinationDetail()
+        try await checkExploreImages(session)
         print("PASS: \(count) network/retry/cache checks (zero real API requests)")
     }
 
@@ -171,6 +173,120 @@ struct Checks {
         try check(!vm.isLoadingDirections && vm.directionsFailure == nil, "Navigating away cancels without error")
         await vm.loadDirections(origin: .init(latitude: 32, longitude: 129))
         try check(vm.directions?.distanceMeters == 3200, "Cancelled route can load when returning")
+    }
+
+    static func checkDestinationDetail() async throws {
+        let destination = PhotoDestination(id: "photo", name: "Destination", latitude: 36, longitude: 129)
+        let service = DirectionsFixture()
+        let vm = DestinationDetailViewModel(destination: destination, directionsService: service)
+        let origin = CLLocation(latitude: 35, longitude: 129)
+        await vm.loadTravelInfo(from: nil)
+        vm.retryAfterReconnection()
+        if case .unavailable = vm.travelState {
+            try check(service.requests == 0 && vm.retryAttempt == 0, "Missing location is not a network error")
+        } else { throw Failed(message: "Missing location must remain unavailable") }
+
+        for (error, expected) in [
+            (RouteDirectionsError.networkFailure(underlying: URLError(.notConnectedToInternet)), RequestFailure.offline),
+            (.networkFailure(underlying: URLError(.timedOut)), .timedOut),
+            (.networkFailure(underlying: URLError(.networkConnectionLost)), .connection),
+            (.missingAPIKey, .configuration),
+            (.routeNotFound, .unavailable),
+            (.providerError(code: "500", message: "private provider detail"), .server)
+        ] {
+            service.error = error
+            await vm.loadTravelInfo(from: origin)
+            guard case .failed(let failure) = vm.travelState else { throw Failed(message: "Detail must show failure") }
+            try check(failure == expected, "Detail route error classification")
+            let before = vm.retryAttempt
+            vm.retryAfterReconnection()
+            try check(vm.retryAttempt == before + (expected.retriesOnReconnect ? 1 : 0), "Only connection failures trigger detail retry")
+        }
+        service.error = nil
+        await vm.loadTravelInfo(from: origin)
+        guard case .loaded(let info) = vm.travelState else { throw Failed(message: "Detail retry must recover") }
+        try check(info.distanceKilometers == 3.5 && info.estimatedDurationMinutes == 10, "Detail shows real distance and duration")
+        let attempts = vm.retryAttempt, requests = service.requests
+        vm.retryAfterReconnection()
+        try check(vm.retryAttempt == attempts && service.requests == requests, "Reconnect preserves successful detail route")
+        try check(destination.canSelectAsDestination, "Destination eligibility does not depend on network")
+
+        service.error = RouteDirectionsError.networkFailure(underlying: URLError(.cancelled))
+        await vm.loadTravelInfo(from: origin)
+        if case .failed = vm.travelState { throw Failed(message: "Wrapped cancellation must not show detail error") }
+        count += 1
+        service.error = nil
+        service.delayed = true
+        let old = Task { await vm.loadTravelInfo(from: CLLocation(latitude: 34, longitude: 129)) }
+        try await waitUntil { service.requests == requests + 2 }
+        let new = Task { await vm.loadTravelInfo(from: CLLocation(latitude: 33, longitude: 129)) }
+        await old.value
+        await new.value
+        guard case .loaded(let newest) = vm.travelState else { throw Failed(message: "Latest detail route must load") }
+        try check(newest.distanceKilometers == 3.3, "Old detail response cannot overwrite new location")
+    }
+
+    static func checkExploreImages(_ session: URLSession) async throws {
+        let pixel = CGContext(data: nil, width: 3_000, height: 1_500, bitsPerComponent: 8, bytesPerRow: 12_000,
+                              space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!.makeImage()!
+        let bytes = NSMutableData()
+        let destination = CGImageDestinationCreateWithData(bytes, UTType.jpeg.identifier as CFString, 1, nil)!
+        CGImageDestinationAddImage(destination, pixel, nil)
+        CGImageDestinationFinalize(destination)
+        let fixture = bytes as Data
+        let loader = RemotePhotoImageLoader(session: session)
+        let url = URL(string: "https://example.test/explore.jpg")!
+        StubURLProtocol.respond { request in
+            guard request.timeoutInterval == 20 else { throw Failed(message: "Explore image timeout") }
+            return (200, fixture)
+        }
+        async let texture = loader.image(from: url, maximumPixelSize: 1_600)
+        async let detail = loader.image(from: url, maximumPixelSize: 2_400)
+        let (a, b) = try await (texture, detail)
+        try check(StubURLProtocol.requests == 1, "Explore/detail share one download")
+        try check(a.width == 1_600 && a.height == 800 && b.width == 2_400 && b.height == 1_200,
+                  "Explore and detail retain resolution and aspect ratio")
+        StubURLProtocol.respond { _ in throw URLError(.notConnectedToInternet) }
+        let offline = try await loader.image(from: url, maximumPixelSize: 2_400)
+        try check(offline.width == 2_400 && StubURLProtocol.requests == 0, "Offline detail reuses loaded explore photo")
+
+        let uncached = URL(string: "https://example.test/new.jpg")!
+        do {
+            _ = try await loader.image(from: uncached, maximumPixelSize: 2_400)
+            throw Failed(message: "Uncached offline photo must report failure")
+        } catch let error as URLError { try check(RequestFailure(error) == .offline, "Uncached photo reports offline") }
+        StubURLProtocol.respond { _ in (503, Data()) }
+        do {
+            _ = try await loader.image(from: uncached, maximumPixelSize: 2_400)
+            throw Failed(message: "Image HTTP error accepted")
+        } catch let failure as RequestFailure { try check(failure == .server, "Image HTTP error is distinct from offline") }
+        StubURLProtocol.respond { _ in (200, Data("not an image".utf8)) }
+        do {
+            _ = try await loader.image(from: uncached, maximumPixelSize: 2_400)
+            throw Failed(message: "Invalid image accepted")
+        } catch let failure as RequestFailure { try check(failure == .invalidResponse, "Broken photo is not cached") }
+        StubURLProtocol.respond { _ in (200, fixture) }
+        let recovered = try await loader.image(from: uncached, maximumPixelSize: 2_400)
+        try check(recovered.width == 2_400 && StubURLProtocol.requests == 1, "Failed image can retry successfully")
+
+        let late = URL(string: "https://example.test/shared.jpg")!
+        let gate = DispatchSemaphore(value: 0)
+        defer { gate.signal() }
+        StubURLProtocol.respond { _ in
+            guard gate.wait(timeout: .now() + 3) == .success else { throw Failed(message: "Explore gate timed out") }
+            return (200, fixture)
+        }
+        let cancelled = Task { try await loader.image(from: late, maximumPixelSize: 1_600) }
+        try await waitUntil { StubURLProtocol.requests == 1 }
+        let remaining = Task { try await loader.image(from: late, maximumPixelSize: 2_400) }
+        cancelled.cancel()
+        gate.signal()
+        do {
+            _ = try await cancelled.value
+            throw Failed(message: "Cancelled image must not be applied")
+        } catch is CancellationError { count += 1 }
+        let image = try await remaining.value
+        try check(image.width == 2_400 && StubURLProtocol.requests == 1, "Cancelling explore does not cancel shared detail download")
     }
 
     static func checkCache(_ session: URLSession) async throws {
