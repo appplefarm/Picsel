@@ -13,7 +13,11 @@ struct AppRootView: View {
         case content
     }
 
+    #if DEBUG
+    @State private var launchPhase: LaunchPhase = .tutorial
+    #else
     @State private var launchPhase: LaunchPhase = .splash
+    #endif
 
     @AppStorage("hasSelectedNavigationApp")
     private var hasSelectedNavigationApp = false
