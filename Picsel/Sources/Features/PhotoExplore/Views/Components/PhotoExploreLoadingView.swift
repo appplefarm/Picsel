@@ -15,35 +15,13 @@ struct PhotoExploreLoadingView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let videoSize = min(geometry.size.width * 1.2, geometry.size.height * 0.65)
+            let videoHeight = min(geometry.size.width * 4 / 3, geometry.size.height * 0.65)
 
             ZStack {
-                VStack(spacing: 0) {
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    PicselColor.photoLoadingBackgroundTop,
-                                    PicselColor.photoLoadingBackgroundTopCenter,
-                                    PicselColor.photoLoadingBackgroundTop
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .overlay {
-                            // 아랫변의 가로 색 분포는 유지하고 윗변만 흰색으로 수렴합니다.
-                            LinearGradient(
-                                colors: [.white, .white.opacity(0)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        }
-                    Rectangle().fill(PicselColor.photoLoadingBackground)
-                }
+                PicselColor.photoLoadingBackground
 
                 loadingVisual
-                    .frame(width: videoSize, height: videoSize)
+                    .frame(width: videoHeight * 3 / 4, height: videoHeight)
                     .accessibilityHidden(true)
                     .allowsHitTesting(false)
             }
