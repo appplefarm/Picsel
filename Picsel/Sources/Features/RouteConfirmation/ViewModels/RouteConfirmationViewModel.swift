@@ -35,6 +35,11 @@ final class RouteConfirmationViewModel {
     /// 여행 목록에서 지우지는 않습니다. 사용자가 고른 장소를 앱이 말없이 없애면 안 되고,
     /// 걸어서 갈 수 있는 곳일 수도 있습니다. 경로 계산에서만 빼고 화면에 그 사실을 밝힙니다.
     private(set) var unreachableStopIDs: Set<UUID> = []
+    /// 경로 계산에 실제로 들어간 장소의 순서입니다.
+    ///
+    /// 갈 수 없는 장소를 빼고 다시 계산하면 응답의 구간 수가 목록보다 적어집니다.
+    /// 목록 순번으로 구간을 세면 한 칸씩 밀려 엉뚱한 장소에 시간이 붙습니다.
+    private var routedStopIDs: [UUID] = []
     /// 다시 시도할 때 같은 출발지를 쓰기 위해 보관합니다.
     private var lastOrigin: CLLocationCoordinate2D?
     @ObservationIgnored private var directionsTask: Task<RouteDirections, Error>?
@@ -72,7 +77,7 @@ final class RouteConfirmationViewModel {
     /// 그래서 장소 목록만으로 마커를 만들면 지도에서 출발지가 통째로 빠집니다.
     /// 경로가 출발지에서 시작할 때는 앞에 따로 한 개를 더 붙여 줍니다.
     var mapMarkers: [RouteMapMarker] {
-        let stopMarkers = locatedStops.enumerated().map { index, stop in
+        let stopMarkers = routedStops.enumerated().map { index, stop in
             RouteMapMarker(
                 coordinate: coordinate(of: stop),
                 title: stop.name,
@@ -100,8 +105,9 @@ final class RouteConfirmationViewModel {
     ///
     /// 지도 마커와 목록 타임라인이 같은 판정을 쓰도록 여기서만 정합니다.
     func stopKind(for stop: RouteStop) -> RouteMapMarker.Kind {
-        guard let index = locatedStops.firstIndex(where: { $0.id == stop.id }) else {
-            // 좌표가 없어 경로에 못 들어간 장소입니다. 목적지 여부만 보고 판단합니다.
+        guard let index = routedStops.firstIndex(where: { $0.id == stop.id }) else {
+            // 좌표가 없거나 갈 수 없어 경로에 못 들어간 장소입니다.
+            // 목적지 여부만 보고 판단합니다.
             return stop.isDestination ? .destination : .waypoint
         }
         return markerKind(for: stop, at: index)
@@ -134,6 +140,14 @@ final class RouteConfirmationViewModel {
         routeStops.filter { $0.latitude != 0 || $0.longitude != 0 }
     }
 
+    /// 경로에 실제로 들어간 장소들입니다. 아직 계산 전이면 좌표를 가진 장소 전부로 봅니다.
+    ///
+    /// 지도 마커와 구간 시간은 목록이 아니라 이 순서를 기준으로 삼아야 합니다.
+    private var routedStops: [RouteStop] {
+        guard !routedStopIDs.isEmpty else { return locatedStops }
+        return routedStopIDs.compactMap { id in locatedStops.first { $0.id == id } }
+    }
+
     // MARK: - 경로 계산
 
     /// 현재 위치에서 출발해 경유지를 거쳐 목적지까지의 경로를 계산합니다.
@@ -149,6 +163,8 @@ final class RouteConfirmationViewModel {
             directions = nil
             startsFromCurrentLocation = false
             routeOriginCoordinate = nil
+            unreachableStopIDs = []
+            routedStopIDs = []
             // 장소를 다시 넣었을 때 같은 조건이라도 반드시 다시 계산하도록 표식을 지웁니다.
             lastRequestSignature = nil
             // 장소가 아예 없는 것과, 장소는 있는데 좌표가 없는 것은 다릅니다.
@@ -163,12 +179,17 @@ final class RouteConfirmationViewModel {
         let start: CLLocationCoordinate2D
         // 좌표만 들고 다니면 나중에 "몇 번째 경유지가 문제인가"를 장소와 이어 붙일 수 없습니다.
         let waypointStops: [RouteStop]
+        // 현재 위치를 못 받아 첫 장소를 출발지로 쓴 경우입니다.
+        // 이 장소도 경로 위에 있으므로 지도 마커와 구간 계산에서 빠지면 안 됩니다.
+        let startStop: RouteStop?
 
         if let origin {
             start = origin
+            startStop = nil
             waypointStops = remainingStops
         } else if let first = remainingStops.first {
             start = coordinate(of: first)
+            startStop = first
             waypointStops = Array(remainingStops.dropFirst())
         } else {
             // 목적지 하나뿐인데 출발지도 없으면 그릴 경로가 없습니다.
@@ -203,6 +224,7 @@ final class RouteConfirmationViewModel {
         startsFromCurrentLocation = false
         routeOriginCoordinate = nil
         unreachableStopIDs = []
+        routedStopIDs = []
         
         defer {
             if activeRequestID == requestID {
@@ -211,37 +233,149 @@ final class RouteConfirmationViewModel {
             }
         }
 
-        let service = directionsService
-        let task = Task {
-            try await service.directions(origin: start, waypoints: waypoints, destination: destination)
-        }
-        directionsTask = task
-
         do {
-            let result = try await withTaskCancellationHandler {
-                try await task.value
-            } onCancel: { task.cancel() }
+            let result = try await requestDirections(
+                origin: start,
+                waypoints: waypoints,
+                destination: destination
+            )
             try Task.checkCancellation()
             guard activeRequestID == requestID else { return }
-            directions = result
-            startsFromCurrentLocation = origin != nil
-            routeOriginCoordinate = origin
+            apply(
+                result,
+                origin: origin,
+                routedStops: Self.routedList(
+                    startStop: startStop,
+                    waypointStops: waypointStops,
+                    destinationStop: destinationStop
+                )
+            )
         } catch {
             guard activeRequestID == requestID else { return }
-            // 실패한 요청은 표식을 지워서 다시 시도할 수 있게 합니다.
-            lastRequestSignature = nil
             guard !Task.isCancelled, !RequestFailure.isCancellation(error) else { return }
 
             let failure = (error as? RouteDirectionsError)?.requestFailure ?? RequestFailure(error)
-            directionsFailure = failure
 
-            // 어느 장소가 문제인지 모르면 사용자는 고칠 방법이 없습니다.
-            guard failure == .unreachableWaypoint else { return }
-            await markUnreachableStops(
-                origin: start,
+            // 갈 수 없는 장소 때문이 아니라면 빼 볼 것이 없습니다.
+            guard failure == .unreachableWaypoint else {
+                lastRequestSignature = nil
+                directionsFailure = failure
+                return
+            }
+
+            await retryWithoutUnreachableStops(
+                origin: origin,
+                start: start,
+                startStop: startStop,
                 waypointStops: waypointStops,
-                requestID: requestID
+                destinationStop: destinationStop,
+                requestID: requestID,
+                originalFailure: failure
             )
+        }
+    }
+
+    /// 업체에 경로를 한 번 물어봅니다. 화면을 떠나면 취소되도록 함께 묶어 둡니다.
+    private func requestDirections(
+        origin: CLLocationCoordinate2D,
+        waypoints: [CLLocationCoordinate2D],
+        destination: CLLocationCoordinate2D
+    ) async throws -> RouteDirections {
+        let service = directionsService
+        let task = Task {
+            try await service.directions(
+                origin: origin,
+                waypoints: waypoints,
+                destination: destination
+            )
+        }
+        directionsTask = task
+
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: { task.cancel() }
+    }
+
+    /// 경로가 지나는 장소를 순서대로 모읍니다.
+    ///
+    /// 현재 위치에서 출발하지 못한 경우 첫 장소가 곧 출발지입니다.
+    /// 그 장소도 경로 위에 있으므로 목록 맨 앞에 넣어야, 지도 마커의 역할 판정과
+    /// 구간 시간 계산이 지금까지와 같은 기준으로 동작합니다.
+    private static func routedList(
+        startStop: RouteStop?,
+        waypointStops: [RouteStop],
+        destinationStop: RouteStop
+    ) -> [RouteStop] {
+        [startStop].compactMap { $0 } + waypointStops + [destinationStop]
+    }
+
+    /// 계산 결과를 화면이 쓰는 상태로 옮깁니다.
+    private func apply(
+        _ result: RouteDirections,
+        origin: CLLocationCoordinate2D?,
+        routedStops: [RouteStop]
+    ) {
+        directions = result
+        startsFromCurrentLocation = origin != nil
+        routeOriginCoordinate = origin
+        routedStopIDs = routedStops.map(\.id)
+        directionsFailure = nil
+    }
+
+    /// 갈 수 없는 장소를 골라내 빼고 한 번 더 계산합니다.
+    ///
+    /// 장소 하나 때문에 경로 전체를 못 보여 주는 것보다, 갈 수 있는 곳까지의 경로를 주고
+    /// 무엇이 빠졌는지 밝히는 편이 낫습니다. 뺀 사실을 감추면 그때는 거짓말이 됩니다.
+    private func retryWithoutUnreachableStops(
+        origin: CLLocationCoordinate2D?,
+        start: CLLocationCoordinate2D,
+        startStop: RouteStop?,
+        waypointStops: [RouteStop],
+        destinationStop: RouteStop,
+        requestID: UUID,
+        originalFailure: RequestFailure
+    ) async {
+        await markUnreachableStops(
+            origin: start,
+            waypointStops: waypointStops,
+            requestID: requestID
+        )
+        guard activeRequestID == requestID else { return }
+
+        // 범인을 못 찾았으면 뺄 것이 없습니다. 원래 실패를 그대로 남깁니다.
+        guard !unreachableStopIDs.isEmpty else {
+            lastRequestSignature = nil
+            directionsFailure = originalFailure
+            return
+        }
+
+        // 경유지가 전부 빠져도 출발지에서 목적지까지는 그릴 수 있습니다.
+        let keptStops = waypointStops.filter { !unreachableStopIDs.contains($0.id) }
+
+        do {
+            let result = try await requestDirections(
+                origin: start,
+                waypoints: keptStops.map(coordinate(of:)),
+                destination: coordinate(of: destinationStop)
+            )
+            try Task.checkCancellation()
+            guard activeRequestID == requestID else { return }
+            apply(
+                result,
+                origin: origin,
+                routedStops: Self.routedList(
+                    startStop: startStop,
+                    waypointStops: keptStops,
+                    destinationStop: destinationStop
+                )
+            )
+        } catch {
+            guard activeRequestID == requestID else { return }
+            guard !Task.isCancelled, !RequestFailure.isCancellation(error) else { return }
+
+            lastRequestSignature = nil
+            directionsFailure = (error as? RouteDirectionsError)?.requestFailure
+                ?? RequestFailure(error)
         }
     }
 
@@ -327,7 +461,9 @@ final class RouteConfirmationViewModel {
             return travelMinutesByStopID[stop.id]
         }
 
-        guard let index = locatedStops.firstIndex(where: { $0.id == stop.id }) else {
+        // 응답의 구간은 경로에 실제로 들어간 장소만큼만 있습니다.
+        // 목록 순번으로 세면 빠진 장소 뒤로 한 칸씩 밀립니다.
+        guard let index = routedStops.firstIndex(where: { $0.id == stop.id }) else {
             return nil
         }
 
