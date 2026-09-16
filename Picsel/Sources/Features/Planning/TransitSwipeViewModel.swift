@@ -159,7 +159,11 @@ final class TransitSwipeViewModel {
         activeTrip.isDone = false
 
         // 완료 화면에서 사용할 픽셀과 진행 중 홈의 도형이 같은 지역을 가리키게 합니다.
-        activeTrip.targetPixelCode = activeTrip.pixelTile?.code
+        // 목적지를 지운 여행은 새로 판정할 좌표가 없습니다.
+        // 그럴 때 nil로 덮어쓰면 목적지를 고를 때 새겨 둔 지역까지 잃어버립니다.
+        if let code = activeTrip.pixelTile?.code {
+            activeTrip.targetPixelCode = code
+        }
 
         // 뒤로 갔다가 다시 들어와도 두 번 등록되지 않게 확인합니다.
         if activeTrip.modelContext == nil {

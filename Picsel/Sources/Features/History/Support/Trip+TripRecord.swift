@@ -27,7 +27,11 @@ extension Trip {
         if let regionName = pixel?.regionName, !regionName.isEmpty {
             return regionName
         }
-        return TripRegionName.make(from: destinationStop?.address)
+        if let address = destinationStop?.address {
+            return TripRegionName.make(from: address)
+        }
+        // 목적지를 지운 여행입니다. 처음 정해 둔 픽셀의 이름을 대신 씁니다.
+        return resolvedPixelTile?.name ?? TripRegionName.fallback
     }
 
     /// 기록에 남길 여행 날짜입니다. PicselMapRecord와 같은 우선순위를 씁니다.
@@ -58,6 +62,17 @@ extension Trip {
             latitude: destination.latitude,
             longitude: destination.longitude
         )
+    }
+
+    /// 이 여행이 실제로 채울 픽셀입니다.
+    ///
+    /// 경로 확인 화면에서 최종 목적지를 지우면 좌표가 사라져 pixelTile이 nil이 됩니다.
+    /// 목적지를 지웠다고 해서 "어느 지역을 여행했는가"까지 없어지는 것은 아니므로,
+    /// 목적지를 고른 순간 Trip에 새겨 둔 targetPixelCode로 지역을 되살립니다.
+    var resolvedPixelTile: PixelTile? {
+        if let pixelTile { return pixelTile }
+        guard let targetPixelCode else { return nil }
+        return PixelRegionLocator.tile(code: targetPixelCode)
     }
 
     /// 기록 상세로 넘길 표시용 값입니다.

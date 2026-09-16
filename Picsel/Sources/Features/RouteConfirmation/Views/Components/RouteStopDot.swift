@@ -34,13 +34,11 @@ enum RouteMarkerStyle {
         }
     }
 
-    /// 테두리 색입니다. 경유지만 초록 테두리를 두르고 나머지는 흰 테두리입니다.
-    static func border(for kind: RouteMapMarker.Kind) -> Color {
-        kind == .waypoint ? PicselColor.actionGreen : .white
-    }
-
-    static func borderWidth(for kind: RouteMapMarker.Kind) -> CGFloat {
-        kind == .waypoint ? 2 : 2.5
+    /// 지름 안쪽에 두르는 테두리입니다. 경유지만 초록 테두리를 갖습니다.
+    ///
+    /// 안쪽에 그리므로 지름은 그대로 두고 채움 면적만 줄어듭니다.
+    static func stroke(for kind: RouteMapMarker.Kind) -> (color: Color, width: CGFloat)? {
+        kind == .waypoint ? (PicselColor.actionGreen, 2) : nil
     }
 
     /// 목적지 가운데를 비우는 흰 점의 지름입니다. 다른 역할에는 없습니다.
@@ -51,9 +49,8 @@ enum RouteMarkerStyle {
 
 /// 목록 타임라인에 찍는 점입니다. 지도 마커와 같은 모양을 씁니다.
 ///
-/// 지도에서는 흰 테두리가 지도 위에서 마커를 떼어내는 역할을 하지만,
-/// 목록은 바탕이 흰색이라 그려도 보이지 않고 초록만 깎아 먹습니다.
-/// 그래서 흰 테두리만 빼고 나머지(채움 · 초록 테두리 · 가운데 점)는 그대로 씁니다.
+/// 지도 마커와 다른 점은 바깥의 흰 후광뿐입니다.
+/// 목록은 바탕이 흰색이라 후광을 그려도 보이지 않으므로 생략합니다.
 struct RouteStopDot: View {
     let kind: RouteMapMarker.Kind
 
@@ -63,12 +60,9 @@ struct RouteStopDot: View {
         Circle()
             .fill(RouteMarkerStyle.fill(for: kind))
             .overlay {
-                if kind == .waypoint {
+                if let stroke = RouteMarkerStyle.stroke(for: kind) {
                     Circle()
-                        .strokeBorder(
-                            RouteMarkerStyle.border(for: kind),
-                            lineWidth: RouteMarkerStyle.borderWidth(for: kind)
-                        )
+                        .strokeBorder(stroke.color, lineWidth: stroke.width)
                 }
             }
             .overlay {

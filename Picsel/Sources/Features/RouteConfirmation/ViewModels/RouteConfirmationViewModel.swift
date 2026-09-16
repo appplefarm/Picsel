@@ -248,6 +248,8 @@ final class RouteConfirmationViewModel {
     func commitEditing() {
         let remainingStopIDs = Set(routeStops.map(\.id))
 
+        stampPixelCodeIfDestinationIsLeaving(remainingStopIDs: remainingStopIDs)
+
         for stop in trip.stops where !remainingStopIDs.contains(stop.id) {
             stop.trip = nil
         }
@@ -263,6 +265,23 @@ final class RouteConfirmationViewModel {
         Task {
             await loadDirections(origin: lastOrigin)
         }
+    }
+
+    /// 최종 목적지를 지우기 직전에 이 여행이 채울 지역을 Trip에 새겨 둡니다.
+    ///
+    /// 지역은 목적지 좌표로 판정하는데, 목적지를 지우면 그 좌표가 사라져
+    /// 이후로는 어느 지역을 여행했는지 알 길이 없어집니다.
+    /// 목적지를 바꾸는 것과 "이 여행이 어느 지역인가"는 다른 이야기라,
+    /// 지우더라도 처음 정해진 지역으로 픽셀을 채울 수 있어야 합니다.
+    ///
+    /// 경계 데이터가 3.5MB라 판정 비용이 작지 않습니다.
+    /// 그래서 실제로 목적지가 빠지는 순간에만, 그것도 한 번만 계산합니다.
+    private func stampPixelCodeIfDestinationIsLeaving(remainingStopIDs: Set<UUID>) {
+        guard trip.targetPixelCode == nil,
+              let destinationStop = trip.destinationStop,
+              !remainingStopIDs.contains(destinationStop.id) else { return }
+
+        trip.targetPixelCode = trip.pixelTile?.code
     }
 
     func removeStops(at offsets: IndexSet) {
