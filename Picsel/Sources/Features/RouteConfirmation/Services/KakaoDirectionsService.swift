@@ -120,7 +120,7 @@ struct KakaoDirectionsService: RouteDirectionsProviding {
             throw RouteDirectionsError.invalidRequest
         }
 
-        var request = URLRequest(url: baseURL, timeoutInterval: 20)
+        var request = URLRequest(url: baseURL)
         request.httpMethod = "POST"
         request.setValue("KakaoAK \(restAPIKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
