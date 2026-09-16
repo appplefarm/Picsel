@@ -29,6 +29,14 @@ struct HomeView: View {
         return locationManager.currentLocation?.coordinate ?? viewModel.fallbackCoordinate
     }
 
+    /// 여행 경로를 계산할 때 쓸 출발지입니다.
+    ///
+    /// 위치 권한을 거절하고 수동으로 입력한 경우, 그 값이 곧 이 사람의 현재 위치입니다.
+    /// GPS를 끝내 받을 수 없으므로 수동 입력값을 그대로 출발지로 넘깁니다.
+    private var tripOriginCoordinate: CLLocationCoordinate2D? {
+        manualLocation?.coordinate ?? recommendationOrigin?.coordinate
+    }
+
     /// 지도 표시용 기본 좌표를 실제 추천 기준 위치로 오인하지 않습니다.
     private var recommendationOrigin: CLLocation? {
         guard locationManager.isLocationAuthorized,
@@ -96,7 +104,8 @@ struct HomeView: View {
                     viewModel: TransitSwipeViewModel(
                         trip: trip,
                         destinationPhotoURL: destination.photoURL.flatMap(URL.init(string:))
-                    )
+                    ),
+                    originCoordinate: tripOriginCoordinate
                 )
             }
         }
