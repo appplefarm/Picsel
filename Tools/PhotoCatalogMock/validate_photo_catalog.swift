@@ -7,6 +7,19 @@ private struct FixtureClient: PhotoCatalogClient {
 
 private struct CheckFailed: Error { let message: String }
 
+@MainActor
+private final class CountingService: PhotoDestinationService {
+    let destinations: [PhotoDestination]
+    private(set) var calls = 0
+
+    init(destinations: [PhotoDestination]) { self.destinations = destinations }
+
+    func fetchDestinations(limit: Int) async throws -> [PhotoDestination] {
+        calls += 1
+        return Array(destinations.prefix(limit))
+    }
+}
+
 @main
 struct ValidatePhotoCatalog {
     @MainActor
@@ -98,6 +111,22 @@ struct ValidatePhotoCatalog {
         if case .loaded(let destinations) = loadedViewModel.phase {
             try check(destinations.count == SpatialPlaceItem.displayLimit, "existing ViewModel receives ten photos")
         } else { throw CheckFailed(message: "Loaded state") }
+
+        let counting = CountingService(destinations: all)
+        let session = PhotoExploreViewModel(service: counting)
+        await session.load()
+        await session.load()
+        try check(counting.calls == 1, "returning to exploration does not refetch")
+        if case .loaded(let photos) = session.phase {
+            try check(photos.map(\.id) == Array(all.prefix(SpatialPlaceItem.displayLimit)).map(\.id), "photo order survives return")
+        } else { throw CheckFailed(message: "Return lost loaded state") }
+        session.retry()
+        if case .loading = session.phase { checks += 1 }
+        else { throw CheckFailed(message: "Retry must reenter loading") }
+        await session.load()
+        try check(counting.calls == 2, "explicit retry refetches")
+        await PhotoExploreViewModel(service: counting).load()
+        try check(counting.calls == 3, "new exploration refetches")
 
         let pending = Task { try await BundledPhotoCatalogClient(bundle: bundle, delay: .seconds(5)).fetchCatalog() }
         pending.cancel()

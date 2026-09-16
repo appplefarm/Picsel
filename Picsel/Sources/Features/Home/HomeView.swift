@@ -102,17 +102,6 @@ struct HomeView: View {
             guard let coordinate = locationManager.currentLocation?.coordinate else { return }
             viewModel.updateMaximumRadius(from: coordinate)
         }
-        .navigationDestination(item: $confirmedDestination) { destination in
-            if let trip = makeTrip(for: destination) {
-                TransitSwipeView(
-                    viewModel: TransitSwipeViewModel(
-                        trip: trip,
-                        destinationPhotoURL: destination.photoURL.flatMap(URL.init(string:))
-                    ),
-                    originCoordinate: tripOriginCoordinate
-                )
-            }
-        }
         .sheet(isPresented: $isShowingManualSearch) {
             ManualLocationSearchView { location, name in
                 manualLocation = location
@@ -133,6 +122,17 @@ struct HomeView: View {
             ) { destination in
                 guard destination.canSelectAsDestination else { return }
                 confirmedDestination = destination
+            }
+            .navigationDestination(item: $confirmedDestination) { destination in
+                if let trip = makeTrip(for: destination) {
+                    TransitSwipeView(
+                        viewModel: TransitSwipeViewModel(
+                            trip: trip,
+                            destinationPhotoURL: destination.photoURL.flatMap(URL.init(string:))
+                        ),
+                        originCoordinate: tripOriginCoordinate
+                    )
+                }
             }
         }
         .alert(
