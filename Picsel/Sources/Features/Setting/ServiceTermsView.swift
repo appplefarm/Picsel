@@ -125,7 +125,7 @@ private enum ServiceTermsContent {
         TermsArticle(
             title: "제6조 외부 서비스 이용",
             paragraphs: [
-                "Picsel은 지도 표시와 경로 계산을 위해 Google Maps Platform과 NAVER Cloud Directions API를 사용하며, 길 안내를 위해 카카오맵·네이버지도·티맵으로 연결할 수 있습니다.",
+                "Picsel은 지도 표시와 경로 계산을 위해 Google Maps Platform과 카카오모빌리티 길찾기 API를 사용하며, 길 안내를 위해 카카오맵·네이버지도·티맵으로 연결할 수 있습니다.",
                 "외부 서비스의 화면, 기능, 오류, 정보 정확성 및 이용 과정에는 각 서비스 제공자의 이용약관과 정책이 적용됩니다."
             ]
         ),

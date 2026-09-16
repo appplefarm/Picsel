@@ -122,7 +122,7 @@ private enum DataSourceContent {
             paragraphs: [],
             items: [
                 "Google Maps Platform: 홈 화면 지도와 현재 위치 기반 반경 표시",
-                "NAVER Cloud Directions API: 출발지·경유지·목적지를 이용한 자동차 경로 계산"
+                "카카오모빌리티 길찾기 API: 출발지·경유지·목적지를 이용한 자동차 경로 계산"
             ],
             footerParagraphs: [
                 "지도 표시와 경로 계산 과정에는 각 서비스 제공자의 이용약관과 개인정보 처리방침이 적용됩니다."
