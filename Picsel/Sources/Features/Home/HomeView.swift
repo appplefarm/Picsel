@@ -14,9 +14,19 @@ struct HomeView: View {
     @State private var photoExploreRequest: PhotoExploreRequest?
     @State private var isLocationAlertPresented = false
     @State private var isSettingsPresented = false
+    @State private var isShowingManualSearch = false
+    @State private var manualLocation: CLLocation?
+    @State private var manualLocationName: String?
+
+    private var hasValidOrigin: Bool {
+        manualLocation != nil || locationManager.isLocationAuthorized
+    }
 
     private var mapCoordinate: CLLocationCoordinate2D {
-        locationManager.currentLocation?.coordinate ?? viewModel.fallbackCoordinate
+        if let manualLocation {
+            return manualLocation.coordinate
+        }
+        return locationManager.currentLocation?.coordinate ?? viewModel.fallbackCoordinate
     }
 
     /// 지도 표시용 기본 좌표를 실제 추천 기준 위치로 오인하지 않습니다.
@@ -29,6 +39,9 @@ struct HomeView: View {
     }
 
     private var mapLocationName: String {
+        if let manualLocationName {
+            return "\(manualLocationName) (수동 지정)"
+        }
         if locationManager.currentLocation != nil {
             return locationManager.localityName
         }
@@ -51,15 +64,19 @@ struct HomeView: View {
                 mapSection
                     .frame(maxWidth: .infinity)
                     .frame(height: HomeStyle.mapHeight(for: proxy.size.height))
-                
-                radiusSlider
-                    .padding(.horizontal, HomeStyle.horizontalPadding)
-                    .padding(.top, 16)
-                
-                destinationButton
-                    .padding(.horizontal, HomeStyle.horizontalPadding)
-                    .padding(.top, 20)
-                    .padding(.bottom, 10)
+
+                if hasValidOrigin {
+                    radiusSlider
+                        .padding(.horizontal, HomeStyle.horizontalPadding)
+                        .padding(.top, 16)
+
+                    destinationButton
+                        .padding(.horizontal, HomeStyle.horizontalPadding)
+                        .padding(.top, 20)
+                        .padding(.bottom, 10)
+                } else {
+                    manualSearchBottomSection
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
@@ -83,6 +100,13 @@ struct HomeView: View {
                 )
             }
         }
+        .sheet(isPresented: $isShowingManualSearch) {
+            ManualLocationSearchView { location, name in
+                manualLocation = location
+                manualLocationName = name
+                viewModel.updateMaximumRadius(from: location.coordinate)
+            }
+        }
         .navigationDestination(item: $photoExploreRequest) { request in
             let origin = request.originLocation
 
@@ -99,14 +123,12 @@ struct HomeView: View {
             }
         }
         .alert(
-            "위치를 확인할 수 없음",
+            "현재 위치를 확인할 수 없어요",
             isPresented: $isLocationAlertPresented
         ) {
             Button("확인", role: .cancel) {}
         } message: {
-            Text(
-                "현재 위치를 확인한 뒤 다시 시도해주세요. 위치 권한이 꺼져 있다면 설정에서 허용해주세요."
-            )
+            Text("현재 위치를 불러오지 못했어요. 잠시 후 다시 시도해주세요.")
         }
         .navigationDestination(isPresented: $isSettingsPresented) {
             SettingsView()
@@ -138,7 +160,8 @@ struct HomeView: View {
         ZStack(alignment: .topLeading) {
             GoogleMapView(
                 coordinate: mapCoordinate,
-                radiusMeters: viewModel.currentRadiusMeters
+                radiusMeters: viewModel.currentRadiusMeters,
+                isValidOrigin: hasValidOrigin
             )
 
             LinearGradient(
@@ -153,28 +176,87 @@ struct HomeView: View {
             )
             .allowsHitTesting(false)
 
-            locationBadge
-                .padding(.leading, HomeStyle.horizontalPadding)
-                .padding(.top, 18)
+            if hasValidOrigin {
+                locationBadge
+                    .padding(.leading, HomeStyle.horizontalPadding)
+                    .padding(.top, 18)
+            }
         }
         .clipped()
     }
+    
+    private var manualSearchBottomSection: some View {
+        VStack(spacing: 24) {
+            Button {
+                isShowingManualSearch = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(PicselColor.radiusGreen)
+                    Text("어디에서 출발하시나요?")
+                        .font(.callout)
+                        .foregroundStyle(.gray)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .frame(height: 52)
+                .background(Color.white)
+                .clipShape(Capsule())
+                .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
+            }
+            .padding(.horizontal, HomeStyle.horizontalPadding)
+            
+            VStack(spacing: 8) {
+                Text("현재 위치를 가져올 수 없어요 :(")
+                Text("출발할 지역이나 장소를 직접 검색해주세요")
+            }
+            .font(.footnote)
+            .foregroundColor(Color(red: 85/255, green: 135/255, blue: 110/255))
+            .multilineTextAlignment(.center)
+            
+            Spacer()
+        }
+        .padding(.top, 60) // 그라데이션이 시작되는 곳으로부터 콘텐츠를 살짝 내림
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            LinearGradient(
+                colors: [Color.white.opacity(0.0), Color(red: 168/255, green: 226/255, blue: 198/255).opacity(1.0)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .padding(.top, -40) // 뷰 전체(배경 포함)를 맵 위로 끌어올림
+    }
 
     private var locationBadge: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "mappin.and.ellipse")
-                .foregroundStyle(PicselColor.radiusGreen)
+        Button {
+            if !locationManager.isLocationAuthorized {
+                isShowingManualSearch = true
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "mappin.and.ellipse")
+                    .foregroundStyle(PicselColor.radiusGreen)
 
-            Text("\(mapLocationName) · 반경 \(Int(viewModel.currentRadiusKm))km")
-                .font(.footnote)
-                .fontWeight(.semibold)
-                .foregroundStyle(PicselColor.homeText)
-                .contentTransition(.numericText())
+                Text("\(mapLocationName) · 반경 \(Int(viewModel.currentRadiusKm))km")
+                    .font(.footnote)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(PicselColor.homeText)
+                    .contentTransition(.numericText())
+                
+                if !locationManager.isLocationAuthorized {
+                    Image(systemName: "chevron.right")
+                        .font(.footnote)
+                        .foregroundStyle(.gray)
+                }
+            }
+            .padding(.horizontal, 10)
+            .frame(height: 34)
+            .background(.white, in: .capsule)
+            .shadow(color: .black.opacity(0.14), radius: 4)
         }
-        .padding(.horizontal, 10)
-        .frame(height: 34)
-        .background(.white, in: .capsule)
-        .shadow(color: .black.opacity(0.14), radius: 4)
+        .disabled(locationManager.isLocationAuthorized)
     }
 
     private var radiusSlider: some View {
@@ -204,7 +286,7 @@ struct HomeView: View {
 
     private var destinationButton: some View {
         Button {
-            guard let origin = recommendationOrigin else {
+            guard let origin = manualLocation ?? recommendationOrigin else {
                 locationManager.requestCurrentLocation()
                 isLocationAlertPresented = true
                 return
