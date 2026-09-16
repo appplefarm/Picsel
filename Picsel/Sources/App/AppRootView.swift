@@ -9,13 +9,21 @@ struct AppRootView: View {
     private enum LaunchPhase {
         case splash
         case onboarding
+        case tutorial
         case content
     }
 
+    #if DEBUG
+    @State private var launchPhase: LaunchPhase = .tutorial
+    #else
     @State private var launchPhase: LaunchPhase = .splash
+    #endif
 
     @AppStorage("hasSelectedNavigationApp")
     private var hasSelectedNavigationApp = false
+
+    @AppStorage("hasCompletedTutorial")
+    private var hasCompletedTutorial = false
 
     /// 탭 이동과 여행 흐름 종료를 화면들이 함께 쓰기 위해 최상위에서 만듭니다.
     @State private var router = AppRouter()
@@ -33,6 +41,15 @@ struct AppRootView: View {
 
             case .onboarding:
                 OnboardingView {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        launchPhase = hasCompletedTutorial ? .content : .tutorial
+                    }
+                }
+                .transition(.opacity)
+
+            case .tutorial:
+                TutorialView {
+                    hasCompletedTutorial = true
                     withAnimation(.easeInOut(duration: 0.3)) {
                         launchPhase = .content
                     }

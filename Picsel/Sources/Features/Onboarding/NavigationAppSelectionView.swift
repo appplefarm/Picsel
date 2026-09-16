@@ -51,7 +51,7 @@ struct NavigationAppSelectionView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 header
-                    .padding(.top, proxy.safeAreaInsets.top + (isCompactHeight ? 24 : 68))
+                    .padding(.top, proxy.safeAreaInsets.top + (isCompactHeight ? 24 : 78))
 
                 appList
                     .padding(.top, isCompactHeight ? 28 : 48)
@@ -59,7 +59,9 @@ struct NavigationAppSelectionView: View {
                 Spacer(minLength: 24)
 
                 saveButton(title: "다음")
-                    .padding(.bottom, proxy.safeAreaInsets.bottom + (isCompactHeight ? 12 : 48))
+                    // 상위 레이아웃의 20pt에 4pt를 더해 최종 24pt로 맞춘다.
+                    .padding(.horizontal, 4)
+                    .padding(.bottom, 24)
             }
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -71,13 +73,17 @@ struct NavigationAppSelectionView: View {
     private var settingsContent: some View {
         GeometryReader { proxy in
             VStack(alignment: .leading, spacing: 0) {
-                Text("길 안내에 사용할 기본 앱을 선택해주세요.\n여행 중 언제든 다시 변경할 수 있어요.")
-                    .font(.system(size: 14))
-                    .foregroundStyle(PicselColor.settingsSecondaryText)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: true, vertical: false)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 20)
+                VStack {
+                    Text("길 안내에 사용할 기본 앱을 선택해주세요.\n여행 중 언제든 다시 변경할 수 있어요.")
+                        .font(.system(size: 14))
+                        .foregroundStyle(PicselColor.settingsSecondaryText)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 100)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 20)
 
                 appList
                     .padding(.leading, 24)
@@ -87,8 +93,8 @@ struct NavigationAppSelectionView: View {
                 Spacer(minLength: 24)
 
                 saveButton(title: "선택 저장")
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, proxy.safeAreaInsets.bottom + 41)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 24)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(PicselColor.settingsBackground.ignoresSafeArea())
@@ -127,23 +133,8 @@ struct NavigationAppSelectionView: View {
         Button(action: saveSelection) {
             Text(title)
                 .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(PicselColor.onPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: 66)
-                .background(
-                    LinearGradient(
-                        colors: [
-                            PicselColor.homeCTA,
-                            PicselColor.navigationButtonHighlight,
-                            PicselColor.homeCTA
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.primaryGradient)
         .accessibilityHint("선택한 길찾기 앱을 기본 앱으로 저장합니다")
     }
 
