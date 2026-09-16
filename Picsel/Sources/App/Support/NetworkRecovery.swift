@@ -75,17 +75,23 @@ nonisolated enum RequestFailure: LocalizedError, Equatable, Sendable {
 
 struct RequestFailureView: View {
     let failure: RequestFailure
+    var foregroundColor: Color = .secondary
     var retry: () -> Void
 
     var body: some View {
         VStack(spacing: 10) {
+            if failure.retriesOnReconnect {
+                Image(systemName: "wifi.exclamationmark")
+                    .font(.title2)
+                    .accessibilityHidden(true)
+            }
             Text(failure.localizedDescription)
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
             Button("다시 시도", action: retry)
                 .buttonStyle(.bordered)
         }
-        .foregroundStyle(.secondary)
+        .foregroundStyle(foregroundColor)
         .padding()
     }
 }
