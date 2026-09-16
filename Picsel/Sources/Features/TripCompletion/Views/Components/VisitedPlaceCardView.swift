@@ -19,6 +19,7 @@ struct VisitedPlaceCardView: View {
             )
             .frame(maxWidth: .infinity)
             .frame(height: 220)
+            .contentShape(Rectangle())
             .clipped()
             // 미완료(비활성화) 시 사진 흑백 처리
             .grayscale(isSelected ? 0.0 : 1.0)
