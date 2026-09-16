@@ -68,6 +68,8 @@ enum RouteDirectionsError: LocalizedError {
     case providerError(code: String, message: String)
     /// 요청은 성공했지만 경로를 찾지 못한 경우입니다.
     case routeNotFound
+    /// 업체가 허용하는 총 경로 길이를 넘은 경우입니다.
+    case routeTooLong
 
     var errorDescription: String? {
         switch self {
@@ -81,6 +83,8 @@ enum RouteDirectionsError: LocalizedError {
             message
         case .routeNotFound:
             "이 경로는 길찾기를 지원하지 않아요."
+        case .routeTooLong:
+            "경로가 너무 길어요. 목적지나 경유지를 줄여 주세요."
         }
     }
 }
