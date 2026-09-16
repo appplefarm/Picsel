@@ -16,9 +16,11 @@ struct PhotoExploreView: View {
     private let directionsService: any RouteDirectionsProviding
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dismiss) private var dismiss
 
     @State private var viewModel: PhotoExploreViewModel
     @State private var isSceneLoading = true
+    @State private var isEmptyAlertPresented = false
 
     init(
         service: any PhotoDestinationService,
@@ -52,6 +54,19 @@ struct PhotoExploreView: View {
         .task(id: viewModel.loadRequest) {
             isSceneLoading = true
             await viewModel.load()
+            if case .empty = viewModel.phase {
+                isEmptyAlertPresented = true
+            }
+        }
+        .alert(
+            "추천할 장소를 찾지 못했어요",
+            isPresented: $isEmptyAlertPresented
+        ) {
+            Button("반경 다시 설정") {
+                dismiss()
+            }
+        } message: {
+            Text("선택한 반경 안에서 추천할 장소를 찾지 못했어요.\n반경을 넓혀보세요.")
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -87,10 +102,7 @@ struct PhotoExploreView: View {
             .id(destinations)
 
         case .empty:
-            ContentUnavailableView(
-                "표시할 관광사진이 없어요",
-                systemImage: "photo.on.rectangle.angled"
-            )
+            Color.clear
 
         case let .failed(message):
             ContentUnavailableView {

@@ -5,7 +5,8 @@
 
 import SwiftUI
 
-/// 경로 확정 직후 현재 앱 실행에서만 보여 주는 여행 준비 홈입니다.
+/// 경로 확정 후 여행을 시작하기 전까지 보여 주는 여행 준비 홈입니다.
+/// 준비 상태 ID가 저장되므로 앱을 강제 종료해도 이 화면으로 복원됩니다.
 struct TripReadyHomeView: View {
     let cityName: String
     let regionCode: String?

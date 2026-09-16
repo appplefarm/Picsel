@@ -43,7 +43,9 @@ enum AdministrativeRegionGrouper {
                     constituentCodes: Set(
                         members.flatMap(\.constituentCodes)
                     ),
-                    polygons: members.flatMap(\.polygons)
+                    polygons: members.flatMap(\.polygons),
+                    // 이미 각자 보정된 값이라 그대로 합칩니다.
+                    displayPolygons: members.flatMap(\.displayPolygons)
                 )
             }
             .sorted { $0.code < $1.code }

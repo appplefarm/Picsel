@@ -115,7 +115,7 @@ struct AdministrativeRegionTileGeometry {
         pixelResolution: Int
     ) {
         self.init(
-            polygons: region.polygons,
+            polygons: region.displayPolygons,
             projection: projection,
             pixelResolution: pixelResolution
         )

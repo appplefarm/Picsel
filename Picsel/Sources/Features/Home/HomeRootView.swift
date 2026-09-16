@@ -8,64 +8,66 @@ import SwiftUI
 
 /// 저장된 여행 상태에 따라 일반 홈과 활성 여행 홈을 전환합니다.
 ///
-/// `Trip.startTime != nil && !Trip.isDone`인 여행은 앱을 다시 실행해도
-/// SwiftData에서 복원됩니다. 경로를 확정한 뒤 아직 시작하지 않은 여행은
-/// AppRouter에 저장된 준비중 여행 ID를 기준으로 준비 화면을 복원합니다.
+/// AppRouter가 활성 여행 한 건을 복원하고, 이 뷰는 결과에 맞는 홈만 표시합니다.
 struct HomeRootView: View {
+    private enum RestorationState {
+        case loading
+        case finished
+        case failed(Error)
+    }
+
     @Environment(AppRouter.self) private var router
-    @Query private var trips: [Trip]
-    @State private var sessionTripID: UUID?
-
-    private var latestActiveTrip: Trip? {
-        trips
-            .filter { $0.startTime != nil && !$0.isDone }
-            .max { lhs, rhs in
-                (lhs.startTime ?? .distantPast) < (rhs.startTime ?? .distantPast)
-            }
-    }
-
-    /// 강제 종료 전에 준비중이었던 여행을 다른 활성 여행보다 우선합니다.
-    private var persistedReadyTrip: Trip? {
-        guard let readyTripID = router.tripReadyTripID else { return nil }
-        return trips.first { trip in
-            trip.id == readyTripID && !trip.isDone
-        }
-    }
-
-    /// 기록 저장으로 isDone이 true가 된 직후에도 현재 NavigationStack을 유지합니다.
-    /// 픽셀 획득 화면의 버튼이 AppRouter를 초기화하면 새 HomeRootView가 만들어집니다.
-    private var displayedTrip: Trip? {
-        if let persistedReadyTrip {
-            return persistedReadyTrip
-        }
-        if let sessionTripID,
-           let sessionTrip = trips.first(where: { $0.id == sessionTripID }) {
-            return sessionTrip
-        }
-        return latestActiveTrip
-    }
+    @Environment(\.modelContext) private var modelContext
+    @State private var restorationState = RestorationState.loading
 
     var body: some View {
         Group {
-            if let trip = displayedTrip {
+            if let trip = router.sessionTrip {
                 ActiveTripHomeFlow(
                     trip: trip,
-                    startsInReadyState: router.tripReadyTripID == trip.id
+                    // 기존 버전에서 준비 상태인데도 startTime을 미리 기록한 데이터는
+                    // UserDefaults의 준비 ID를 함께 확인해 호환합니다.
+                    startsInReadyState: trip.startTime == nil
+                        || router.tripReadyTripID == trip.id
                 )
                     .id(trip.id)
             } else {
-                HomeView()
+                switch restorationState {
+                case .loading:
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(PicselColor.homeBackground.ignoresSafeArea())
+                case .finished:
+                    HomeView()
+                case .failed(let error):
+                    ContentUnavailableView {
+                        Label("여행을 복원하지 못했어요", systemImage: "exclamationmark.triangle")
+                    } description: {
+                        Text(error.localizedDescription)
+                    } actions: {
+                        Button("다시 시도", action: restoreTrip)
+                        if error is AppRouter.RestorationError {
+                            Button("홈으로 돌아가기") {
+                                // 여행 기록은 삭제하지 않고 이 여행의 자동 복원만 중단합니다.
+                                router.finishTripFlow(returningTo: .home)
+                            }
+                        }
+                    }
+                }
             }
         }
-        .task {
-            if sessionTripID == nil {
-                sessionTripID = persistedReadyTrip?.id ?? latestActiveTrip?.id
-            }
+        .task(id: router.homeStackID) {
+            restoreTrip()
         }
-        .onChange(of: latestActiveTrip?.id) { _, activeTripID in
-            if sessionTripID == nil {
-                sessionTripID = activeTripID
-            }
+    }
+
+    private func restoreTrip() {
+        restorationState = .loading
+        do {
+            try router.restoreTrip(in: modelContext)
+            restorationState = .finished
+        } catch {
+            restorationState = .failed(error)
         }
     }
 }
@@ -77,12 +79,14 @@ private struct ActiveTripHomeFlow: View {
     }
 
     @Environment(AppRouter.self) private var router
+    @Environment(\.modelContext) private var modelContext
     let trip: Trip
 
     @State private var homeMode: HomeMode
     @State private var isSettingsPresented = false
     @State private var isTripProgressPresented = false
     @State private var isVisitedPlacesPresented = false
+    @State private var tripStartErrorMessage: String?
 
     private var thumbnailURLsByStopID: [UUID: URL] {
         Dictionary(
@@ -118,8 +122,9 @@ private struct ActiveTripHomeFlow: View {
                 )
             }
         }
-        .fullScreenCover(isPresented: $isSettingsPresented) {
+        .navigationDestination(isPresented: $isSettingsPresented) {
             SettingsView()
+                .toolbar(.hidden, for: .tabBar)
         }
         .navigationDestination(isPresented: $isTripProgressPresented) {
             TripProgressView(
@@ -138,9 +143,32 @@ private struct ActiveTripHomeFlow: View {
             )
             .toolbar(.hidden, for: .tabBar)
         }
+        .alert(
+            "여행 시작 실패",
+            isPresented: Binding(
+                get: { tripStartErrorMessage != nil },
+                set: { if !$0 { tripStartErrorMessage = nil } }
+            )
+        ) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text(tripStartErrorMessage ?? "")
+        }
     }
 
     private func startTrip() {
+        if trip.startTime == nil {
+            trip.startTime = Date()
+        }
+
+        do {
+            try modelContext.save()
+        } catch {
+            modelContext.rollback()
+            tripStartErrorMessage = "여행 시작 상태를 저장하지 못했어요. 잠시 후 다시 시도해주세요."
+            return
+        }
+
         router.markTripAsStarted(trip.id)
         homeMode = .inProgress
         isTripProgressPresented = true

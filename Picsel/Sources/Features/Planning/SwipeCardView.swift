@@ -10,6 +10,7 @@ import SwiftUI
 
 struct SwipeCardView: View {
     let place: PlaceDTO
+    var isTopCard: Bool = false
     var onSwipeLeft: () -> Void
     var onSwipeRight: () -> Void
     
@@ -41,15 +42,6 @@ struct SwipeCardView: View {
             .clipped()
             .cornerRadius(10)
             
-            VStack {
-                Spacer()
-                Text(place.name)
-                    .font(.title2)
-                    .bold()
-                    .padding()
-                    .frame(maxWidth: .infinity)
-//                    .background(Color.white.opacity(0.8))
-            }
             // MARK: - 스와이프 방향에 따른 시각적 피드백 (오버레이 및 아이콘)
             ZStack {
                 // 오른쪽 스와이프 (초록색 그라데이션 - 오른쪽 가장자리)
@@ -123,6 +115,16 @@ struct SwipeCardView: View {
             }
         }
         .animation(.spring(), value: offset) // 손을 놓았을 때 부드러운 애니메이션
+        .onAppear {
+            if isTopCard {
+                print("📸 맨 위 카드 장소: \(place.name) (주소: \(place.address ?? "없음"), 위도: \(place.latitude), 경도: \(place.longitude))")
+            }
+        }
+        .onChange(of: isTopCard) { newValue in
+            if newValue {
+                print("📸 맨 위 카드 장소: \(place.name) (주소: \(place.address ?? "없음"), 위도: \(place.latitude), 경도: \(place.longitude))")
+            }
+        }
     }
     
     // MARK: - 계산된 그림자 색상

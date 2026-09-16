@@ -16,6 +16,7 @@ struct TransitSwipeView: View {
     @State var viewModel: TransitSwipeViewModel
     @State private var isShowingRouteConfirmation = false
     @State private var tripStartErrorMessage: String?
+    @State private var showSwipeToast = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -24,7 +25,7 @@ struct TransitSwipeView: View {
                 Text("경유지를 골라보세요")
                     .font(.title)
                     .bold()
-                Text("목적지 부근에서 들르기 좋은 장소 10곳을 추천해드릴게요")
+                Text("목적지 부근에서 들르기 좋은 장소를 최대 \(TransitSwipeViewModel.maximumRecommendationCount)곳 추천해드릴게요")
                     .font(.subheadline)
                     .foregroundColor(.gray)
             }
@@ -36,55 +37,60 @@ struct TransitSwipeView: View {
             
             // MARK: - 카드 스택 영역
             ZStack {
-                if viewModel.candidates.isEmpty && !viewModel.isLoading {
-                    Text("모든 추천 장소를 확인했습니다.")
+                if viewModel.isLoading || !viewModel.hasLoadedRecommendations {
+                    ProgressView()
+                        .frame(width: 334, height: 239)
+                } else if viewModel.candidates.isEmpty {
+                    Text(
+                        viewModel.totalFetchedCount == 0
+                            ? "목적지 주변에서 추천할 장소를 찾지 못했어요."
+                            : "모든 추천 장소를 확인했습니다."
+                    )
                         .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
                         .frame(width: 334, height: 239) // 카드 사이즈와 동일한 빈 공간 유지 (하단 UI 고정용)
                 } else {
                     ForEach(Array(viewModel.candidates.enumerated().reversed()), id: \.element.id) { index, place in
-                        let angle = (index == 1) ? 3.0 : (index == 2) ? -2.0 : 0.0
-                        let yOffset = CGFloat(index * 12)
+                        let angle = (index == 1) ? 6.0 : (index == 2) ? -4.5 : 0.0
                         
-                        SwipeCardView(place: place) {
+                        SwipeCardView(place: place, isTopCard: index == 0) {
                             withAnimation(.spring()) { viewModel.swipeLeft(on: place) }
                         } onSwipeRight: {
                             withAnimation(.spring()) { viewModel.swipeRight(on: place) }
                         }
                         .rotationEffect(.degrees(index == 0 ? 0 : angle))
-                        .offset(y: index == 0 ? 0 : yOffset)
                         .opacity(index < 3 ? 1 : 0)
                         .allowsHitTesting(index == 0)
                         .animation(.spring(), value: index)
                     }
                 }
             }
-            .padding(.bottom, 30) // 카드 스택과 텍스트 사이 간격 (기존 Spacer 대체)
+            .padding(.bottom, 60) // 카드 스택과 텍스트 사이 간격 늘림
             
             // MARK: - 스와이프 안내 문구 및 버튼
             let currentIndex = viewModel.totalFetchedCount - viewModel.candidates.count + 1
             let displayIndex = min(currentIndex, viewModel.totalFetchedCount)
             
-            VStack(spacing: 16) {
+            HStack {
+                Text("← 안 갈래요")
+                    .onTapGesture { showToast() }
+                
+                Spacer()
+                
                 if viewModel.totalFetchedCount > 0 && !viewModel.candidates.isEmpty {
                     Text("\(Text("\(displayIndex)").font(.system(size: 15, weight: .bold))) / \(viewModel.totalFetchedCount)")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(Color(red: 125/255, green: 160/255, blue: 142/255))
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
                 }
                 
-                HStack {
-                    Text("← 안 갈래요")
-                    
-                    Spacer()
-                    
-                    
-                    Text("갈래요 →")
-                }
-                .padding(.horizontal, 40)
-                    .font(.system(size: 11))
-                    .foregroundColor(Color(white: 0.42))
+                Spacer()
+                
+                Text("갈래요 →")
+                    .onTapGesture { showToast() }
             }
+            .padding(.horizontal, 32)
+            .font(.system(size: 12))
+            .foregroundColor(Color(white: 0.42))
             .padding(.bottom, 10)
             
             Spacer()
@@ -106,9 +112,9 @@ struct TransitSwipeView: View {
                 thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
             ) { _ in
                 // 경로가 확정된 여행은 여기서 저장합니다.
-                // 준비 화면은 현재 실행에만 남고, 앱 재실행 시에는 진행 중 홈으로 복원됩니다.
-                if viewModel.startTrip(in: modelContext) {
-                    router.showTripReadyHome(for: viewModel.activeTrip.id)
+                // 여행 시작 전 강제 종료 시에도 준비 홈으로 복원되도록 준비 상태 ID를 함께 저장합니다.
+                if viewModel.saveTripPlan(in: modelContext) {
+                    router.showTripReadyHome(for: viewModel.activeTrip)
                 } else {
                     tripStartErrorMessage = "여행 계획을 저장하지 못했어요. 잠시 후 다시 시도해주세요."
                 }
@@ -126,28 +132,52 @@ struct TransitSwipeView: View {
         } message: {
             Text(tripStartErrorMessage ?? "")
         }
+        .overlay(
+            VStack {
+                if showSwipeToast {
+                    Text("버튼 대신 화면을 좌우로 스와이프 해주세요")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                        .padding(.vertical, 14)
+                        .padding(.horizontal, 20)
+                        .background(Color.black.opacity(0.3))
+                        .cornerRadius(12)
+                        .padding(.bottom, 120)
+                        .transition(.opacity)
+                }
+            }
+            , alignment: .bottom
+        )
         .onAppear {
             // 화면 진입 시 추천 장소 로드
             Task {
-                // Trip에 저장된 최종 목적지를 기반으로 시군구를 판별합니다.
-                if let destination = viewModel.activeTrip.destinationStop {
-                    // 주소가 있다면 주소를, 없다면 이름을 우선적으로 사용하여 지역 코드 매칭
-                    let searchKeyword = destination.address ?? destination.name
-                    print("searchKeyword: \(searchKeyword)\ndestination.address: \(destination.address ?? "nil")\ndestination.name: \(destination.name)")
-                    if let region = RegionCodeManager.shared.findRegion(by: searchKeyword) {
-                        await viewModel.fetchRecommendedPlaces(areaCode: region.areaCd, sigunguCode: region.sigunguCd)
-                    } else {
-                        // 매칭 실패 시 기본값 (포항시)
-                        if let defaultRegion = RegionCodeManager.shared.findRegion(by: "포항시") {
-                            await viewModel.fetchRecommendedPlaces(areaCode: defaultRegion.areaCd, sigunguCode: defaultRegion.sigunguCd)
-                        }
-                    }
-                } else {
-                    // 목적지 정보가 없을 경우 안전하게 기본값 사용
-                    if let defaultRegion = RegionCodeManager.shared.findRegion(by: "포항시") {
-                        await viewModel.fetchRecommendedPlaces(areaCode: defaultRegion.areaCd, sigunguCode: defaultRegion.sigunguCd)
-                    }
+                // 목적지가 없거나 지역을 판별할 수 없으면 임의 지역을 추천하지 않습니다.
+                guard let destination = viewModel.activeTrip.destinationStop else {
+                    router.finishTripFlow(returningTo: .home)
+                    return
                 }
+
+                let searchKeyword = destination.address ?? destination.name
+                guard let region = RegionCodeManager.shared.findRegion(by: searchKeyword) else {
+                    router.finishTripFlow(returningTo: .home)
+                    return
+                }
+
+                await viewModel.fetchRecommendedPlaces(
+                    areaCode: region.areaCd,
+                    sigunguCode: region.sigunguCd
+                )
+            }
+        }
+    }
+    
+    private func showToast() {
+        withAnimation {
+            showSwipeToast = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            withAnimation {
+                showSwipeToast = false
             }
         }
     }
@@ -164,6 +194,7 @@ struct TransitSwipeView: View {
         PlaceDTO(id: "3", name: "구룡포 일본인가옥거리", address: "경상북도 포항시 남구", latitude: 36.2, longitude: 129.2, photoURL: "https://tong.visitkorea.or.kr/cms/resource/66/2908766_image2_1.jpg", detailDescription: nil, regionCode: nil)
     ]
     viewModel.totalFetchedCount = 10
+    viewModel.hasLoadedRecommendations = true
     
     return NavigationStack {
         TransitSwipeView(viewModel: viewModel)

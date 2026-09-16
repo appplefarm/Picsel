@@ -6,71 +6,27 @@
 import SwiftUI
 
 struct ServiceTermsView: View {
-    @Environment(\.dismiss) private var dismiss
-
     var body: some View {
-        ZStack {
-            PicselColor.settingsBackground
-                .ignoresSafeArea()
+        SettingsModalScaffold(
+            title: "서비스 이용약관",
+            closeAccessibilityLabel: "서비스 이용약관 닫기"
+        ) {
+            LazyVStack(alignment: .leading, spacing: 28) {
+                header
 
-            VStack(spacing: 0) {
-                closeBar
-
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 28) {
-                        header
-
-                        ForEach(Array(ServiceTermsContent.articles.enumerated()), id: \.offset) { _, article in
-                            TermsArticleView(article: article)
-                        }
-                    }
-                    .padding(.horizontal, 27)
-                    .padding(.top, 66)
-                    .padding(.bottom, 48)
+                ForEach(Array(ServiceTermsContent.articles.enumerated()), id: \.offset) { _, article in
+                    TermsArticleView(article: article)
                 }
-                .scrollIndicators(.hidden)
-                .background(Color.white)
-                .clipShape(
-                    UnevenRoundedRectangle(
-                        topLeadingRadius: 30,
-                        topTrailingRadius: 30
-                    )
-                )
             }
         }
-        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
 private extension ServiceTermsView {
-    var closeBar: some View {
-        HStack {
-            Button(action: dismiss.callAsFunction) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(PicselColor.homeText)
-                    .frame(width: 36, height: 36)
-                    .background(.ultraThinMaterial, in: Circle())
-                    .shadow(color: .black.opacity(0.08), radius: 8, y: 3)
-            }
-            .accessibilityLabel("서비스 이용약관 닫기")
-
-            Spacer()
-        }
-        .padding(.horizontal, 8)
-        .frame(height: 52)
-    }
-
     var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("서비스 이용약관")
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(Color(hex: 0x303B37))
-
-            Text("시행일: \(ServiceTermsContent.effectiveDate) | Picsel")
-                .font(.system(size: 12))
-                .foregroundStyle(Color(hex: 0x8D9795))
-        }
+        Text("시행일: \(ServiceTermsContent.effectiveDate) | Picsel")
+            .font(.system(size: 12))
+            .foregroundStyle(Color(hex: 0x8D9795))
     }
 }
 
