@@ -30,11 +30,12 @@ final class RouteConfirmationViewModel {
     private var directionsStartFromCurrentLocation = false
     /// 다시 시도할 때 같은 출발지를 쓰기 위해 보관합니다.
     private var lastOrigin: CLLocationCoordinate2D?
+    @ObservationIgnored private var directionsTask: Task<RouteDirections, Error>?
+    private var activeRequestID: UUID?
 
     private(set) var isLoadingDirections = false
-    /// 화면에는 노출하지 않고 콘솔 확인용으로만 둡니다.
-    /// 실패해도 요약 문구가 "경로 정보를 계산하고 있어요"로 남아 조용히 처리됩니다.
-    private(set) var directionsErrorMessage: String?
+    private(set) var directionsFailure: RequestFailure?
+    private(set) var needsOrigin = false
 
     /// 경로를 아직 한 번도 못 그린 채 계산 중인 상태입니다.
     var isCalculatingFirstRoute: Bool {
@@ -46,13 +47,13 @@ final class RouteConfirmationViewModel {
         estimatedDurationMinutes: Int? = nil,
         thumbnailURLsByStopID: [UUID: URL] = [:],
         travelMinutesByStopID: [UUID: Int] = [:],
-        directionsService: RouteDirectionsProviding = KakaoDirectionsService()
+        directionsService: (any RouteDirectionsProviding)? = nil
     ) {
         self.trip = trip
         self.estimatedDurationMinutes = estimatedDurationMinutes
         self.thumbnailURLsByStopID = thumbnailURLsByStopID
         self.travelMinutesByStopID = travelMinutesByStopID
-        self.directionsService = directionsService
+        self.directionsService = directionsService ?? KakaoDirectionsService()
         routeStops = trip.orderedStops
     }
 
@@ -96,7 +97,14 @@ final class RouteConfirmationViewModel {
     /// 경로만이라도 보여 줍니다. 위치가 들어오면 다시 계산합니다.
     func loadDirections(origin: CLLocationCoordinate2D?) async {
         let stops = locatedStops
-        guard let destinationStop = stops.last else { return }
+        lastOrigin = origin
+        needsOrigin = false
+        guard let destinationStop = stops.last else {
+            cancelDirections()
+            directions = nil
+            directionsFailure = .unavailable
+            return
+        }
 
         let destination = coordinate(of: destinationStop)
         let remaining = stops.dropLast().map(coordinate(of:))
@@ -113,8 +121,10 @@ final class RouteConfirmationViewModel {
         } else {
             // 목적지 하나뿐인데 출발지도 없으면 그릴 경로가 없습니다.
             // 잔상(이전 경로 선)이 남지 않도록 초기화해 줍니다.
+            cancelDirections()
             directions = nil
-            lastRequestSignature = nil
+            directionsFailure = nil
+            needsOrigin = true
             return
         }
 
@@ -122,37 +132,54 @@ final class RouteConfirmationViewModel {
             + waypoints.map { "\($0.latitude),\($0.longitude)" }.joined(separator: "|")
             + ">\(destination.latitude),\(destination.longitude)"
 
-        guard lastRequestSignature != signature else { return }
+        guard lastRequestSignature != signature || directionsTask?.isCancelled == true else { return }
+        directionsTask?.cancel()
+        let requestID = UUID()
+        activeRequestID = requestID
         lastRequestSignature = signature
-        lastOrigin = origin
 
         isLoadingDirections = true
-        directionsErrorMessage = nil
+        directionsFailure = nil
         
         // 새 경로를 계산하는 동안 이전 경로의 잔상이 지도에 남지 않도록 비워둡니다.
         directions = nil
         
-        defer { isLoadingDirections = false }
+        defer {
+            if activeRequestID == requestID {
+                isLoadingDirections = false
+                directionsTask = nil
+            }
+        }
+
+        let service = directionsService
+        let task = Task {
+            try await service.directions(origin: start, waypoints: waypoints, destination: destination)
+        }
+        directionsTask = task
 
         do {
-            directions = try await directionsService.directions(
-                origin: start,
-                waypoints: waypoints,
-                destination: destination
-            )
+            let result = try await withTaskCancellationHandler {
+                try await task.value
+            } onCancel: { task.cancel() }
+            try Task.checkCancellation()
+            guard activeRequestID == requestID else { return }
+            directions = result
             directionsStartFromCurrentLocation = origin != nil
         } catch {
+            guard activeRequestID == requestID else { return }
             // 실패한 요청은 표식을 지워서 다시 시도할 수 있게 합니다.
             lastRequestSignature = nil
-            directionsErrorMessage = (error as? RouteDirectionsError)?.errorDescription
-                ?? "경로를 계산하지 못했어요."
-            print("경로 계산 실패: \(error)")
+            guard !Task.isCancelled, !RequestFailure.isCancellation(error) else { return }
+            directionsFailure = (error as? RouteDirectionsError)?.requestFailure ?? RequestFailure(error)
         }
     }
 
-    /// 실패했을 때 같은 조건으로 한 번 더 계산합니다.
-    func retryDirections() async {
-        await loadDirections(origin: lastOrigin)
+    func cancelDirections() {
+        directionsTask?.cancel()
+        directionsTask = nil
+        activeRequestID = nil
+        if isLoadingDirections { lastRequestSignature = nil }
+        isLoadingDirections = false
     }
 
     private func coordinate(of stop: RouteStop) -> CLLocationCoordinate2D {
@@ -160,6 +187,9 @@ final class RouteConfirmationViewModel {
     }
 
     var routeSummary: String {
+        if isLoadingDirections { return "경로 정보를 계산하고 있어요" }
+        if directionsFailure != nil { return "경로 정보를 불러오지 못했어요" }
+        if needsOrigin { return "출발 위치를 확인하면 거리·시간을 표시할 수 있어요" }
         var values: [String] = []
 
         if let distanceText {
@@ -171,7 +201,7 @@ final class RouteConfirmationViewModel {
         }
 
         guard !values.isEmpty else {
-            return "경로 정보를 계산하고 있어요"
+            return "경로 정보가 없어요"
         }
 
         values.append("자동차 기준")
@@ -240,7 +270,7 @@ final class RouteConfirmationViewModel {
     }
 
     func thumbnailURL(for stop: RouteStop) -> URL? {
-        thumbnailURLsByStopID[stop.id]
+        thumbnailURLsByStopID[stop.id] ?? stop.photoURL.flatMap(URL.init(string:))
     }
 
     private var distanceText: String? {

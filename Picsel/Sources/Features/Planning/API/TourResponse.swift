@@ -11,7 +11,7 @@ struct TourRoot: Decodable {
 
 struct TourResponse: Decodable {
     let header: TourHeader
-    let body: TourBody
+    let body: TourBody?
 }
 
 struct TourHeader: Decodable {
@@ -20,10 +20,21 @@ struct TourHeader: Decodable {
 }
 
 struct TourBody: Decodable {
-    let items: TourItems
+    let items: TourItems?
     let numOfRows: Int
     let pageNo: Int
     let totalCount: Int
+
+    private enum CodingKeys: String, CodingKey { case items, numOfRows, pageNo, totalCount }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        totalCount = try container.decode(Int.self, forKey: .totalCount)
+        numOfRows = try container.decode(Int.self, forKey: .numOfRows)
+        pageNo = try container.decode(Int.self, forKey: .pageNo)
+        // TourAPI는 정상적인 빈 결과에서 items를 객체 대신 ""로 돌려주기도 합니다.
+        items = totalCount == 0 ? nil : try container.decode(TourItems.self, forKey: .items)
+    }
 }
 
 struct TourItems: Decodable {

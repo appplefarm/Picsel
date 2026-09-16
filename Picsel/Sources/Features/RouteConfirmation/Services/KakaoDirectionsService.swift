@@ -58,6 +58,7 @@ struct KakaoDirectionsService: RouteDirectionsProviding {
         do {
             (data, response) = try await session.data(for: request)
         } catch {
+            if Task.isCancelled || RequestFailure.isCancellation(error) { throw CancellationError() }
             throw RouteDirectionsError.networkFailure(underlying: error)
         }
 
@@ -119,7 +120,7 @@ struct KakaoDirectionsService: RouteDirectionsProviding {
             throw RouteDirectionsError.invalidRequest
         }
 
-        var request = URLRequest(url: baseURL)
+        var request = URLRequest(url: baseURL, timeoutInterval: 20)
         request.httpMethod = "POST"
         request.setValue("KakaoAK \(restAPIKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
