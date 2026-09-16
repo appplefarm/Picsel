@@ -61,7 +61,7 @@ struct VisitedPlacesConfirmView: View {
                     .opacity(reverseIndex < 3 ? 1 : 0)
                     // 맨 위에 있는 카드만 터치/스와이프 가능하도록 활성화
                     .allowsHitTesting(isTopCard)
-                    .animation(.spring(), value: index) // 순서가 바뀔 때 자연스럽게 애니메이션
+                    .animation(.spring(response: 0.35, dampingFraction: 0.8), value: index) // 순서가 바뀔 때 자연스럽고 빠르게 애니메이션
                 }
             }
             .padding(.bottom, 20)

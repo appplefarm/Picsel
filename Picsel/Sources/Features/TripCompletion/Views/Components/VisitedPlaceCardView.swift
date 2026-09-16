@@ -29,6 +29,7 @@ struct VisitedPlaceCardView: View {
                         .fill(Color.gray.opacity(0.2))
                 }
             }
+            .frame(maxWidth: .infinity)
             .frame(height: 220)
             .clipped()
             // 미완료(비활성화) 시 사진 흑백 처리
@@ -83,29 +84,41 @@ struct VisitedPlaceCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24))
         .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
         .offset(y: offset.height) // 드래그 시 Y축으로만 이동
+        // 드래그 거리가 100px에 가까워질수록 카드가 서서히 투명해짐
+        .opacity(max(1.0 - Double(abs(offset.height)) / 120.0, 0.0))
         .gesture(
             DragGesture()
                 .onChanged { value in
-                    // 위아래 양방향 이동 허용
-                    offset = value.translation
+                    // 한계치를 넘어가면 드래그 저항력(고무줄 효과)을 주어 카드가 너무 위/아래로 끝없이 끌려가지 않도록 함
+                    var dragY = value.translation.height
+                    let limit: CGFloat = 80
+                    
+                    if dragY > limit {
+                        dragY = limit + (dragY - limit) * 0.3
+                    } else if dragY < -limit {
+                        dragY = -limit + (dragY + limit) * 0.3
+                    }
+                    
+                    offset = CGSize(width: 0, height: dragY)
                 }
                 .onEnded { value in
                     if value.translation.height > 80 {
-                        // 아래로 내렸을 때 (이전 카드로)
+                        // 아래로 내렸을 때 (다음 카드 보기 - 현재 카드를 뒤로)
                         UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
                         onSwipeDown()
+                        offset = .zero
                     } else if value.translation.height < -80 {
-                        // 위로 올렸을 때 (다음 카드로)
+                        // 위로 올렸을 때 (이전 카드 보기 - 뒤에 있던 카드를 앞으로)
                         UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
                         onSwipeUp()
-                    }
-                    
-                    // 스와이프 후 무조건 중앙으로 복귀
-                    withAnimation(.spring()) {
                         offset = .zero
+                    } else {
+                        // 스와이프 임계치를 넘지 못해 취소될 때
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            offset = .zero
+                        }
                     }
                 }
         )
-        .animation(.spring(), value: offset)
     }
 }
