@@ -13,11 +13,14 @@ struct VisitedPlaceCardView: View {
     var body: some View {
         VStack(spacing: 0) {
             // 상단 썸네일 이미지
-            RemotePlacePhoto(
-                url: photoURL ?? stop.photoURL.flatMap(URL.init(string:)),
-                tripID: stop.trip?.id
-            )
-            .frame(maxWidth: .infinity)
+            // 긴 사진도 아래 정보 영역과 같은 폭 안에서만 표시합니다.
+            GeometryReader { geometry in
+                RemotePlacePhoto(
+                    url: photoURL ?? stop.photoURL.flatMap(URL.init(string:)),
+                    tripID: stop.trip?.id
+                )
+                .frame(width: geometry.size.width, height: geometry.size.height)
+            }
             .frame(height: 220)
             .contentShape(Rectangle())
             .clipped()

@@ -18,7 +18,9 @@ struct TripHistoryCard: View {
     let photoURL: URL?
 
     var body: some View {
-        photo
+        // 사진의 원본 비율이 카드 폭을 늘리지 않도록 배경이 크기를 결정합니다.
+        PicselColor.pixelLockedFill
+            .overlay { photo }
             .frame(height: 190)
             .frame(maxWidth: .infinity)
             .overlay { shade }
