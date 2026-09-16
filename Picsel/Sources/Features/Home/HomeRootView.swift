@@ -98,6 +98,11 @@ private struct ActiveTripHomeFlow: View {
         )
     }
 
+    private func cacheTripPhotos() async {
+        guard !trip.isDone else { return }
+        await TripImageStore.shared.prefetch(Array(thumbnailURLsByStopID.values), tripID: trip.id)
+    }
+
     init(trip: Trip, startsInReadyState: Bool) {
         self.trip = trip
         _homeMode = State(initialValue: startsInReadyState ? .ready : .inProgress)
@@ -126,6 +131,8 @@ private struct ActiveTripHomeFlow: View {
             SettingsView()
                 .toolbar(.hidden, for: .tabBar)
         }
+        .task(id: trip.id) { await cacheTripPhotos() }
+        .onNetworkRecovery { await cacheTripPhotos() }
         .navigationDestination(isPresented: $isTripProgressPresented) {
             TripProgressView(
                 trip: trip,

@@ -58,6 +58,7 @@ struct KakaoDirectionsService: RouteDirectionsProviding {
         do {
             (data, response) = try await session.data(for: request)
         } catch {
+            if Task.isCancelled || RequestFailure.isCancellation(error) { throw CancellationError() }
             throw RouteDirectionsError.networkFailure(underlying: error)
         }
 
