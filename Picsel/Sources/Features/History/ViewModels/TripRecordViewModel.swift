@@ -101,8 +101,11 @@ final class TripRecordViewModel {
         trip.isDone = true
 
         // 픽셀맵이 이 코드로 칠할 칸을 찾는다. 좌표가 경계 밖이면 nil이 될 수 있다.
-        let tile = trip.pixelTile
-        trip.targetPixelCode = tile?.code
+        // 목적지를 지운 여행은 좌표가 없으므로, 목적지를 고를 때 새겨 둔 코드로 되살린다.
+        let tile = trip.resolvedPixelTile
+        if let tile {
+            trip.targetPixelCode = tile.code
+        }
 
         // 픽셀을 못 찾아도 기록 자체는 남긴다. 지도에만 안 뜰 뿐이다.
         if let tile {
@@ -113,6 +116,8 @@ final class TripRecordViewModel {
 
         do {
             try context.save()
+            let tripID = trip.id
+            Task { await TripImageStore.shared.removeTrip(tripID) }
             return true
         } catch {
             // 저장에 실패했는데 완료 표시만 남으면 픽셀맵에 빈 기록이 뜨므로 되돌린다.

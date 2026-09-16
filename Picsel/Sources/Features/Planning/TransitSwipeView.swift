@@ -6,6 +6,7 @@
 //
 
 
+import CoreLocation
 import SwiftData
 import SwiftUI
 
@@ -14,9 +15,13 @@ struct TransitSwipeView: View {
     @Environment(AppRouter.self) private var router
 
     @State var viewModel: TransitSwipeViewModel
+    /// 홈에서 정한 출발지입니다. 수동으로 입력한 위치도 여기로 들어옵니다.
+    let originCoordinate: CLLocationCoordinate2D?
+
     @State private var isShowingRouteConfirmation = false
     @State private var tripStartErrorMessage: String?
     @State private var showSwipeToast = false
+    @State private var retryAttempt = 0
     
     var body: some View {
         VStack(spacing: 0) {
@@ -37,7 +42,10 @@ struct TransitSwipeView: View {
             
             // MARK: - 카드 스택 영역
             ZStack {
-                if viewModel.isLoading || !viewModel.hasLoadedRecommendations {
+                if case .failed(let failure) = viewModel.loadState {
+                    RequestFailureView(failure: failure) { retryAttempt += 1 }
+                        .frame(width: 334, height: 239)
+                } else if !hasLoadedRecommendations {
                     ProgressView()
                         .frame(width: 334, height: 239)
                 } else if viewModel.candidates.isEmpty {
@@ -109,7 +117,8 @@ struct TransitSwipeView: View {
         .navigationDestination(isPresented: $isShowingRouteConfirmation) {
             RouteConfirmationView(
                 trip: viewModel.activeTrip,
-                thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
+                thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID,
+                originCoordinate: originCoordinate
             ) { _ in
                 // 경로가 확정된 여행은 여기서 저장합니다.
                 // 여행 시작 전 강제 종료 시에도 준비 홈으로 복원되도록 준비 상태 ID를 함께 저장합니다.
@@ -148,27 +157,41 @@ struct TransitSwipeView: View {
             }
             , alignment: .bottom
         )
-        .onAppear {
-            // 화면 진입 시 추천 장소 로드
-            Task {
-                // 목적지가 없거나 지역을 판별할 수 없으면 임의 지역을 추천하지 않습니다.
-                guard let destination = viewModel.activeTrip.destinationStop else {
-                    router.finishTripFlow(returningTo: .home)
-                    return
-                }
-
-                let searchKeyword = destination.address ?? destination.name
-                guard let region = RegionCodeManager.shared.findRegion(by: searchKeyword) else {
-                    router.finishTripFlow(returningTo: .home)
-                    return
-                }
-
-                await viewModel.fetchRecommendedPlaces(
-                    areaCode: region.areaCd,
-                    sigunguCode: region.sigunguCd
-                )
-            }
+        .onChange(of: isShowingRouteConfirmation) { wasShowing, isShowing in
+            guard wasShowing, !isShowing else { return }
+            // 경로 확인 화면에서 돌아왔을 때만 선택을 비우고 추천을 다시 받습니다.
+            viewModel.resetSelection()
+            retryAttempt += 1
         }
+        .onNetworkRecovery {
+            guard !isShowingRouteConfirmation,
+                  case .failed(let failure) = viewModel.loadState,
+                  failure.retriesOnReconnect else { return }
+            retryAttempt += 1
+        }
+        .task(id: retryAttempt) {
+            // 목적지가 없거나 지역을 판별할 수 없으면 임의 지역을 추천하지 않습니다.
+            guard let destination = viewModel.activeTrip.destinationStop else {
+                router.finishTripFlow(returningTo: .home)
+                return
+            }
+
+            let searchKeyword = destination.address ?? destination.name
+            guard let region = RegionCodeManager.shared.findRegion(by: searchKeyword) else {
+                router.finishTripFlow(returningTo: .home)
+                return
+            }
+
+            await viewModel.fetchRecommendedPlaces(
+                areaCode: region.areaCd,
+                sigunguCode: region.sigunguCd
+            )
+        }
+    }
+
+    private var hasLoadedRecommendations: Bool {
+        if case .loaded = viewModel.loadState { return true }
+        return false
     }
     
     private func showToast() {
@@ -194,9 +217,13 @@ struct TransitSwipeView: View {
         PlaceDTO(id: "3", name: "구룡포 일본인가옥거리", address: "경상북도 포항시 남구", latitude: 36.2, longitude: 129.2, photoURL: "https://tong.visitkorea.or.kr/cms/resource/66/2908766_image2_1.jpg", detailDescription: nil, regionCode: nil)
     ]
     viewModel.totalFetchedCount = 10
-    viewModel.hasLoadedRecommendations = true
+    viewModel.loadState = .loaded
     
     return NavigationStack {
-        TransitSwipeView(viewModel: viewModel)
+        TransitSwipeView(
+            viewModel: viewModel,
+            // 포항 시내를 출발지로 가정합니다.
+            originCoordinate: CLLocationCoordinate2D(latitude: 36.019, longitude: 129.343)
+        )
     }
 }

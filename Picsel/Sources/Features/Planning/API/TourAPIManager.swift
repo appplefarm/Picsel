@@ -7,40 +7,54 @@ import Foundation
 
 final class TourAPIManager {
     static let shared = TourAPIManager()
-    private init() {}
-    
-    private var serviceKey: String {
-        guard let key = Bundle.main.object(forInfoDictionaryKey: "TOUR_API_SERVICE_KEY_ENTRY") as? String else {
-            fatalError("TOUR_API_SERVICE_KEY_ENTRY를 찾을 수 없음")
-        }
-        return key
+    private let session: URLSession
+    private let serviceKey: String?
+
+    init(session: URLSession = .shared, serviceKey: String? = nil) {
+        self.session = session
+        self.serviceKey = serviceKey
+            ?? Bundle.main.object(forInfoDictionaryKey: "TOUR_API_SERVICE_KEY_ENTRY") as? String
     }
     
     // 국문 관광정보 API (지역기반 관광정보 조회)
     private let baseURL = "https://apis.data.go.kr/B551011/KorService2/areaBasedList2"
     
     func fetchRecommendedPlaces(areaCode: String, sigunguCode: String) async throws -> [PlaceDTO] {
-        let urlString = """
-        \(baseURL)\
-        ?serviceKey=\(serviceKey)\
-        &numOfRows=100\
-        &pageNo=1\
-        &MobileOS=IOS\
-        &MobileApp=Picsel\
-        &areaCode=\(areaCode)\
-        &sigunguCode=\(sigunguCode)\
-        &contentTypeId=12\
-        &arrange=A\
-        &_type=json
-        """
-        
-        guard let url = URL(string: urlString) else { return [] }
-        
-        let (data, _) = try await URLSession.shared.data(from: url)
+        guard let serviceKey, !serviceKey.isEmpty, !serviceKey.contains("$(") else {
+            throw RequestFailure.configuration
+        }
+        var components = URLComponents(string: baseURL)!
+        components.queryItems = [
+            URLQueryItem(name: "serviceKey", value: serviceKey.removingPercentEncoding ?? serviceKey),
+            URLQueryItem(name: "numOfRows", value: "100"),
+            URLQueryItem(name: "pageNo", value: "1"),
+            URLQueryItem(name: "MobileOS", value: "IOS"),
+            URLQueryItem(name: "MobileApp", value: "Picsel"),
+            URLQueryItem(name: "areaCode", value: areaCode),
+            URLQueryItem(name: "sigunguCode", value: sigunguCode),
+            URLQueryItem(name: "contentTypeId", value: "12"),
+            URLQueryItem(name: "arrange", value: "A"),
+            URLQueryItem(name: "_type", value: "json")
+        ]
+        // 서비스 키의 '+'가 공백으로 해석되지 않게 인코딩합니다.
+        components.percentEncodedQuery = components.percentEncodedQuery?
+            .replacingOccurrences(of: "+", with: "%2B")
+        guard let url = components.url else { throw RequestFailure.configuration }
+        let request = URLRequest(url: url, timeoutInterval: 20)
+        let (data, response) = try await session.data(for: request)
+        try Task.checkCancellation()
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            throw RequestFailure.server
+        }
         
         let decodedData = try JSONDecoder().decode(TourRoot.self, from: data)
         
-        guard let items = decodedData.response.body.items.item else { return [] }
+        guard decodedData.response.header.resultCode == "0000" else {
+            throw RequestFailure.server
+        }
+        guard let body = decodedData.response.body else { throw RequestFailure.invalidResponse }
+        guard body.totalCount > 0 else { return [] }
+        guard let items = body.items?.item else { throw RequestFailure.invalidResponse }
 
         // 사진으로 목적지를 고르는 서비스라 대표 이미지가 없는 장소는 제외합니다.
         // 응답에서 걸러낸 뒤 랜덤으로 섞어서 필요한 개수만 뽑아냅니다.

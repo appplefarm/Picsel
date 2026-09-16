@@ -6,6 +6,7 @@
 //
 
 import CoreLocation
+import Foundation
 import NMapsMap
 import SwiftUI
 
@@ -96,7 +97,7 @@ struct RouteMapView: UIViewRepresentable {
     private func drawMarkers(on mapView: NMFMapView, coordinator: Coordinator) {
         coordinator.markerOverlays = markers.map { item in
             let marker = NMFMarker()
-            marker.position = Self.latLng(from: item.coordinate)
+            marker.position = Self.latLng(from: snapped(item.coordinate))
             marker.iconImage = RouteMapMarkerIcon.image(for: item.kind)
 
             // 기본 마커는 핀이라 아래 끝이 기준점입니다.
@@ -138,6 +139,48 @@ struct RouteMapView: UIViewRepresentable {
 
         mapView.moveCamera(NMFCameraUpdate(fit: bounds, padding: MapStyle.fitPadding))
     }
+
+    // MARK: - 마커 위치 보정
+
+    /// 마커를 경로선 위에서 가장 가까운 점으로 옮깁니다.
+    ///
+    /// 장소 좌표는 관광 API가 준 건물 위치이고 경로선은 길찾기 업체가 도로에 맞춰 준 좌표라,
+    /// 그대로 두면 지도를 확대했을 때 마커가 경로선 옆에 따로 떠 있습니다.
+    /// 이 화면은 장소를 찾는 지도가 아니라 경로를 미리 보는 지도라 붙여 놓는 편이 읽기 좋습니다.
+    private func snapped(_ coordinate: CLLocationCoordinate2D) -> CLLocationCoordinate2D {
+        guard !path.isEmpty else { return coordinate }
+
+        var nearest = coordinate
+        var nearestDistance = Double.greatestFiniteMagnitude
+
+        // 위도 1도의 길이는 어디서나 비슷하지만 경도는 위도에 따라 줄어듭니다.
+        // 한 마커를 보는 동안에는 위도가 거의 같으므로 보정값을 한 번만 구해 씁니다.
+        let longitudeScale = cos(coordinate.latitude * .pi / 180)
+
+        for point in path {
+            let latitudeMeters = (point.latitude - coordinate.latitude) * Self.metersPerDegree
+            let longitudeMeters =
+                (point.longitude - coordinate.longitude) * Self.metersPerDegree * longitudeScale
+            let distance = latitudeMeters * latitudeMeters + longitudeMeters * longitudeMeters
+
+            if distance < nearestDistance {
+                nearestDistance = distance
+                nearest = point
+            }
+        }
+
+        // 경로에서 한참 떨어진 장소까지 끌어다 붙이면 위치를 속이는 셈입니다.
+        // 그런 장소는 원래 자리에 그대로 둡니다.
+        let limit = Self.maximumSnapDistanceMeters
+        guard nearestDistance <= limit * limit else { return coordinate }
+
+        return nearest
+    }
+
+    /// 마커를 경로선으로 당겨 붙일 수 있는 최대 거리(m)입니다.
+    private static let maximumSnapDistanceMeters: Double = 500
+    /// 위도 1도의 대략적인 길이(m)입니다.
+    private static let metersPerDegree: Double = 111_320
 
     // MARK: - 보조
 

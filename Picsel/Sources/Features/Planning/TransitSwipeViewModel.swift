@@ -9,8 +9,12 @@
 import SwiftUI
 import SwiftData
 
+@MainActor
 @Observable
 final class TransitSwipeViewModel {
+    enum LoadState {
+        case idle, loading, loaded, failed(RequestFailure)
+    }
     static let maximumRecommendationCount = 10
 
     var activeTrip: Trip
@@ -18,46 +22,62 @@ final class TransitSwipeViewModel {
     var candidates: [PlaceDTO] = []       // 국문 관광정보 API로 받아올 추천 장소 최대 10곳
     var totalFetchedCount: Int = 0        // 10장 중 몇장째인지 계산하기 위한 전체 개수
     var selectedPlaces: [PlaceDTO] = []   // 오른쪽으로 스와이프(선택)한 장소들
-    var isLoading: Bool = false
-    var hasLoadedRecommendations: Bool = false
+    var loadState: LoadState = .idle
+    private let service: TourAPIManager
+    @ObservationIgnored private var requestTask: Task<[PlaceDTO], Error>?
+    private var requestID: UUID?
 
     /// 경로 확인 화면에 넘길 장소 사진입니다.
-    /// RouteStop 모델에는 사진 필드가 없어 화면 사이에서만 들고 다닙니다.
+    /// 재실행 후에는 RouteStop.photoURL에서 복원합니다.
     private(set) var thumbnailURLsByStopID: [UUID: URL] = [:]
 
     /// 수상작 목적지 사진입니다. 경유지와 달리 홈 화면에서 넘겨받습니다.
     private let destinationPhotoURL: URL?
 
-    init(trip: Trip, destinationPhotoURL: URL? = nil) {
+    init(trip: Trip, destinationPhotoURL: URL? = nil, service: TourAPIManager? = nil) {
         self.activeTrip = trip
         self.destinationPhotoURL = destinationPhotoURL
+        self.service = service ?? .shared
     }
     
     // MARK: - 목적지와 동일한 시·군·구의 일반 관광지 추천
     func fetchRecommendedPlaces(areaCode: String, sigunguCode: String) async {
-        isLoading = true
-        hasLoadedRecommendations = false
-        
-        do {
-            let fetchedData = try await TourAPIManager.shared.fetchRecommendedPlaces(
+        switch loadState {
+        case .loaded: return // 뒤로 돌아와도 이미 고른/넘긴 카드가 다시 생기지 않습니다.
+        case .loading where requestTask?.isCancelled != true: return
+        case .loading: break
+        case .idle, .failed: break
+        }
+        let id = UUID()
+        requestID = id
+        loadState = .loading
+        let service = service
+        let task = Task {
+            try await service.fetchRecommendedPlaces(
                 areaCode: areaCode,
                 sigunguCode: sigunguCode
             )
+        }
+        requestTask = task
+        defer { if requestID == id { requestTask = nil } }
+
+        do {
+            let fetchedData = try await withTaskCancellationHandler {
+                try await task.value
+            } onCancel: { task.cancel() }
             try Task.checkCancellation()
+            guard requestID == id else { return }
 
             candidates = fetchedData
             totalFetchedCount = fetchedData.count
-            hasLoadedRecommendations = true
-            isLoading = false
-        } catch is CancellationError {
-            isLoading = false
-            return
+            loadState = .loaded
         } catch {
-            print("국문 관광정보 추천 통신 에러: \(error.localizedDescription)")
-            candidates = []
-            totalFetchedCount = 0
-            hasLoadedRecommendations = true
-            isLoading = false
+            guard requestID == id else { return }
+            if Task.isCancelled || RequestFailure.isCancellation(error) {
+                loadState = .idle
+            } else {
+                loadState = .failed(RequestFailure(error))
+            }
         }
     }
     
@@ -73,15 +93,40 @@ final class TransitSwipeViewModel {
         candidates.removeAll { $0.id == place.id }
     }
     
-    // MARK: - 최종 경로 확정 (DB에 반영)
-    func finalizeWaypoints() {
-        // 확인 화면에서 되돌아와 다시 확정해도 기존 경유지가 중복되지 않게 교체합니다.
+    // MARK: - 선택 초기화
+
+    /// 골라 둔 경유지를 모두 비웁니다.
+    ///
+    /// 경로 확인 화면에서 뒤로 오면 추천 목록을 처음부터 다시 받습니다.
+    /// 이때 앞서 고른 장소가 남아 있으면 새로 고른 장소가 그 위에 쌓여
+    /// 경유지가 10곳, 20곳으로 계속 불어납니다.
+    /// 목록을 새로 받을 때는 선택도 0곳에서 다시 시작하는 것이 맞습니다.
+    func resetSelection() {
+        requestTask?.cancel()
+        requestTask = nil
+        requestID = nil
+        loadState = .idle
+        candidates = []
+        totalFetchedCount = 0
+        selectedPlaces = []
+        thumbnailURLsByStopID = [:]
+        detachWaypoints()
+    }
+
+    /// 여행에 붙어 있던 경유지를 떼어냅니다. 목적지는 그대로 둡니다.
+    private func detachWaypoints() {
         for stop in activeTrip.stops where !stop.isDestination {
             stop.trip = nil
             // 여행이 이미 저장된 뒤라면, 떼어낸 장소가 DB에 떠돌지 않게 함께 지웁니다.
             stop.modelContext?.delete(stop)
         }
         activeTrip.stops.removeAll { !$0.isDestination }
+    }
+
+    // MARK: - 최종 경로 확정 (DB에 반영)
+    func finalizeWaypoints() {
+        // 확인 화면에서 되돌아와 다시 확정해도 기존 경유지가 중복되지 않게 교체합니다.
+        detachWaypoints()
 
         var thumbnails: [UUID: URL] = [:]
 
@@ -140,7 +185,11 @@ final class TransitSwipeViewModel {
         activeTrip.isDone = false
 
         // 완료 화면에서 사용할 픽셀과 진행 중 홈의 도형이 같은 지역을 가리키게 합니다.
-        activeTrip.targetPixelCode = activeTrip.pixelTile?.code
+        // 목적지를 지운 여행은 새로 판정할 좌표가 없습니다.
+        // 그럴 때 nil로 덮어쓰면 목적지를 고를 때 새겨 둔 지역까지 잃어버립니다.
+        if let code = activeTrip.pixelTile?.code {
+            activeTrip.targetPixelCode = code
+        }
 
         // 뒤로 갔다가 다시 들어와도 두 번 등록되지 않게 확인합니다.
         if activeTrip.modelContext == nil {

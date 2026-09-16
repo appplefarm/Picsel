@@ -38,8 +38,15 @@ struct RouteLeg: Equatable {
     /// 전체 path 배열에서 이 구간이 끝나는 위치입니다. 구간별로 경로를 잘라 쓸 때 사용합니다.
     let pathEndIndex: Int
 
-    var durationMinutes: Int {
-        max(1, Int((duration / 60).rounded()))
+    /// 표시용 소요 시간(분)입니다.
+    ///
+    /// 업체가 이 구간의 시간을 주지 않으면 0이 들어옵니다.
+    /// 예전에는 max(1, …)이 그 0을 "1분"으로 바꿔 버려서,
+    /// 데이터가 없다는 사실이 그럴듯한 숫자에 가려졌습니다.
+    /// 값이 없으면 nil을 돌려주고 화면에서 배지를 감춥니다.
+    var durationMinutes: Int? {
+        guard duration > 0 else { return nil }
+        return max(1, Int((duration / 60).rounded()))
     }
 
     static func == (lhs: RouteLeg, rhs: RouteLeg) -> Bool {
@@ -70,6 +77,15 @@ enum RouteDirectionsError: LocalizedError {
     case routeNotFound
     /// 업체가 허용하는 총 경로 길이를 넘은 경우입니다.
     case routeTooLong
+
+    var requestFailure: RequestFailure {
+        switch self {
+        case .networkFailure(let error): RequestFailure(error)
+        case .missingAPIKey, .invalidRequest: .configuration
+        case .providerError: .server
+        case .routeNotFound, .routeTooLong: .unavailable
+        }
+    }
 
     var errorDescription: String? {
         switch self {

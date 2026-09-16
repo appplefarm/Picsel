@@ -1,8 +1,13 @@
 import SwiftUI
+import SwiftData
 
 struct VisitedPlacesConfirmView: View {
     @State var viewModel: VisitedPlacesConfirmViewModel
     @State private var isShowingTripRecord = false
+    @State private var isShowingDeleteAlert = false
+    
+    @Environment(\.modelContext) private var modelContext
+    @Environment(AppRouter.self) private var appRouter
     
     var body: some View {
         VStack(spacing: 0) {
@@ -80,8 +85,12 @@ struct VisitedPlacesConfirmView: View {
             // MARK: - 하단 완료 버튼
             VStack {
                 Button {
-                    viewModel.confirmVisitedPlaces()
-                    isShowingTripRecord = true
+                    if viewModel.visitedStopIDs.isEmpty {
+                        isShowingDeleteAlert = true
+                    } else {
+                        viewModel.confirmVisitedPlaces()
+                        isShowingTripRecord = true
+                    }
                 } label: {
                     Text("여행 완료하기")
                         .font(.system(size: 16, weight: .bold))
@@ -96,6 +105,21 @@ struct VisitedPlacesConfirmView: View {
         .navigationDestination(isPresented: $isShowingTripRecord) {
             TripRecordView(trip: viewModel.trip)
                 .toolbar(.hidden, for: .tabBar)
+        }
+        .alert(
+            "여행지를 방문하지 않으셨나요?",
+            isPresented: $isShowingDeleteAlert
+        ) {
+            Button("취소", role: .cancel) {}
+            Button("확인", role: .destructive) {
+                // 이 여행과 연결된 모든 데이터 삭제
+                modelContext.delete(viewModel.trip)
+                try? modelContext.save() // 명시적 저장
+                // 홈 탭으로 복귀
+                appRouter.finishTripFlow(returningTo: .home)
+            }
+        } message: {
+            Text("아무곳도 가지 않았다면 해당 여행 기록이 삭제됩니다.")
         }
     }
 }

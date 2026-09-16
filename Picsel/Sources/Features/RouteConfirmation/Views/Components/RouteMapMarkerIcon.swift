@@ -29,49 +29,14 @@ enum RouteMapMarkerIcon {
 
     // MARK: - 그리기
 
+    /// 목록 타임라인의 점(RouteStopDot)과 똑같은 모양을 그립니다.
+    ///
+    /// 크기·색·테두리·가운데 점은 모두 RouteMarkerStyle에서 가져옵니다.
+    /// 지도에만 있는 것은 바깥에 두르는 흰 후광 하나뿐입니다.
     private static func draw(_ kind: RouteMapMarker.Kind) -> UIImage {
-        switch kind {
-        case .origin:
-            // 출발지: 브랜드 색으로 꽉 채운 원
-            circle(
-                diameter: Metric.originDiameter,
-                fill: Palette.actionGreen,
-                border: .white,
-                borderWidth: 2.5
-            )
-
-        case .waypoint:
-            // 경유지: 흰 원에 얇은 초록 테두리
-            circle(
-                diameter: Metric.waypointDiameter,
-                fill: .white,
-                border: Palette.actionGreen,
-                borderWidth: 2
-            )
-
-        case .destination:
-            // 목적지: 가장 크고 진하게, 가운데를 비워 도착점처럼 보이게 합니다.
-            circle(
-                diameter: Metric.destinationDiameter,
-                fill: Palette.primaryGreen,
-                border: .white,
-                borderWidth: 2.5,
-                innerDotDiameter: Metric.destinationInnerDot
-            )
-        }
-    }
-
-    /// 테두리는 stroke 대신 큰 원 위에 작은 원을 덮어 그립니다.
-    /// stroke는 선의 절반이 바깥으로 나가 크기를 가늠하기 어렵습니다.
-    private static func circle(
-        diameter: CGFloat,
-        fill: UIColor,
-        border: UIColor,
-        borderWidth: CGFloat,
-        innerDotDiameter: CGFloat? = nil
-    ) -> UIImage {
-        // 그림자가 잘리지 않도록 여백을 둡니다.
+        let diameter = RouteMarkerStyle.diameter(for: kind)
         let padding = Metric.shadowPadding
+
         let canvasSize = CGSize(
             width: diameter + padding * 2,
             height: diameter + padding * 2
@@ -79,46 +44,46 @@ enum RouteMapMarkerIcon {
 
         return UIGraphicsImageRenderer(size: canvasSize).image { context in
             let cgContext = context.cgContext
-            let rect = CGRect(
+            let body = CGRect(
                 x: padding,
                 y: padding,
                 width: diameter,
                 height: diameter
             )
 
+            // 1. 흰 후광. 지름 바깥으로 두르기 때문에 안쪽 초록을 깎지 않습니다.
             cgContext.setShadow(
                 offset: .zero,
                 blur: 3,
                 color: UIColor.black.withAlphaComponent(0.22).cgColor
             )
-            cgContext.setFillColor(border.cgColor)
-            cgContext.fillEllipse(in: rect)
+            cgContext.setFillColor(UIColor.white.cgColor)
 
-            // 그림자는 바깥 테두리에만 주고 나머지는 깔끔하게 그립니다.
+            // 그림자는 바깥 후광에만 주고 나머지는 깔끔하게 그립니다.
             cgContext.setShadow(offset: .zero, blur: 0, color: nil)
 
-            cgContext.setFillColor(fill.cgColor)
-            cgContext.fillEllipse(in: rect.insetBy(dx: borderWidth, dy: borderWidth))
+            // 2. 본체를 채웁니다.
+            cgContext.setFillColor(UIColor(RouteMarkerStyle.fill(for: kind)).cgColor)
+            cgContext.fillEllipse(in: body)
 
-            guard let innerDotDiameter else { return }
+            // 3. 안쪽 테두리(경유지의 초록 테두리)를 두릅니다.
+            //    stroke는 선의 절반이 바깥으로 나가므로 절반만큼 안으로 밀어 그립니다.
+            if let stroke = RouteMarkerStyle.stroke(for: kind) {
+                cgContext.setStrokeColor(UIColor(stroke.color).cgColor)
+                cgContext.setLineWidth(stroke.width)
+                cgContext.strokeEllipse(in: body.insetBy(dx: stroke.width / 2, dy: stroke.width / 2))
+            }
 
-            let inset = (diameter - innerDotDiameter) / 2
-            cgContext.setFillColor(UIColor.white.cgColor)
-            cgContext.fillEllipse(in: rect.insetBy(dx: inset, dy: inset))
+            // 4. 목적지 가운데를 비웁니다.
+            if let innerDotDiameter = RouteMarkerStyle.innerDotDiameter(for: kind) {
+                let inset = (diameter - innerDotDiameter) / 2
+                cgContext.setFillColor(UIColor.white.cgColor)
+                cgContext.fillEllipse(in: body.insetBy(dx: inset, dy: inset))
+            }
         }
     }
 
     private enum Metric {
-        static let originDiameter: CGFloat = 16
-        static let waypointDiameter: CGFloat = 12
-        static let destinationDiameter: CGFloat = 22
-        static let destinationInnerDot: CGFloat = 7
         static let shadowPadding: CGFloat = 3
-    }
-
-    /// 지도 SDK는 UIColor를 받으므로 디자인 토큰을 변환해 씁니다.
-    private enum Palette {
-        static let actionGreen = UIColor(PicselColor.actionGreen)
-        static let primaryGreen = UIColor(PicselColor.primaryGreen)
     }
 }

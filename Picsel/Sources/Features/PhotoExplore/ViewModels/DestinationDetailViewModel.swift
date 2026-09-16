@@ -16,7 +16,7 @@ final class DestinationDetailViewModel {
         case loading
         case loaded(DestinationDetailInfo)
         case unavailable(String)
-        case failed
+        case failed(RequestFailure)
     }
 
     private let destination: PhotoDestination
@@ -33,6 +33,11 @@ final class DestinationDetailViewModel {
 
     func retry() {
         retryAttempt += 1
+    }
+
+    func retryAfterReconnection() {
+        guard case .failed(let failure) = travelState, failure.retriesOnReconnect else { return }
+        retry()
     }
 
     func loadTravelInfo(from origin: CLLocation?) async {
@@ -70,7 +75,7 @@ final class DestinationDetailViewModel {
             guard directions.distanceMeters >= 0,
                   directions.duration >= 0,
                   minutes.isFinite, minutes >= 0, minutes < Double(Int.max) else {
-                travelState = .failed
+                travelState = .failed(.invalidResponse)
                 return
             }
 
@@ -81,9 +86,13 @@ final class DestinationDetailViewModel {
             ))
         } catch {
             // URLSession 취소가 서비스 오류로 감싸져 전달되는 경우도 오류 UI를 띄우지 않습니다.
-            guard !Task.isCancelled, !(error is CancellationError),
+            let underlying: Error
+            if case .networkFailure(let cause) = error as? RouteDirectionsError {
+                underlying = cause
+            } else { underlying = error }
+            guard !Task.isCancelled, !RequestFailure.isCancellation(underlying),
                   activeRequestID == requestID else { return }
-            travelState = .failed
+            travelState = .failed((error as? RouteDirectionsError)?.requestFailure ?? RequestFailure(error))
         }
     }
 }

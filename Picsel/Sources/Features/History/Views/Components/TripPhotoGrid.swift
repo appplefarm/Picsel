@@ -203,6 +203,7 @@ private struct TripPhotoThumbnail: View {
     }
 }
 
+#if DEBUG
 #Preview("여러 장") {
     // 숫자만 바꿔 가며 1~10장 배치를 확인하세요.
     ScrollView {
@@ -217,3 +218,4 @@ private struct TripPhotoThumbnail: View {
             .padding(24)
     }
 }
+#endif

@@ -18,7 +18,8 @@ struct DestinationDetailView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var loadedPhoto: CGImage?
-    @State private var didFailToLoadPhoto = false
+    @State private var photoFailure: RequestFailure?
+    @State private var photoRetryAttempt = 0
     @State private var viewModel: DestinationDetailViewModel
 
     init(
@@ -101,11 +102,15 @@ struct DestinationDetailView: View {
             .tint(PicselColor.textPrimary)
         }
         .presentationBackground(.clear)
-        .task(id: destination.photoURL) {
+        .task(id: PhotoRequestID(url: destination.photoURL, retryAttempt: photoRetryAttempt)) {
             await loadPhoto()
         }
         .task(id: TravelRequestID(origin: originLocation, retryAttempt: viewModel.retryAttempt)) {
             await viewModel.loadTravelInfo(from: originLocation)
+        }
+        .onNetworkRecovery {
+            if photoFailure?.retriesOnReconnect == true { photoRetryAttempt += 1 }
+            viewModel.retryAfterReconnection()
         }
     }
 
@@ -136,14 +141,11 @@ struct DestinationDetailView: View {
                 .frame(width: size.width, height: size.height)
                 .background(Color(.systemBackground))
                 .clipShape(.rect(cornerRadius: 1))
-        } else if didFailToLoadPhoto {
-            Image(systemName: "photo")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
+        } else if let photoFailure {
+            RequestFailureView(failure: photoFailure) { photoRetryAttempt += 1 }
                 .frame(width: maxWidth, height: maxHeight)
                 .background(Color(.secondarySystemBackground))
                 .clipShape(.rect(cornerRadius: 1))
-                .accessibilityLabel("사진을 불러오지 못했습니다")
         } else {
             ProgressView()
                 .frame(width: maxWidth, height: maxHeight)
@@ -169,11 +171,11 @@ struct DestinationDetailView: View {
 
     private func loadPhoto() async {
         loadedPhoto = nil
-        didFailToLoadPhoto = false
+        photoFailure = nil
 
         guard let photoURL = destination.photoURL,
               let imageURL = URL(string: photoURL) else {
-            didFailToLoadPhoto = true
+            photoFailure = .invalidResponse
             return
         }
 
@@ -184,10 +186,9 @@ struct DestinationDetailView: View {
             )
             try Task.checkCancellation()
             loadedPhoto = image
-        } catch is CancellationError {
-            return
         } catch {
-            didFailToLoadPhoto = true
+            guard !Task.isCancelled, !RequestFailure.isCancellation(error) else { return }
+            photoFailure = RequestFailure(error)
         }
     }
 
@@ -212,14 +213,9 @@ struct DestinationDetailView: View {
                 .font(PicselFont.caption01)
                 .multilineTextAlignment(.center)
 
-        case .failed:
-            VStack(spacing: 8) {
-                Text("거리·시간을 불러오지 못했어요.")
-                    .font(PicselFont.caption01)
-                Button("다시 시도", action: viewModel.retry)
-                    .buttonStyle(.bordered)
-                    .tint(.white)
-            }
+        case .failed(let failure):
+            RequestFailureView(failure: failure, foregroundColor: .white, retry: viewModel.retry)
+                .tint(.white)
         }
     }
 
@@ -240,6 +236,11 @@ struct DestinationDetailView: View {
                 .frame(minWidth: 112, minHeight: 30)
                 .background(.white.opacity(0.65), in: .capsule)
         }
+    }
+
+    private struct PhotoRequestID: Equatable {
+        let url: String?
+        let retryAttempt: Int
     }
 
     private struct TravelRequestID: Equatable {
