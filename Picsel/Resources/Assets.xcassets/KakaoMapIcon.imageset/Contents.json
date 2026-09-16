@@ -1,17 +1,8 @@
 {
   "images" : [
     {
-      "filename" : "KakaoMapIcon.png",
-      "idiom" : "universal",
-      "scale" : "1x"
-    },
-    {
-      "idiom" : "universal",
-      "scale" : "2x"
-    },
-    {
-      "idiom" : "universal",
-      "scale" : "3x"
+      "filename" : "KakaoMap.pdf",
+      "idiom" : "universal"
     }
   ],
   "info" : {
