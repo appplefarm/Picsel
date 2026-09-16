@@ -118,6 +118,41 @@ final class AppRouter {
         selectedTab = tab
     }
 
+    /// 현재 미완료 여행만 삭제합니다. 저장 성공 전에는 화면·복원 상태를 바꾸지 않습니다.
+    func cancelTrip(_ tripID: UUID, in context: ModelContext) throws {
+        guard activeTripID == tripID, sessionTrip?.id == tripID else {
+            throw TripCancellationError.notActive
+        }
+
+        // 다른 화면의 미저장 변경까지 저장하거나 rollback하지 않도록 삭제 작업을 격리합니다.
+        let deletionContext = ModelContext(context.container)
+        deletionContext.autosaveEnabled = false
+        var descriptor = FetchDescriptor<Trip>(predicate: #Predicate { $0.id == tripID })
+        descriptor.fetchLimit = 1
+        guard let trip = try deletionContext.fetch(descriptor).first else {
+            throw RestorationError.tripNotFound
+        }
+        guard !trip.isDone, sessionTrip?.isDone == false else {
+            throw TripCancellationError.alreadyCompleted
+        }
+
+        // 연결된 RouteStop·TripPhoto만 cascade 삭제되고 기존 픽셀/다른 여행은 유지됩니다.
+        deletionContext.delete(trip)
+        try deletionContext.save()
+        finishTripFlow(returningTo: .home)
+    }
+
+    enum TripCancellationError: LocalizedError {
+        case notActive, alreadyCompleted
+
+        var errorDescription: String? {
+            switch self {
+            case .notActive: "현재 진행 중인 여행이 아니에요. 홈에서 여행 상태를 확인해주세요."
+            case .alreadyCompleted: "이미 완료한 여행은 중단할 수 없어요."
+            }
+        }
+    }
+
     private func clearRestorationID() {
         clearLegacyReadyTripID()
         updateActiveTripID(nil)

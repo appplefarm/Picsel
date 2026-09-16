@@ -5,6 +5,7 @@
 //  Created by kosoobin on 9/6/26.
 //
 
+import SwiftData
 import SwiftUI
 
 /// 여행 진행 중 화면입니다.
@@ -17,6 +18,10 @@ struct TripProgressView: View {
     let onFinishTrip: () -> Void
 
     @AppStorage("preferredNavigationApp") private var navigationApp: NavigationApp = .kakaoMap
+    @Environment(AppRouter.self) private var router
+    @Environment(\.modelContext) private var modelContext
+    @State private var isShowingCancellation = false
+    @State private var cancellationError: String?
 
     private var stops: [RouteStop] { trip.orderedStops }
 
@@ -26,12 +31,28 @@ struct TripProgressView: View {
                 header
 
                 stopList
+
+                cancellationButton
             }
         }
         .background(Color.white)
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             finishButton
+        }
+        .alert("여행을 중단할까요?", isPresented: $isShowingCancellation) {
+            Button("취소", role: .cancel) {}
+            Button("여행 중단", role: .destructive, action: cancelTrip)
+        } message: {
+            Text("진행 중인 여행과 임시 사진 데이터가 삭제돼요. 여행 기록과 픽셀은 추가되지 않으며, 중단한 여행은 다시 이어갈 수 없어요.")
+        }
+        .alert("여행을 중단하지 못했어요", isPresented: Binding(
+            get: { cancellationError != nil },
+            set: { if !$0 { cancellationError = nil } }
+        )) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text(cancellationError ?? "")
         }
     }
 
@@ -78,6 +99,23 @@ struct TripProgressView: View {
         .padding(.bottom, 24)
     }
 
+    private var cancellationButton: some View {
+        Button(role: .destructive) {
+            isShowingCancellation = true
+        } label: {
+            Text("여행을 중단하시겠어요?")
+                .font(PicselFont.label03)
+                .underline()
+                .frame(minHeight: 44)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.red)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 20)
+        .padding(.bottom, 16)
+        .accessibilityHint("여행을 삭제하고 홈으로 돌아가기 전 확인창을 엽니다")
+    }
+
     private var finishButton: some View {
         Button(action: onFinishTrip) {
             Text("여행 마치기")
@@ -99,6 +137,18 @@ struct TripProgressView: View {
                 longitude: stop.longitude
             )
         )
+    }
+
+    private func cancelTrip() {
+        let tripID = trip.id
+        do {
+            try router.cancelTrip(tripID, in: modelContext)
+            // 저장 성공 후에만 정리하며, 화면이 닫혀도 캐시 정리는 마저 수행합니다.
+            Task { await TripImageStore.shared.removeTrip(tripID) }
+        } catch {
+            cancellationError = (error as? AppRouter.TripCancellationError)?.errorDescription
+                ?? "여행 중단 상태를 저장하지 못했어요. 현재 여행은 유지되니 다시 시도해주세요."
+        }
     }
 }
 
@@ -169,5 +219,7 @@ private enum TripProgressPreviewData {
             onFinishTrip: {}
         )
     }
+    .environment(AppRouter())
+    .modelContainer(for: [Trip.self, RouteStop.self, TripPhoto.self, UserPixel.self], inMemory: true)
 }
 #endif

@@ -85,7 +85,7 @@ actor TripImageStore {
         }
     }
 
-    /// 완료 저장에 성공한 여행만 삭제합니다. 늦게 끝난 다운로드의 재생성도 막습니다.
+    /// 완료 저장 또는 중단 삭제에 성공한 여행의 캐시를 지웁니다. 늦은 다운로드의 재생성도 막습니다.
     func removeTrip(_ tripID: UUID) {
         completedTrips.insert(tripID)
         try? FileManager.default.removeItem(at: root.appendingPathComponent(tripID.uuidString, isDirectory: true))
