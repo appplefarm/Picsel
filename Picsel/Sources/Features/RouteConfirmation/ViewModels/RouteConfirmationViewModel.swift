@@ -46,7 +46,7 @@ final class RouteConfirmationViewModel {
         estimatedDurationMinutes: Int? = nil,
         thumbnailURLsByStopID: [UUID: URL] = [:],
         travelMinutesByStopID: [UUID: Int] = [:],
-        directionsService: RouteDirectionsProviding = NaverDirectionsService()
+        directionsService: RouteDirectionsProviding = KakaoDirectionsService()
     ) {
         self.trip = trip
         self.estimatedDurationMinutes = estimatedDurationMinutes
