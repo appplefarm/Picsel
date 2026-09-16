@@ -60,6 +60,7 @@ struct RouteConfirmationView: View {
                         travelMinutes: viewModel.travelMinutes(before: stop),
                         kind: viewModel.stopKind(for: stop),
                         position: position(for: stop),
+                        startsFromCurrentLocation: viewModel.startsFromCurrentLocation,
                         showsTimeline: !editMode.isEditing
                     )
                     .listRowInsets(
