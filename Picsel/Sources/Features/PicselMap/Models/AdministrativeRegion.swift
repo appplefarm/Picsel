@@ -13,7 +13,16 @@ nonisolated struct AdministrativeRegion: Identifiable, Hashable, Sendable {
     let name: String
     let parentCode: String?
     let constituentCodes: Set<String>
+
+    /// 실제 지리 좌표입니다. 좌표가 어느 픽셀에 속하는지 **판정할 때** 씁니다.
     let polygons: [AdministrativeRegionPolygon]
+
+    /// 화면에 **그릴 때** 쓰는 좌표입니다.
+    ///
+    /// 독도처럼 너무 작거나, 백령도·제주처럼 멀리 떨어져 지도를 작게 만드는 섬은
+    /// 보기 좋은 자리로 옮겨 그립니다. (PixelMapIslandLayout)
+    /// 옮길 필요가 없는 지역은 `polygons`와 같습니다.
+    let displayPolygons: [AdministrativeRegionPolygon]
 
     var id: String { code }
 
