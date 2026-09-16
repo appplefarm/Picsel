@@ -47,15 +47,15 @@ struct HomeView: View {
                     .frame(height: HomeStyle.headerHeight)
                     .padding(.horizontal, HomeStyle.horizontalPadding)
                     .padding(.bottom, 12)
-
+                
                 mapSection
                     .frame(maxWidth: .infinity)
                     .frame(height: HomeStyle.mapHeight(for: proxy.size.height))
-
+                
                 radiusSlider
                     .padding(.horizontal, HomeStyle.horizontalPadding)
                     .padding(.top, 16)
-
+                
                 destinationButton
                     .padding(.horizontal, HomeStyle.horizontalPadding)
                     .padding(.top, 20)
@@ -85,6 +85,7 @@ struct HomeView: View {
         }
         .navigationDestination(item: $photoExploreRequest) { request in
             let origin = request.originLocation
+            
             PhotoExploreView(
                 service: PhotoDestinationServiceFactory.make(
                     originLocation: origin,
@@ -101,6 +102,10 @@ struct HomeView: View {
             Button("확인", role: .cancel) {}
         } message: {
             Text("현재 위치를 확인한 뒤 다시 시도해주세요. 위치 권한이 꺼져 있다면 설정에서 허용해주세요.")
+                .navigationDestination(isPresented: $isSettingsPresented) {
+                    SettingsView()
+                        .toolbar(.hidden, for: .tabBar)
+                }
         }
     }
 
@@ -120,9 +125,6 @@ struct HomeView: View {
             HomeSettingsButton {
                 isSettingsPresented = true
             }
-        }
-        .fullScreenCover(isPresented: $isSettingsPresented) {
-            SettingsView()
         }
     }
     

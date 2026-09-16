@@ -196,8 +196,9 @@ private struct ActiveTripHomeFlow: View {
                 )
             }
         }
-        .fullScreenCover(isPresented: $isSettingsPresented) {
+        .navigationDestination(isPresented: $isSettingsPresented) {
             SettingsView()
+                .toolbar(.hidden, for: .tabBar)
         }
         .navigationDestination(isPresented: $isTripProgressPresented) {
             TripProgressView(

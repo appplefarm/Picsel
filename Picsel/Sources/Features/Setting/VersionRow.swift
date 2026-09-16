@@ -12,7 +12,7 @@ struct VersionRow: View {
         HStack(spacing: 15) {
             
             Image(systemName: "info.circle")
-                .font(.system(size: 18, weight: .medium))
+                .font(.system(size: 18, weight: .regular))
                 .foregroundStyle(PicselColor.settingsIcon)
                 .frame(width: 36, height: 36)
                 .background(
@@ -35,8 +35,9 @@ struct VersionRow: View {
             Text(AppInfo.displayVersion)
                 .font(.system(size: 12))
                 .foregroundStyle(PicselColor.settingsSecondaryText.opacity(0.85))
+                .padding(.trailing, 9)
         }
-        .padding(.horizontal, 10)
-        .frame(minHeight: 56)
+        .padding(.horizontal, 11)
+        .frame(minHeight: 76)
     }
 }

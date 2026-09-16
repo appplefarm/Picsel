@@ -8,48 +8,31 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.openURL) private var openURL
-
-    @State private var destination: SettingsDestination?
-    @State private var isShowingMailError = false
+    @State private var isNavigationAppPresented = false
+    @State private var presentedSheet: SettingsSheet?
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 35) {
-                    serviceSection
-                    informationSection
-                }
-                .padding(.horizontal, 35)
-                .padding(.top, 48)
-                .padding(.bottom, 40)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 35) {
+                serviceSection
+                informationSection
             }
-            .background(PicselColor.settingsBackground.ignoresSafeArea())
-            .navigationTitle("설정")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(PicselColor.settingsBackground, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .fontWeight(.semibold)
-                    }
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.circle)
-                    .tint(PicselColor.homeText)
-                    .accessibilityLabel("설정 닫기")
-                }
+            .padding(.horizontal, 27)
+            .padding(.top, 48)
+            .padding(.bottom, 40)
+        }
+        .scrollIndicators(.hidden)
+        .background(PicselColor.settingsBackground.ignoresSafeArea())
+        .settingsNavigationBar(title: "설정")
+        .preferredColorScheme(.light)
+        .navigationDestination(isPresented: $isNavigationAppPresented) {
+            NavigationAppSelectionView(presentation: .settings) {
+                isNavigationAppPresented = false
             }
-            .navigationDestination(item: $destination) { route in
-                switch route {
-                case .navigationApp:
-                    NavigationAppSelectionView(presentation: .settings) {
-                        destination = nil
-                    }
+        }
+        .sheet(item: $presentedSheet) { sheet in
+            NavigationStack {
+                switch sheet {
                 case .privacyPolicy:
                     PrivacyPolicyView()
                 case .serviceTerms:
@@ -58,11 +41,8 @@ struct SettingsView: View {
                     DataSourceView()
                 }
             }
-            .alert("메일 앱을 열 수 없어요", isPresented: $isShowingMailError) {
-                Button("확인", role: .cancel) { }
-            } message: {
-                Text("\(AppContact.supportEmail)로 직접 문의해주세요.")
-            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.hidden)
         }
     }
 }
@@ -76,9 +56,10 @@ private extension SettingsView {
                 SettingsRow(
                     icon: "location.fill",
                     title: "네비게이션",
-                    description: "기본 길 안내 앱 선택"
+                    description: "기본 길 안내 앱 선택",
+                    minHeight: 70
                 ) {
-                    destination = .navigationApp
+                    isNavigationAppPresented = true
                 }
             }
         }
@@ -86,7 +67,7 @@ private extension SettingsView {
 
     var informationSection: some View {
         VStack(alignment: .leading, spacing: 26) {
-            sectionTitle("정보")
+            sectionTitle("정보 및 약관")
 
             SettingsCard {
                 SettingsRow(
@@ -94,44 +75,36 @@ private extension SettingsView {
                     title: "개인정보 처리방침",
                     description: "개인정보 수집·이용 내역"
                 ) {
-                    destination = .privacyPolicy
+                    presentedSheet = .privacyPolicy
                 }
 
                 Divider()
-                    .padding(.horizontal, 10)
+                    .padding(.leading, 20)
+                    .padding(.trailing, 28)
 
                 SettingsRow(
                     icon: "doc.text",
                     title: "서비스 이용약관",
-                    description: "서비스 이용 조건과 운영 정책"
+                    description: "서비스 이용약관과 운영 정책"
                 ) {
-                    destination = .serviceTerms
+                    presentedSheet = .serviceTerms
                 }
 
                 Divider()
-                    .padding(.horizontal, 10)
+                    .padding(.leading, 20)
+                    .padding(.trailing, 28)
 
                 SettingsRow(
                     icon: "chevron.left.forwardslash.chevron.right",
                     title: "API 및 데이터 정보",
                     description: "연동 서비스와 데이터 출처"
                 ) {
-                    destination = .dataSource
+                    presentedSheet = .dataSource
                 }
 
                 Divider()
-                    .padding(.horizontal, 10)
-
-                SettingsRow(
-                    icon: "envelope",
-                    title: "문의하기",
-                    description: "서비스 문의 및 문제 신고"
-                ) {
-                    openSupportMail()
-                }
-
-                Divider()
-                    .padding(.horizontal, 10)
+                    .padding(.leading, 20)
+                    .padding(.trailing, 28)
 
                 VersionRow()
             }
@@ -140,26 +113,12 @@ private extension SettingsView {
 
     func sectionTitle(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: 15, weight: .medium))
+            .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(PicselColor.settingsSectionTitle)
-    }
-
-    func openSupportMail() {
-        guard let url = AppContact.supportMailURL else {
-            isShowingMailError = true
-            return
-        }
-
-        openURL(url) { accepted in
-            if !accepted {
-                isShowingMailError = true
-            }
-        }
     }
 }
 
-private enum SettingsDestination: Hashable, Identifiable {
-    case navigationApp
+private enum SettingsSheet: Hashable, Identifiable {
     case privacyPolicy
     case serviceTerms
     case dataSource
@@ -168,5 +127,7 @@ private enum SettingsDestination: Hashable, Identifiable {
 }
 
 #Preview {
-    SettingsView()
+    NavigationStack {
+        SettingsView()
+    }
 }
