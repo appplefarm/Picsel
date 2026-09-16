@@ -123,14 +123,12 @@ struct HomeView: View {
             }
         }
         .alert(
-            "위치를 확인할 수 없음",
+            "현재 위치를 확인할 수 없어요",
             isPresented: $isLocationAlertPresented
         ) {
             Button("확인", role: .cancel) {}
         } message: {
-            Text(
-                "현재 위치를 확인한 뒤 다시 시도해주세요. 위치 권한이 꺼져 있다면 설정에서 허용해주세요."
-            )
+            Text("현재 위치를 불러오지 못했어요. 잠시 후 다시 시도해주세요.")
         }
         .navigationDestination(isPresented: $isSettingsPresented) {
             SettingsView()
@@ -287,16 +285,8 @@ struct HomeView: View {
     }
 
     private var destinationButton: some View {
-        NavigationLink {
-            PhotoExploreView(
-                service: PhotoDestinationServiceFactory.make(),
-                sourceNotice: PhotoDestinationServiceFactory.sourceNotice,
-                originLocation: manualLocation ?? (locationManager.isLocationAuthorized ? locationManager.currentLocation : nil)
-            ) { destination in
-                guard destination.canSelectAsDestination else { return }
-                confirmedDestination = destination
         Button {
-            guard let origin = recommendationOrigin else {
+            guard let origin = manualLocation ?? recommendationOrigin else {
                 locationManager.requestCurrentLocation()
                 isLocationAlertPresented = true
                 return
