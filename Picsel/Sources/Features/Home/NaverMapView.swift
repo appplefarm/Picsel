@@ -33,8 +33,8 @@ private struct NaverMapRepresentable: UIViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
-    func makeUIView(context: Context) -> NMFNaverMapView {
-        let naverMapView = NMFNaverMapView(frame: .zero)
+    func makeUIView(context: Context) -> LayoutAwareMapView {
+        let naverMapView = LayoutAwareMapView(frame: .zero)
         naverMapView.showLocationButton = false
         naverMapView.showZoomControls = false
         naverMapView.showCompass = false
@@ -49,37 +49,21 @@ private struct NaverMapRepresentable: UIViewRepresentable {
         mapView.isTiltGestureEnabled = false
         mapView.isStopGestureEnabled = false
 
-        context.coordinator.previousCoordinate = coordinate
-        context.coordinator.previousRadiusMeters = radiusMeters
-        context.coordinator.previousIsValidOrigin = isValidOrigin
-
-        // makeUIView 시점에는 뷰 크기가 0일 수 있어 레이아웃 이후 반경을 맞춥니다.
-        DispatchQueue.main.async {
-            applyCamera(to: mapView, animated: false)
+        naverMapView.onLayout = { [weak coordinator = context.coordinator] mapView in
+            coordinator?.applyLatestCamera(to: mapView)
         }
+        context.coordinator.update(self, mapView: mapView)
 
         return naverMapView
     }
 
-    func updateUIView(_ naverMapView: NMFNaverMapView, context: Context) {
-        let coordinator = context.coordinator
-        let radiusChanged = coordinator.previousRadiusMeters != radiusMeters
-        let coordinateChanged = coordinator.previousCoordinate.map {
-            $0.latitude != coordinate.latitude || $0.longitude != coordinate.longitude
-        } ?? true
-        let isValidOriginChanged = coordinator.previousIsValidOrigin != isValidOrigin
+    func updateUIView(_ naverMapView: LayoutAwareMapView, context: Context) {
+        context.coordinator.update(self, mapView: naverMapView.mapView)
+    }
 
-        guard radiusChanged || coordinateChanged || isValidOriginChanged else { return }
-
-        // Slider를 움직일 때는 애니메이션을 누적하지 않고 현재 반경과 즉시 동기화합니다.
-        applyCamera(
-            to: naverMapView.mapView,
-            animated: (coordinateChanged || isValidOriginChanged) && !radiusChanged
-        )
-
-        coordinator.previousCoordinate = coordinate
-        coordinator.previousRadiusMeters = radiusMeters
-        coordinator.previousIsValidOrigin = isValidOrigin
+    static func dismantleUIView(_ naverMapView: LayoutAwareMapView, coordinator: Coordinator) {
+        naverMapView.onLayout = nil
+        naverMapView.mapView.cancelTransitions()
     }
 
     private func applyCamera(to mapView: NMFMapView, animated: Bool) {
@@ -125,9 +109,49 @@ private struct NaverMapRepresentable: UIViewRepresentable {
     }
 
     final class Coordinator {
-        var previousCoordinate: CLLocationCoordinate2D?
-        var previousRadiusMeters: CLLocationDistance?
-        var previousIsValidOrigin: Bool?
+        private var latest: NaverMapRepresentable?
+        private var applied: NaverMapRepresentable?
+        private var appliedSize: CGSize?
+
+        func update(_ configuration: NaverMapRepresentable, mapView: NMFMapView) {
+            latest = configuration
+            applyLatestCamera(to: mapView)
+        }
+
+        func applyLatestCamera(to mapView: NMFMapView) {
+            let size = mapView.bounds.size
+            // 위치가 먼저 도착해도 버리지 않고, 실제 지도 레이아웃 이후 최신 값으로 적용합니다.
+            guard let latest, mapView.window != nil, size.width > 0, size.height > 0 else { return }
+            let sizeChanged = appliedSize != size
+            let radiusChanged = applied?.radiusMeters != latest.radiusMeters
+                || applied?.circleDiameterPoints != latest.circleDiameterPoints
+            let coordinateChanged = applied?.coordinate.latitude != latest.coordinate.latitude
+                || applied?.coordinate.longitude != latest.coordinate.longitude
+            let originChanged = applied?.isValidOrigin != latest.isValidOrigin
+            guard sizeChanged || radiusChanged || coordinateChanged || originChanged else { return }
+
+            // 첫 배치·크기 변경·Slider는 즉시 맞추고, 이후 위치 변경만 애니메이션합니다.
+            latest.applyCamera(
+                to: mapView,
+                animated: applied != nil && !sizeChanged && !radiusChanged
+            )
+            applied = latest
+            appliedSize = size
+        }
+    }
+
+    final class LayoutAwareMapView: NMFNaverMapView {
+        var onLayout: ((NMFMapView) -> Void)?
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            onLayout?(mapView)
+        }
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            onLayout?(mapView)
+        }
     }
 }
 
