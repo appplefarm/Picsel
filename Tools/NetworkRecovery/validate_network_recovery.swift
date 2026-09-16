@@ -132,8 +132,16 @@ struct Checks {
         vm.swipeRight(on: selected)
         vm.swipeLeft(on: vm.candidates[0])
         await vm.fetchRecommendedPlaces(areaCode: "35", sigunguCode: "11")
-        try check(vm.selectedPlaces == [selected] && vm.candidates.isEmpty, "Return/reconnect preserves selections and dismissed cards")
+        try check(vm.selectedPlaces == [selected] && vm.candidates.isEmpty, "Reconnect preserves selections and dismissed cards")
         try check(StubURLProtocol.requests == 1, "No duplicate API call for loaded recommendations")
+        vm.resetSelection()
+        if case .idle = vm.loadState { count += 1 }
+        else { throw Failed(message: "Returning from confirmation must allow recommendation reload") }
+        try check(vm.selectedPlaces.isEmpty && vm.candidates.isEmpty && vm.totalFetchedCount == 0,
+                  "Returning from confirmation clears previous choices and card count")
+        await vm.fetchRecommendedPlaces(areaCode: "35", sigunguCode: "11")
+        try check(vm.candidates.count == 2 && StubURLProtocol.requests == 2,
+                  "Returning from confirmation fetches a fresh recommendation set once")
         let missingKey = TourAPIManager(session: session, serviceKey: "")
         do {
             _ = try await missingKey.fetchRecommendedPlaces(areaCode: "35", sigunguCode: "11")
@@ -155,6 +163,9 @@ struct Checks {
         service.error = nil
         await vm.loadDirections(origin: origin)
         try check(vm.directions != nil && vm.directionsFailure == nil, "Route retry clears failure")
+        try check(vm.startsFromCurrentLocation && vm.routeOriginCoordinate?.latitude == origin.latitude
+                  && vm.mapMarkers.first?.kind == .origin,
+                  "Resolved origin is retained for the map marker")
         await vm.loadDirections(origin: origin)
         try check(service.requests == 2, "Same successful route not requested twice")
 

@@ -93,15 +93,40 @@ final class TransitSwipeViewModel {
         candidates.removeAll { $0.id == place.id }
     }
     
-    // MARK: - 최종 경로 확정 (DB에 반영)
-    func finalizeWaypoints() {
-        // 확인 화면에서 되돌아와 다시 확정해도 기존 경유지가 중복되지 않게 교체합니다.
+    // MARK: - 선택 초기화
+
+    /// 골라 둔 경유지를 모두 비웁니다.
+    ///
+    /// 경로 확인 화면에서 뒤로 오면 추천 목록을 처음부터 다시 받습니다.
+    /// 이때 앞서 고른 장소가 남아 있으면 새로 고른 장소가 그 위에 쌓여
+    /// 경유지가 10곳, 20곳으로 계속 불어납니다.
+    /// 목록을 새로 받을 때는 선택도 0곳에서 다시 시작하는 것이 맞습니다.
+    func resetSelection() {
+        requestTask?.cancel()
+        requestTask = nil
+        requestID = nil
+        loadState = .idle
+        candidates = []
+        totalFetchedCount = 0
+        selectedPlaces = []
+        thumbnailURLsByStopID = [:]
+        detachWaypoints()
+    }
+
+    /// 여행에 붙어 있던 경유지를 떼어냅니다. 목적지는 그대로 둡니다.
+    private func detachWaypoints() {
         for stop in activeTrip.stops where !stop.isDestination {
             stop.trip = nil
             // 여행이 이미 저장된 뒤라면, 떼어낸 장소가 DB에 떠돌지 않게 함께 지웁니다.
             stop.modelContext?.delete(stop)
         }
         activeTrip.stops.removeAll { !$0.isDestination }
+    }
+
+    // MARK: - 최종 경로 확정 (DB에 반영)
+    func finalizeWaypoints() {
+        // 확인 화면에서 되돌아와 다시 확정해도 기존 경유지가 중복되지 않게 교체합니다.
+        detachWaypoints()
 
         var thumbnails: [UUID: URL] = [:]
 
@@ -160,7 +185,11 @@ final class TransitSwipeViewModel {
         activeTrip.isDone = false
 
         // 완료 화면에서 사용할 픽셀과 진행 중 홈의 도형이 같은 지역을 가리키게 합니다.
-        activeTrip.targetPixelCode = activeTrip.pixelTile?.code
+        // 목적지를 지운 여행은 새로 판정할 좌표가 없습니다.
+        // 그럴 때 nil로 덮어쓰면 목적지를 고를 때 새겨 둔 지역까지 잃어버립니다.
+        if let code = activeTrip.pixelTile?.code {
+            activeTrip.targetPixelCode = code
+        }
 
         // 뒤로 갔다가 다시 들어와도 두 번 등록되지 않게 확인합니다.
         if activeTrip.modelContext == nil {

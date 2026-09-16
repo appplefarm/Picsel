@@ -5,6 +5,7 @@
 //  Created by Jonghyeon Lee on 8/31/26.
 //
 
+import CoreLocation
 import SwiftUI
 internal import _LocationEssentials
 
@@ -15,6 +16,12 @@ struct RouteConfirmationView: View {
     @State private var retryAttempt = 0
     @State private var mapReloadID = 0
 
+    /// 앞 화면에서 정해 준 출발지입니다.
+    ///
+    /// 위치 권한을 거절하고 수동으로 입력한 경우, 이 값이 그 사람의 현재 위치입니다.
+    /// 이때 GPS는 끝내 오지 않으므로 여기서 받지 못하면 출발지가 아예 사라집니다.
+    private let originCoordinate: CLLocationCoordinate2D?
+
     private let onStartNavigation: (Trip) -> Void
 
     init(
@@ -22,6 +29,7 @@ struct RouteConfirmationView: View {
         estimatedDurationMinutes: Int? = nil,
         thumbnailURLsByStopID: [UUID: URL] = [:],
         travelMinutesByStopID: [UUID: Int] = [:],
+        originCoordinate: CLLocationCoordinate2D? = nil,
         initiallyEditing: Bool = false,
         onStartNavigation: @escaping (Trip) -> Void = { _ in }
     ) {
@@ -34,6 +42,7 @@ struct RouteConfirmationView: View {
             )
         )
         _editMode = State(initialValue: initiallyEditing ? .active : .inactive)
+        self.originCoordinate = originCoordinate
         self.onStartNavigation = onStartNavigation
     }
 
@@ -51,7 +60,9 @@ struct RouteConfirmationView: View {
                         stop: stop,
                         thumbnailURL: viewModel.thumbnailURL(for: stop),
                         travelMinutes: viewModel.travelMinutes(before: stop),
+                        kind: viewModel.stopKind(for: stop),
                         position: position(for: stop),
+                        startsFromCurrentLocation: viewModel.startsFromCurrentLocation,
                         showsTimeline: !editMode.isEditing
                     )
                     .listRowInsets(
@@ -84,11 +95,13 @@ struct RouteConfirmationView: View {
             }
         }
         .onAppear {
-            // 권한 요청과 동시에, 위치가 없어도 우선 경로를 그려 둡니다.
-            locationManager.requestCurrentLocation()
+            // 앞 화면에서 수동 출발지를 받았으면 권한을 다시 물을 이유가 없습니다.
+            if originCoordinate == nil {
+                locationManager.requestCurrentLocation()
+            }
         }
-        .task(id: RouteRequestID(timestamp: locationManager.currentLocation?.timestamp, attempt: retryAttempt)) {
-            await viewModel.loadDirections(origin: locationManager.currentLocation?.coordinate)
+        .task(id: RouteRequestID(timestamp: originCoordinate == nil ? locationManager.currentLocation?.timestamp : nil, attempt: retryAttempt)) {
+            await viewModel.loadDirections(origin: resolvedOrigin)
         }
         .onDisappear { viewModel.cancelDirections() }
         .onNetworkRecovery {
@@ -98,6 +111,14 @@ struct RouteConfirmationView: View {
                 retryAttempt += 1
             }
         }
+    }
+
+    /// 실제로 경로 계산에 쓸 출발지입니다.
+    ///
+    /// 앞 화면이 정해 준 값을 먼저 씁니다. 홈에서 이미 "수동 입력 > GPS" 순서로 고른 값이라
+    /// 여기서 GPS를 다시 우선하면 두 화면의 출발지가 달라집니다.
+    private var resolvedOrigin: CLLocationCoordinate2D? {
+        originCoordinate ?? locationManager.currentLocation?.coordinate
     }
 
     private struct RouteRequestID: Equatable {

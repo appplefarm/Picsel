@@ -59,6 +59,15 @@ nonisolated enum PixelRegionLocator {
         _ = regions
     }
 
+    /// 저장해 둔 코드로 픽셀을 되찾습니다.
+    ///
+    /// 여행에서 최종 목적지를 지우면 좌표가 사라져 tile(latitude:longitude:)로는
+    /// 지역을 알 수 없습니다. 그때 Trip에 남아 있는 targetPixelCode로 복원합니다.
+    static func tile(code: String) -> PixelTile? {
+        guard let region = regions.first(where: { $0.code == code }) else { return nil }
+        return PixelTile(code: region.code, name: region.name)
+    }
+
     /// 좌표가 속한 픽셀을 찾습니다.
     ///
     /// 1. 폴리곤 안에 들어가는 지역을 먼저 찾고,

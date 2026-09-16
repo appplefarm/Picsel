@@ -6,6 +6,7 @@
 //
 
 
+import CoreLocation
 import SwiftData
 import SwiftUI
 
@@ -14,6 +15,9 @@ struct TransitSwipeView: View {
     @Environment(AppRouter.self) private var router
 
     @State var viewModel: TransitSwipeViewModel
+    /// 홈에서 정한 출발지입니다. 수동으로 입력한 위치도 여기로 들어옵니다.
+    let originCoordinate: CLLocationCoordinate2D?
+
     @State private var isShowingRouteConfirmation = false
     @State private var tripStartErrorMessage: String?
     @State private var showSwipeToast = false
@@ -113,7 +117,8 @@ struct TransitSwipeView: View {
         .navigationDestination(isPresented: $isShowingRouteConfirmation) {
             RouteConfirmationView(
                 trip: viewModel.activeTrip,
-                thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID
+                thumbnailURLsByStopID: viewModel.thumbnailURLsByStopID,
+                originCoordinate: originCoordinate
             ) { _ in
                 // 경로가 확정된 여행은 여기서 저장합니다.
                 // 여행 시작 전 강제 종료 시에도 준비 홈으로 복원되도록 준비 상태 ID를 함께 저장합니다.
@@ -152,6 +157,12 @@ struct TransitSwipeView: View {
             }
             , alignment: .bottom
         )
+        .onChange(of: isShowingRouteConfirmation) { wasShowing, isShowing in
+            guard wasShowing, !isShowing else { return }
+            // 경로 확인 화면에서 돌아왔을 때만 선택을 비우고 추천을 다시 받습니다.
+            viewModel.resetSelection()
+            retryAttempt += 1
+        }
         .onNetworkRecovery {
             guard !isShowingRouteConfirmation,
                   case .failed(let failure) = viewModel.loadState,
@@ -209,6 +220,10 @@ struct TransitSwipeView: View {
     viewModel.loadState = .loaded
     
     return NavigationStack {
-        TransitSwipeView(viewModel: viewModel)
+        TransitSwipeView(
+            viewModel: viewModel,
+            // 포항 시내를 출발지로 가정합니다.
+            originCoordinate: CLLocationCoordinate2D(latitude: 36.019, longitude: 129.343)
+        )
     }
 }
