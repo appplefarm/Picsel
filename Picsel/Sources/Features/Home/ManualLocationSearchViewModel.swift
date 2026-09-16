@@ -22,6 +22,11 @@ final class ManualLocationSearchViewModel: NSObject {
         self.completer.delegate = self
         // 장소와 주소 모두 검색할 수 있도록 결과 타입 설정
         self.completer.resultTypes = [.address, .pointOfInterest]
+        
+        // 대한민국 전체를 대략적으로 포함하는 범위를 주어 국내 결과를 우선적으로 검색하도록 바이어스(bias) 설정
+        let koreaCenter = CLLocationCoordinate2D(latitude: 36.5, longitude: 127.5)
+        let koreaSpan = MKCoordinateSpan(latitudeDelta: 6.0, longitudeDelta: 6.0)
+        self.completer.region = MKCoordinateRegion(center: koreaCenter, span: koreaSpan)
     }
     
     func selectLocation(completion: MKLocalSearchCompletion) async -> (CLLocation, String)? {
@@ -34,6 +39,12 @@ final class ManualLocationSearchViewModel: NSObject {
         do {
             let response = try await search.start()
             if let mapItem = response.mapItems.first {
+                // 국내 장소만 선택 가능하도록 차단
+                if mapItem.placemark.isoCountryCode != "KR" {
+                    self.errorMessage = "국내 지역만 선택 가능합니다."
+                    return nil
+                }
+                
                 let name = mapItem.name ?? completion.title
                 let location = mapItem.placemark.location ?? CLLocation(
                     latitude: mapItem.placemark.coordinate.latitude,
