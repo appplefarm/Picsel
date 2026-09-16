@@ -11,10 +11,21 @@ struct HomeView: View {
     @State private var viewModel = HomeViewModel()
     @State private var locationManager = CurrentLocationManager()
     @State private var confirmedDestination: PhotoDestination?
+    @State private var photoExploreRequest: PhotoExploreRequest?
+    @State private var isLocationAlertPresented = false
     @State private var isSettingsPresented = false
 
     private var mapCoordinate: CLLocationCoordinate2D {
         locationManager.currentLocation?.coordinate ?? viewModel.fallbackCoordinate
+    }
+
+    /// 지도 표시용 기본 좌표를 실제 추천 기준 위치로 오인하지 않습니다.
+    private var recommendationOrigin: CLLocation? {
+        guard locationManager.isLocationAuthorized,
+              let location = locationManager.currentLocation,
+              location.horizontalAccuracy >= 0,
+              CLLocationCoordinate2DIsValid(location.coordinate) else { return nil }
+        return location
     }
 
     private var mapLocationName: String {
@@ -36,15 +47,15 @@ struct HomeView: View {
                     .frame(height: HomeStyle.headerHeight)
                     .padding(.horizontal, HomeStyle.horizontalPadding)
                     .padding(.bottom, 12)
-
+                
                 mapSection
                     .frame(maxWidth: .infinity)
                     .frame(height: HomeStyle.mapHeight(for: proxy.size.height))
-
+                
                 radiusSlider
                     .padding(.horizontal, HomeStyle.horizontalPadding)
                     .padding(.top, 16)
-
+                
                 destinationButton
                     .padding(.horizontal, HomeStyle.horizontalPadding)
                     .padding(.top, 20)
@@ -71,6 +82,31 @@ struct HomeView: View {
                     )
                 )
             }
+        }
+        .navigationDestination(item: $photoExploreRequest) { request in
+            let origin = request.originLocation
+
+            PhotoExploreView(
+                service: PhotoDestinationServiceFactory.make(
+                    originLocation: origin,
+                    selectedRadiusMeters: request.radiusMeters
+                ),
+                sourceNotice: PhotoDestinationServiceFactory.sourceNotice,
+                originLocation: origin
+            ) { destination in
+                guard destination.canSelectAsDestination else { return }
+                confirmedDestination = destination
+            }
+        }
+        .alert(
+            "위치를 확인할 수 없음",
+            isPresented: $isLocationAlertPresented
+        ) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text(
+                "현재 위치를 확인한 뒤 다시 시도해주세요. 위치 권한이 꺼져 있다면 설정에서 허용해주세요."
+            )
         }
         .navigationDestination(isPresented: $isSettingsPresented) {
             SettingsView()
@@ -167,15 +203,20 @@ struct HomeView: View {
     }
 
     private var destinationButton: some View {
-        NavigationLink {
-            PhotoExploreView(
-                service: PhotoDestinationServiceFactory.make(),
-                sourceNotice: PhotoDestinationServiceFactory.sourceNotice,
-                originLocation: locationManager.isLocationAuthorized ? locationManager.currentLocation : nil
-            ) { destination in
-                guard destination.canSelectAsDestination else { return }
-                confirmedDestination = destination
+        Button {
+            guard let origin = recommendationOrigin else {
+                locationManager.requestCurrentLocation()
+                isLocationAlertPresented = true
+                return
             }
+
+            photoExploreRequest = PhotoExploreRequest(
+                originLocation: origin,
+                radiusMeters: max(
+                    viewModel.currentRadiusMeters,
+                    PhotoRecommendationPolicy.minimumRadiusMeters
+                )
+            )
         } label: {
             ZStack {
                 // 텍스트는 ZStack의 기본 속성으로 버튼 정중앙에 위치
@@ -220,6 +261,24 @@ struct HomeView: View {
         stop.trip = trip
         trip.stops.append(stop)
         return trip
+    }
+}
+
+/// 목적지 고르기 버튼을 누른 순간의 위치와 반경을 고정해 다음 화면에 전달합니다.
+private struct PhotoExploreRequest: Hashable, Identifiable {
+    let id = UUID()
+    let latitude: CLLocationDegrees
+    let longitude: CLLocationDegrees
+    let radiusMeters: CLLocationDistance
+
+    init(originLocation: CLLocation, radiusMeters: CLLocationDistance) {
+        latitude = originLocation.coordinate.latitude
+        longitude = originLocation.coordinate.longitude
+        self.radiusMeters = radiusMeters
+    }
+
+    var originLocation: CLLocation {
+        CLLocation(latitude: latitude, longitude: longitude)
     }
 }
 

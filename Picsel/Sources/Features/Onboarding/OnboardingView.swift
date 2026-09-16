@@ -18,14 +18,14 @@ struct OnboardingView: View {
                     .ignoresSafeArea()
 
                 OnboardingLogo()
-                    .padding(.top, proxy.size.height * 0.38)
+                    .padding(.top, proxy.size.height * OnboardingStyle.logoTopRatio)
 
                 Text("사진으로 고르고,\n여행을 떠나고,\n픽셀로 남겨요.")
                     .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(OnboardingStyle.subtitleColor)
-                    .lineSpacing(10)
-                    .padding(.leading, proxy.size.width * 0.345)
-                    .padding(.top, proxy.size.height * 0.515)
+                    .foregroundStyle(OnboardingStyle.subtitleGradient)
+                    .lineSpacing(6)
+                    .padding(.leading, proxy.size.width * OnboardingStyle.subtitleLeadingRatio)
+                    .padding(.top, proxy.size.height * OnboardingStyle.subtitleTopRatio)
                     .opacity(isShowingSlogan ? 1 : 0)
                     .offset(y: reduceMotion || isShowingSlogan ? 0 : 18)
             }

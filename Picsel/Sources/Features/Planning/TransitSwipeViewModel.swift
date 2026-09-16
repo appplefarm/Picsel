@@ -11,12 +11,15 @@ import SwiftData
 
 @Observable
 final class TransitSwipeViewModel {
+    static let maximumRecommendationCount = 10
+
     var activeTrip: Trip
     
-    var candidates: [PlaceDTO] = []       // API로 받아올 추천 장소 최대 10곳
+    var candidates: [PlaceDTO] = []       // 국문 관광정보 API로 받아올 추천 장소 최대 10곳
     var totalFetchedCount: Int = 0        // 10장 중 몇장째인지 계산하기 위한 전체 개수
     var selectedPlaces: [PlaceDTO] = []   // 오른쪽으로 스와이프(선택)한 장소들
     var isLoading: Bool = false
+    var hasLoadedRecommendations: Bool = false
 
     /// 경로 확인 화면에 넘길 장소 사진입니다.
     /// RouteStop 모델에는 사진 필드가 없어 화면 사이에서만 들고 다닙니다.
@@ -30,24 +33,31 @@ final class TransitSwipeViewModel {
         self.destinationPhotoURL = destinationPhotoURL
     }
     
-    // MARK: - API 통신 (한국관광공사 지역기반 API)
+    // MARK: - 목적지와 동일한 시·군·구의 일반 관광지 추천
     func fetchRecommendedPlaces(areaCode: String, sigunguCode: String) async {
         isLoading = true
+        hasLoadedRecommendations = false
         
         do {
-            let fetchedData = try await TourAPIManager.shared.fetchRecommendedPlaces(areaCode: areaCode, sigunguCode: sigunguCode)
-            
-            // UI 스레드(Main Actor)에서 상태 업데이트
-            await MainActor.run {
-                self.candidates = fetchedData
-                self.totalFetchedCount = fetchedData.count
-                self.isLoading = false
-            }
+            let fetchedData = try await TourAPIManager.shared.fetchRecommendedPlaces(
+                areaCode: areaCode,
+                sigunguCode: sigunguCode
+            )
+            try Task.checkCancellation()
+
+            candidates = fetchedData
+            totalFetchedCount = fetchedData.count
+            hasLoadedRecommendations = true
+            isLoading = false
+        } catch is CancellationError {
+            isLoading = false
+            return
         } catch {
-            print("API 통신 에러: \(error.localizedDescription)")
-            await MainActor.run {
-                self.isLoading = false
-            }
+            print("국문 관광정보 추천 통신 에러: \(error.localizedDescription)")
+            candidates = []
+            totalFetchedCount = 0
+            hasLoadedRecommendations = true
+            isLoading = false
         }
     }
     
@@ -114,18 +124,20 @@ final class TransitSwipeViewModel {
         thumbnailURLsByStopID = thumbnails
     }
 
-    // MARK: - 여행 시작 (SwiftData 등록)
+    // MARK: - 여행 계획 저장 (SwiftData 등록)
 
-    /// 여행을 SwiftData에 등록하고 시작 시각을 남깁니다.
+    /// 확정한 여행 계획을 SwiftData에 준비 상태로 등록합니다.
     ///
     /// 여기서 저장해 두지 않으면 실제 여행 중(몇 시간)에 앱이 메모리에서 내려갈 때
     /// 목적지·경유지·경로가 통째로 사라집니다.
-    /// 목적지를 눌러보기만 한 여행이 쌓이지 않도록, 경로를 확정한 이 시점에 넣습니다.
+    /// `startTime == nil`은 준비 중, 값이 있으면 진행 중이라는 상태로 사용합니다.
     @discardableResult
-    func startTrip(in context: ModelContext) -> Bool {
-        if activeTrip.startTime == nil {
-            activeTrip.startTime = Date()
-        }
+    func saveTripPlan(in context: ModelContext) -> Bool {
+        // 경로 확정은 아직 실제 여행 시작이 아닙니다.
+        // 이 값들이 SwiftData에 저장되어 앱 재실행 시 준비 화면으로 판별됩니다.
+        activeTrip.startTime = nil
+        activeTrip.endTime = nil
+        activeTrip.isDone = false
 
         // 완료 화면에서 사용할 픽셀과 진행 중 홈의 도형이 같은 지역을 가리키게 합니다.
         activeTrip.targetPixelCode = activeTrip.pixelTile?.code

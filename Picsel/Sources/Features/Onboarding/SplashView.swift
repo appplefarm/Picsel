@@ -13,7 +13,7 @@ struct SplashView: View {
                     .ignoresSafeArea()
 
                 OnboardingLogo()
-                    .padding(.top, proxy.size.height * 0.38)
+                    .padding(.top, proxy.size.height * OnboardingStyle.logoTopRatio)
             }
         }
         .accessibilityElement(children: .combine)
@@ -31,6 +31,10 @@ struct OnboardingLogo: View {
 }
 
 enum OnboardingStyle {
+    static let logoTopRatio = 0.38
+    static let subtitleTopRatio = 0.515
+    static let subtitleLeadingRatio = 0.345
+
     static let backgroundGradient = LinearGradient(
         stops: [
             .init(color: Color(hex: 0x54CA8B), location: 0.6875),
@@ -39,8 +43,15 @@ enum OnboardingStyle {
         startPoint: .top,
         endPoint: .bottom
     )
-    static let logoColor = Color(hex: 0xF2FDF8)
-    static let subtitleColor = Color(hex: 0x00725D)
+    static let logoColor = Color(hex: 0xFBFFFD)
+    static let subtitleGradient = LinearGradient(
+        stops: [
+            .init(color: Color(hex: 0x00725D), location: 0.33654),
+            .init(color: Color(hex: 0x267B5E), location: 1)
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
 }
 
 #Preview {

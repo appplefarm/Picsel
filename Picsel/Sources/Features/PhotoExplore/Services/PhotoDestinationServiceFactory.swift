@@ -5,6 +5,7 @@
 //  Created by Jonghyeon Lee on 9/10/26.
 //
 
+import CoreLocation
 import Foundation
 
 /// 앱의 데이터 공급처 선택은 이곳에서만 합니다.
@@ -15,7 +16,10 @@ import Foundation
 /// 목업은 `PICSEL_PHOTO_SOURCE` 환경변수로만 켭니다.
 /// (Xcode Scheme → Run → Arguments → Environment Variables)
 enum PhotoDestinationServiceFactory {
-    static func make() -> any PhotoDestinationService {
+    static func make(
+        originLocation: CLLocation? = nil,
+        selectedRadiusMeters: CLLocationDistance = PhotoRecommendationPolicy.minimumRadiusMeters
+    ) -> any PhotoDestinationService {
 #if DEBUG
         switch source {
         case "empty":
@@ -28,7 +32,10 @@ enum PhotoDestinationServiceFactory {
             break
         }
 #endif
-        return LivePhotoDestinationService()
+        return LivePhotoDestinationService(
+            originLocation: originLocation,
+            selectedRadiusMeters: selectedRadiusMeters
+        )
     }
 
     static var sourceNotice: String? {

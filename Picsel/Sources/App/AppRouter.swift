@@ -39,6 +39,10 @@ final class AppRouter {
     /// 강제 종료 후에도 준비 화면을 복원할 수 있도록 UserDefaults에 함께 저장합니다.
     private(set) var tripReadyTripID: UUID?
 
+    /// 저장 직후 SwiftData `@Query`가 갱신되기 전에도 준비 홈을 바로 표시하기 위한
+    /// 현재 앱 실행 동안의 여행 참조입니다. 앱 재실행 시에는 SwiftData에서 복원합니다.
+    private(set) var sessionTrip: Trip?
+
     init() {
         tripReadyTripID = UserDefaults.standard
             .string(forKey: Self.tripReadyTripIDKey)
@@ -46,20 +50,23 @@ final class AppRouter {
     }
 
     /// 경로 확정 직후 여행 준비 화면을 홈 탭의 루트로 보여 줍니다.
-    func showTripReadyHome(for tripID: UUID) {
-        updateTripReadyTripID(tripID)
+    func showTripReadyHome(for trip: Trip) {
+        sessionTrip = trip
+        updateTripReadyTripID(trip.id)
         homeStackID = UUID()
         selectedTab = .home
     }
 
     /// 준비 화면에서 여행을 시작하면 이후 홈은 진행 중 상태로 표시합니다.
     func markTripAsStarted(_ tripID: UUID) {
-        guard tripReadyTripID == tripID else { return }
+        // 실제 준비/진행 상태는 SwiftData의 Trip.startTime으로 복원합니다.
+        // UserDefaults의 ID는 즉시 화면을 전환하기 위한 보조 값이므로 시작 시 정리합니다.
         updateTripReadyTripID(nil)
     }
 
     /// 여행 흐름을 닫고 지정한 탭의 첫 화면으로 돌아갑니다.
     func finishTripFlow(returningTo tab: Tab) {
+        sessionTrip = nil
         updateTripReadyTripID(nil)
         homeStackID = UUID()
         selectedTab = tab

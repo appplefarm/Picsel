@@ -9,10 +9,11 @@
 /* Begin PBXBuildFile section */
 		0C1C3EE6304CC61C001A4A24 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = 0C1C3EE5304CC61C001A4A24 /* NMapsMap */; };
 		4137A4D830459E08008474B6 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 4137A4D730459E08008474B6 /* GoogleMaps */; };
+		41ACC5AF305AA61400D7BC60 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 41ACC5AE305AA61400D7BC60 /* Secrets.xcconfig */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0C3356A3304715C400282041 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		41ACC5AE305AA61400D7BC60 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		639548F1302DE738001B48E6 /* Picsel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Picsel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0DE00000000000000000001 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		C0DE00000000000000000002 /* Secrets.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.example.xcconfig; sourceTree = "<group>"; };
@@ -63,7 +64,7 @@
 				C0DE00000000000000000001 /* Base.xcconfig */,
 				C0DE00000000000000000004 /* Info.plist */,
 				C0DE00000000000000000002 /* Secrets.example.xcconfig */,
-				0C3356A3304715C400282041 /* Secrets.xcconfig */,
+				41ACC5AE305AA61400D7BC60 /* Secrets.xcconfig */,
 			);
 			path = Configs;
 			sourceTree = "<group>";
@@ -139,6 +140,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				41ACC5AF305AA61400D7BC60 /* Secrets.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

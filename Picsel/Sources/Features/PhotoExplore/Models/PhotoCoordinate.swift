@@ -7,6 +7,7 @@
 
 import CoreLocation
 import Foundation
+import OSLog
 
 /// 사진 한 장을 어느 API에서 가져와야 하는지입니다.
 ///
@@ -49,6 +50,11 @@ nonisolated struct PhotoCoordinate: Codable, Sendable, Identifiable {
 /// CloudKit에서 받은 좌표 데이터 한 벌입니다.
 nonisolated struct PhotoCoordinateCatalog: Codable, Sendable {
 
+    private static let logger = Logger(
+        subsystem: "com.applefarm.picsel",
+        category: "PhotoCatalogDecode"
+    )
+
     let schemaVersion: Int
     let photos: [PhotoCoordinate]
 
@@ -64,9 +70,36 @@ nonisolated struct PhotoCoordinateCatalog: Codable, Sendable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        let decodedPhotos = try container.decode(
+            [LossyPhotoCoordinate].self,
+            forKey: .photos
+        )
+        let photos = decodedPhotos.compactMap { entry -> PhotoCoordinate? in
+            guard let raw = entry.value else {
+                Self.logger.warning("형식이 잘못된 사진 좌표 항목을 제외합니다.")
+                return nil
+            }
+            guard let source = PhotoAPISource(rawValue: raw.source) else {
+                Self.logger.warning(
+                    "알 수 없는 사진 출처를 제외합니다: \(raw.source, privacy: .public)"
+                )
+                return nil
+            }
+
+            return PhotoCoordinate(
+                photoID: raw.photoID,
+                source: source,
+                placeName: raw.placeName,
+                address: raw.address,
+                latitude: raw.latitude,
+                longitude: raw.longitude,
+                regionCode: raw.regionCode
+            )
+        }
+
         self.init(
             schemaVersion: try container.decode(Int.self, forKey: .schemaVersion),
-            photos: try container.decode([PhotoCoordinate].self, forKey: .photos)
+            photos: photos
         )
     }
 
@@ -92,5 +125,24 @@ nonisolated struct PhotoCoordinateCatalog: Codable, Sendable {
     /// 이 출처에서 우리가 쓸 사진 ID 목록입니다. API 응답을 거를 때 씁니다.
     func photoIDs(of source: PhotoAPISource) -> Set<String> {
         Set(photos.lazy.filter { $0.source == source }.map(\.photoID))
+    }
+}
+
+nonisolated private struct RawPhotoCoordinate: Decodable {
+    let photoID: String
+    let source: String
+    let placeName: String
+    let address: String
+    let latitude: Double
+    let longitude: Double
+    let regionCode: String
+}
+
+/// 한 항목의 source나 필드가 잘못돼도 나머지 카탈로그는 계속 사용할 수 있게 합니다.
+nonisolated private struct LossyPhotoCoordinate: Decodable {
+    let value: RawPhotoCoordinate?
+
+    init(from decoder: Decoder) throws {
+        value = try? RawPhotoCoordinate(from: decoder)
     }
 }
