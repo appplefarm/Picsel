@@ -14,6 +14,11 @@ struct PicselApp: App {
     private let modelContainer: ModelContainer
 
     init() {
+#if DEBUG
+        print("[Picsel] Debug 실행 중")
+#else
+        print("[Picsel] Release 실행 중")
+#endif
         guard let apiKey = Bundle.main.object(
             forInfoDictionaryKey: "GOOGLE_MAPS_API_KEY"
         ) as? String,
