@@ -85,7 +85,7 @@ struct HomeView: View {
         }
         .navigationDestination(item: $photoExploreRequest) { request in
             let origin = request.originLocation
-            
+
             PhotoExploreView(
                 service: PhotoDestinationServiceFactory.make(
                     originLocation: origin,
@@ -98,14 +98,19 @@ struct HomeView: View {
                 confirmedDestination = destination
             }
         }
-        .alert("위치를 확인할 수 없음", isPresented: $isLocationAlertPresented) {
+        .alert(
+            "위치를 확인할 수 없음",
+            isPresented: $isLocationAlertPresented
+        ) {
             Button("확인", role: .cancel) {}
         } message: {
-            Text("현재 위치를 확인한 뒤 다시 시도해주세요. 위치 권한이 꺼져 있다면 설정에서 허용해주세요.")
-                .navigationDestination(isPresented: $isSettingsPresented) {
-                    SettingsView()
-                        .toolbar(.hidden, for: .tabBar)
-                }
+            Text(
+                "현재 위치를 확인한 뒤 다시 시도해주세요. 위치 권한이 꺼져 있다면 설정에서 허용해주세요."
+            )
+        }
+        .navigationDestination(isPresented: $isSettingsPresented) {
+            SettingsView()
+                .toolbar(.hidden, for: .tabBar)
         }
     }
 
