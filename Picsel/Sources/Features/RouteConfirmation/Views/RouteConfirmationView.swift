@@ -13,6 +13,10 @@ struct RouteConfirmationView: View {
     @State private var viewModel: RouteConfirmationViewModel
     @State private var editMode: EditMode
     @State private var locationManager = CurrentLocationManager()
+    @Environment(\.dismiss) private var dismiss
+    /// 프리뷰에는 라우터가 없으므로 옵셔널로 받습니다. 없으면 화면을 닫는 것으로 대신합니다.
+    @Environment(AppRouter.self) private var router: AppRouter?
+    @State private var isEmptyRouteAlertPresented = false
     @State private var retryAttempt = 0
     @State private var mapReloadID = 0
 
@@ -104,6 +108,12 @@ struct RouteConfirmationView: View {
             await viewModel.loadDirections(origin: resolvedOrigin)
         }
         .onDisappear { viewModel.cancelDirections() }
+        .alert("장소를 모두 지웠어요", isPresented: $isEmptyRouteAlertPresented) {
+            Button("홈으로 돌아가기", role: .destructive) { leaveTripFlow() }
+            Button("취소", role: .cancel) { viewModel.undoEmptyingRemoval() }
+        } message: {
+            Text("경로에 남은 장소가 없어요.\n홈으로 돌아가면 지금 고른 여행은 사라집니다.")
+        }
         .onNetworkRecovery {
             // SDK의 지도 타일과 경로 API는 별개입니다. 연결 복구 시 지도만 별도로 다시 만듭니다.
             mapReloadID = NetworkRecovery.shared.generation
@@ -129,13 +139,17 @@ struct RouteConfirmationView: View {
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("최종 경로가 완성되었어요")
+                Text(viewModel.isRouteEmpty ? "경로에 남은 장소가 없어요" : "최종 경로가 완성되었어요")
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(.black)
 
-                Text("일정을 확인하고 편집을 이용해 자유롭게 수정해보세요")
-                    .font(.system(size: 13))
-                    .foregroundStyle(PicselColor.subtitle)
+                Text(
+                    viewModel.isRouteEmpty
+                        ? "장소를 다시 골라야 여행 계획표를 만들 수 있어요"
+                        : "일정을 확인하고 편집을 이용해 자유롭게 수정해보세요"
+                )
+                .font(.system(size: 13))
+                .foregroundStyle(PicselColor.subtitle)
             }
             .padding(.vertical, 10)
             .padding(.bottom, 14)
@@ -168,17 +182,21 @@ struct RouteConfirmationView: View {
             HStack {
                 Spacer()
 
-                Button(editMode.isEditing ? "완료" : "편집") {
-                    toggleEditing()
+                // 편집 중에는 빠져나갈 길이 있어야 하므로 "완료"는 항상 둡니다.
+                // 다만 남은 장소가 없을 때 "편집"은 누를 이유가 없어 감춥니다.
+                if editMode.isEditing || !viewModel.isRouteEmpty {
+                    Button(editMode.isEditing ? "완료" : "편집") {
+                        toggleEditing()
+                    }
+                    .font(.system(size: 12))
+                    .foregroundStyle(PicselColor.editLabel)
+                    .buttonStyle(.plain)
+                    .accessibilityHint(
+                        editMode.isEditing
+                            ? "변경한 경유지 순서를 저장합니다"
+                            : "경유지를 삭제하거나 순서를 변경합니다"
+                    )
                 }
-                .font(.system(size: 12))
-                .foregroundStyle(PicselColor.editLabel)
-                .buttonStyle(.plain)
-                .accessibilityHint(
-                    editMode.isEditing
-                        ? "변경한 경유지 순서를 저장합니다"
-                        : "경유지를 삭제하거나 순서를 변경합니다"
-                )
             }
             .padding(.top, 12)
         }
@@ -227,11 +245,19 @@ struct RouteConfirmationView: View {
         .accessibilityLabel("경로를 계산하고 있어요")
     }
 
+    /// 빈 경로에서는 계획표를 만들 수 없으므로, 버튼이 다시 고르러 가는 길이 됩니다.
+    ///
+    /// 비활성화만 하면 사용자가 아무것도 할 수 없는 화면에 갇힙니다.
+    /// 여기서 할 수 있는 유일한 일이 "장소 다시 고르기"라면 그것을 버튼으로 둡니다.
     private var startNavigationButton: some View {
         Button {
-            onStartNavigation(viewModel.activeTrip)
+            if viewModel.isRouteEmpty {
+                dismiss()
+            } else {
+                onStartNavigation(viewModel.activeTrip)
+            }
         } label: {
-            Text("이대로 여행 계획표 만들기")
+            Text(viewModel.isRouteEmpty ? "장소 다시 고르기" : "이대로 여행 계획표 만들기")
                 .font(.system(size: 16, weight: .bold))
         }
         .buttonStyle(.primaryGradient)
@@ -256,6 +282,22 @@ struct RouteConfirmationView: View {
     private func deleteStops(at offsets: IndexSet) {
         guard editMode.isEditing else { return }
         viewModel.removeStops(at: offsets)
+
+        // 빈 화면에 도착한 뒤에 설명하는 것보다, 마지막 하나가 사라지는 순간에
+        // 되돌릴 기회를 주는 편이 낫습니다.
+        if viewModel.isRouteEmpty {
+            isEmptyRouteAlertPresented = true
+        }
+    }
+
+    /// 여행 만들기를 그만두고 홈 첫 화면으로 돌아갑니다.
+    private func leaveTripFlow() {
+        guard let router else {
+            // 라우터가 없는 환경(프리뷰 등)에서는 최소한 이 화면은 빠져나갑니다.
+            dismiss()
+            return
+        }
+        router.finishTripFlow(returningTo: .home)
     }
 
     private func moveStops(from offsets: IndexSet, to destination: Int) {
@@ -334,6 +376,16 @@ private enum RouteConfirmationPreviewData {
             thumbnails
         )
     }
+
+    /// 편집에서 장소를 모두 지운 여행입니다.
+    ///
+    /// 거리 값을 일부러 넣어 둡니다. 장소가 없는데도 지난 경로의 숫자가
+    /// 요약에 새어 나오지 않는지 확인하는 것이 이 프리뷰의 목적입니다.
+    static func makeEmpty() -> Trip {
+        let trip = Trip(title: "빈 여행")
+        trip.totalDistanceMeters = 124_000
+        return trip
+    }
 }
 
 #Preview("최종 경로") {
@@ -345,6 +397,15 @@ private enum RouteConfirmationPreviewData {
             estimatedDurationMinutes: 230,
             thumbnailURLsByStopID: data.thumbnails,
             travelMinutesByStopID: data.travelMinutes
+        )
+    }
+}
+
+#Preview("모든 장소 삭제") {
+    NavigationStack {
+        RouteConfirmationView(
+            trip: RouteConfirmationPreviewData.makeEmpty(),
+            estimatedDurationMinutes: 230
         )
     }
 }
