@@ -24,7 +24,12 @@ struct PhotoInteractionSettings: Equatable {
     var maximumDragCoast = 160.0
     var zoomMomentumDuration = 0.080
     var maximumZoomCoast = 0.22
-    var settlingDuration = 0.40
+    var settlingDuration = 0.55
+
+    // First entrance and connected-photo snapping
+    var initialZoomDuration: Double = 4.0
+    var initialZoomDistance = 0.80
+    var snapDragThreshold = 32.0
 
     // Magnet and appearance
     var magnetDepthTolerance = 0.80

@@ -10,8 +10,8 @@ import Foundation
 /// 2D 배치값을 RealityKit 공간으로 옮길 때 사용하는 공통 기준입니다.
 enum PhotoSpace {
     static let focusDistance: Float = 3
-    /// 시작·화면 맞춤은 초점 위치보다 카메라를 15% 뒤로 두어 공간을 넓게 보여줍니다.
-    static let initialCameraDistance = focusDistance * 1.15
+    /// 시작·화면 맞춤은 초점 위치보다 카메라를 50% 뒤로 두어 공간을 넓게 보여줍니다.
+    static let initialCameraDistance = focusDistance * 1.50
     static let sharpDepthTolerance: Float = 0.25
     static let focusFadeRange: Float = 1.55
     /// 초점 사진의 긴 변은 화면의 짧은 변 기준 70%로 통일합니다.

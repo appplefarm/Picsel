@@ -12,6 +12,8 @@ import Foundation
 /// 선택 결과로는 이 타입이 아닌 `PhotoDestination`을 전달합니다.
 struct SpatialPlaceItem: Identifiable, Hashable {
     let destination: PhotoDestination
+    /// 사진 ID와 별개인 1부터 시작하는 배치 번호입니다. 일부 사진이 빠져도 번호는 유지합니다.
+    let placementNumber: Int
     private let placement: SpatialPlacePlacement
 
     var id: PhotoDestination.ID { destination.id }
@@ -41,8 +43,8 @@ extension SpatialPlaceItem {
     static func compose(
         from destinations: [PhotoDestination]
     ) -> [SpatialPlaceItem] {
-        zip(destinations.prefix(layout.count), layout).map {
-            SpatialPlaceItem(destination: $0.0, placement: $0.1)
+        zip(destinations.prefix(layout.count), layout).enumerated().map { index, pair in
+            SpatialPlaceItem(destination: pair.0, placementNumber: index + 1, placement: pair.1)
         }
     }
 
