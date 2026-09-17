@@ -39,6 +39,7 @@ struct PicselApp: App {
     var body: some Scene {
         WindowGroup {
             AppRootView()
+                .preferredColorScheme(.light)
         }
         .modelContainer(modelContainer)
     }
