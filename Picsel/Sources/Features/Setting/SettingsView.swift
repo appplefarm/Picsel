@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(\.openURL) private var openURL
     @State private var isNavigationAppPresented = false
     @State private var presentedSheet: SettingsSheet?
 
@@ -100,6 +101,19 @@ private extension SettingsView {
                     description: "연동 서비스와 데이터 출처"
                 ) {
                     presentedSheet = .dataSource
+                }
+
+                Divider()
+                    .padding(.leading, 20)
+                    .padding(.trailing, 28)
+
+                SettingsRow(
+                    icon: "envelope",
+                    title: "문의하기",
+                    description: AppContact.supportEmail
+                ) {
+                    guard let url = AppContact.supportMailURL else { return }
+                    openURL(url)
                 }
 
                 Divider()

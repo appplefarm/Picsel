@@ -2,15 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UIAppFonts</key>
-	<array>
-		<string>Pretendard-Regular.otf</string>
-		<string>Pretendard-Medium.otf</string>
-		<string>Pretendard-SemiBold.otf</string>
-		<string>Pretendard-Bold.otf</string>
-	</array>
-	<key>GOOGLE_MAPS_API_KEY</key>
-	<string>$(GOOGLE_MAPS_API_KEY)</string>
 	<key>KAKAO_REST_API_KEY</key>
 	<string>$(KAKAO_REST_API_KEY)</string>
 	<key>LSApplicationQueriesSchemes</key>
@@ -30,5 +21,12 @@
 	<string>$(TOUR_API_SERVICE_KEY_ENTRY)</string>
 	<key>TOUR_API_SERVICE_KEY_WINNERS</key>
 	<string>$(TOUR_API_SERVICE_KEY_WINNERS)</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Pretendard-Regular.otf</string>
+		<string>Pretendard-Medium.otf</string>
+		<string>Pretendard-SemiBold.otf</string>
+		<string>Pretendard-Bold.otf</string>
+	</array>
 </dict>
 </plist>

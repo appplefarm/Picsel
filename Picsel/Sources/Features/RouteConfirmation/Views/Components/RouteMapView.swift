@@ -34,7 +34,6 @@ struct RouteMapMarker: Equatable {
 
 /// 경로 화면의 지도입니다.
 ///
-/// 홈 화면은 Google 지도를 쓰지만, Google은 국내에서 자동차 길찾기를 제공하지 않아
 /// 경로 화면만 네이버 지도로 그립니다. 경로 데이터와 지도를 같은 업체로 맞추면
 /// 좌표가 어긋나지 않고 약관 문제도 없습니다.
 struct RouteMapView: UIViewRepresentable {
