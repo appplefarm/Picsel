@@ -17,11 +17,11 @@ struct RouteMapPlaceholderView: View {
             .overlay {
                 VStack(spacing: 8) {
                     Image(systemName: "map")
-                        .font(.system(size: 28))
+                        .font(PicselFont.title01)
                         .foregroundStyle(.tertiary)
 
                     Text("지도에 표시할 경로가 없어요")
-                        .font(.footnote)
+                        .font(PicselFont.body02)
                         .foregroundStyle(.secondary)
                 }
             }

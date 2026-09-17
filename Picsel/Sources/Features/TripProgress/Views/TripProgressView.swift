@@ -59,11 +59,11 @@ struct TripProgressView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("여행 진행 중")
-                .font(.system(size: 24, weight: .semibold))
+                .font(PicselFont.title02)
                 .foregroundStyle(.black)
 
             Text("오늘도 특별한 대한민국을 만나보길 기대할게요")
-                .font(.system(size: 13))
+                .font(PicselFont.body02)
                 .foregroundStyle(PicselColor.subtitle)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -119,7 +119,7 @@ struct TripProgressView: View {
     private var finishButton: some View {
         Button(action: onFinishTrip) {
             Text("여행 마치기")
-                .font(.system(size: 16, weight: .bold))
+                .font(PicselFont.label01)
         }
         .buttonStyle(.primaryGradient)
         .padding(.horizontal, 24)

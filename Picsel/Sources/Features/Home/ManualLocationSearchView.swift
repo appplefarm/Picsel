@@ -34,12 +34,12 @@ struct ManualLocationSearchView: View {
                         } label: {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(completion.title)
-                                    .font(.headline)
+                                    .font(PicselFont.label01)
                                     .foregroundStyle(.primary)
                                 
                                 if !completion.subtitle.isEmpty {
                                     Text(completion.subtitle)
-                                        .font(.subheadline)
+                                        .font(PicselFont.body01)
                                         .foregroundStyle(.secondary)
                                 }
                             }

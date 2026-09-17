@@ -16,7 +16,7 @@ struct SwipeBottomBar: View {
         VStack {
             Button(action: onConfirm) {
                 Text(selectedCount == 0 ? "경유지 없이 건너뛰기" : "\(selectedCount)곳의 장소들로 경로 만들기")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(PicselFont.label01)
             }
             .buttonStyle(.primaryGradient)
         }

@@ -49,7 +49,7 @@ struct PhotoThumbnailStrip: View {
                 }
                 .overlay {
                     Image(systemName: "plus")
-                        .font(.system(size: 21, weight: .light))
+                        .font(PicselFont.title03)
                         .foregroundStyle(PicselColor.photoAddIcon)
                 }
         }
@@ -91,7 +91,7 @@ struct PhotoThumbnailStrip: View {
             onDelete(photo)
         } label: {
             Image(systemName: "xmark.circle.fill")
-                .font(.system(size: 20))
+                .font(PicselFont.title03)
                 .foregroundStyle(.white, .black.opacity(0.45))
                 // 아이콘보다 넉넉한 탭 영역을 줍니다.
                 .frame(width: 32, height: 32)

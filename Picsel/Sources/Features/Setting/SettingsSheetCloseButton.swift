@@ -13,7 +13,7 @@ struct SettingsSheetCloseButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: "xmark")
-                .font(.system(size: 20, weight: .regular))
+                .font(PicselFont.title03)
                 .frame(width: 36, height: 36)
         }
         .buttonStyle(.glass)
@@ -33,7 +33,7 @@ private struct SettingsModalHeader: View {
     var body: some View {
         HStack(spacing: 16) {
             Text(title)
-                .font(.system(size: 24, weight: .bold))
+                .font(PicselFont.title02)
                 .foregroundStyle(Color(hex: 0x303B37))
 
             Spacer(minLength: 0)

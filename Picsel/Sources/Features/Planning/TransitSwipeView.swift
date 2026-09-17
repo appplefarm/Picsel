@@ -29,10 +29,10 @@ struct TransitSwipeView: View {
             // MARK: - 상단 헤더
             VStack(alignment: .leading, spacing: 8) {
                 Text("경유지를 골라보세요")
-                    .font(.title)
+                    .font(PicselFont.title01)
                     .bold()
                 Text("목적지 부근에서 들르기 좋은 장소를 최대 \(TransitSwipeViewModel.maximumRecommendationCount)곳 추천해드릴게요")
-                    .font(.subheadline)
+                    .font(PicselFont.body01)
                     .foregroundColor(.gray)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -87,8 +87,8 @@ struct TransitSwipeView: View {
                 Spacer()
                 
                 if viewModel.totalFetchedCount > 0 && !viewModel.candidates.isEmpty {
-                    Text("\(Text("\(displayIndex)").font(.system(size: 15, weight: .bold))) / \(viewModel.totalFetchedCount)")
-                        .font(.system(size: 12, weight: .medium))
+                    Text("\(Text("\(displayIndex)").font(PicselFont.label02)) / \(viewModel.totalFetchedCount)")
+                        .font(PicselFont.caption01)
                         .foregroundColor(Color(red: 125/255, green: 160/255, blue: 142/255))
                 }
                 
@@ -98,7 +98,7 @@ struct TransitSwipeView: View {
                     .onTapGesture { showToast() }
             }
             .padding(.horizontal, 32)
-            .font(.system(size: 12))
+            .font(PicselFont.caption01)
             .foregroundColor(Color(white: 0.42))
             .padding(.bottom, 10)
             
@@ -147,7 +147,7 @@ struct TransitSwipeView: View {
             VStack {
                 if showSwipeToast {
                     Text("버튼 대신 화면을 좌우로 스와이프 해주세요")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(PicselFont.body01)
                         .foregroundColor(.white)
                         .padding(.vertical, 14)
                         .padding(.horizontal, 20)

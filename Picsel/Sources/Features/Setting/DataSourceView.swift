@@ -26,11 +26,11 @@ private extension DataSourceView {
     var header: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("시행일: \(DataSourceContent.effectiveDate) | Picsel")
-                .font(.system(size: 12))
+                .font(PicselFont.caption01)
                 .foregroundStyle(Color(hex: 0x8D9795))
 
             Text("Picsel은 정확하고 다양한 여행 정보를 제공하기 위해 공공데이터와 외부 서비스의 API를 활용합니다.")
-                .font(.system(size: 13, weight: .medium))
+                .font(PicselFont.body02)
                 .foregroundStyle(Color(hex: 0x688276))
                 .lineSpacing(4)
                 .padding(14)
@@ -48,12 +48,12 @@ private struct DataSourceSectionView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(section.title)
-                .font(.system(size: 13, weight: .semibold))
+                .font(PicselFont.label03)
                 .foregroundStyle(Color(hex: 0x2B3431))
 
             ForEach(section.paragraphs, id: \.self) { paragraph in
                 Text(paragraph)
-                    .font(.system(size: 12))
+                    .font(PicselFont.caption01)
                     .foregroundStyle(Color(hex: 0x475651))
                     .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
@@ -69,7 +69,7 @@ private struct DataSourceSectionView: View {
                             Text(item)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .font(.system(size: 12))
+                        .font(PicselFont.caption01)
                         .foregroundStyle(Color(hex: 0x475651))
                         .lineSpacing(4)
                         .fixedSize(horizontal: false, vertical: true)
@@ -79,7 +79,7 @@ private struct DataSourceSectionView: View {
 
             ForEach(section.footerParagraphs, id: \.self) { paragraph in
                 Text(paragraph)
-                    .font(.system(size: 12))
+                    .font(PicselFont.caption01)
                     .foregroundStyle(Color(hex: 0x475651))
                     .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)

@@ -40,7 +40,7 @@ struct HomeSettingsButton: View {
 
     private var settingsIcon: some View {
         Image(systemName: "gearshape")
-            .font(.system(size: 22, weight: .medium))
+            .font(PicselFont.title02)
     }
 }
 

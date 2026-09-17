@@ -24,7 +24,7 @@ struct SplashView: View {
 struct OnboardingLogo: View {
     var body: some View {
         Text("Picsel")
-            .font(.system(size: 36, weight: .semibold))
+            .font(PicselFont.title01)
             .foregroundStyle(OnboardingStyle.logoColor)
             .frame(maxWidth: .infinity)
     }

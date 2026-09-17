@@ -11,7 +11,6 @@ struct PicselMapView: View {
     @State private var viewModel: PicselMapViewModel
     /// 채워진 픽셀을 누르면 그 지역 상세로 들어갑니다.
     @State private var selectedPixelRegion: AdministrativeRegion?
-    @ScaledMetric(relativeTo: .title2) private var titleSize = 25.0
 
     private let unlockedRegionCodes: Set<String>
     private let records: [PicselMapRecord]
@@ -55,11 +54,11 @@ struct PicselMapView: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("나의 픽셀맵")
-                        .font(.system(size: titleSize, weight: .semibold))
+                        .font(PicselFont.title02)
                         .accessibilityAddTraits(.isHeader)
 
                     Text("다녀온 여행으로 대한민국을 채워보세요.")
-                        .font(.footnote)
+                        .font(PicselFont.body02)
                 }
 
                 Spacer()
@@ -104,7 +103,7 @@ struct PicselMapView: View {
             PixelHistoryScreen()
         } label: {
             Image(systemName: "point.bottomleft.forward.to.point.topright.scurvepath")
-                .font(.system(size: 20, weight: .medium))
+                .font(PicselFont.title03)
                 .foregroundStyle(PicselColor.homeText)
                 .frame(width: 48, height: 48)
                 .background(PicselColor.surface, in: .circle)
@@ -149,7 +148,7 @@ struct PicselMapView: View {
     private var recentPixelSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("최근 채운 픽셀")
-                .font(.subheadline.weight(.semibold))
+                .font(PicselFont.label01)
                 .accessibilityAddTraits(.isHeader)
                 .padding(.horizontal, 8)
 
@@ -174,9 +173,9 @@ struct PicselMapView: View {
     private var emptyRecordPlaceholder: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("아직 채운 픽셀이 없어요")
-                .font(.subheadline.weight(.semibold))
+                .font(PicselFont.label01)
             Text("여행을 기록하면 이곳에 추억이 채워져요.")
-                .font(.caption)
+                .font(PicselFont.caption01)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)

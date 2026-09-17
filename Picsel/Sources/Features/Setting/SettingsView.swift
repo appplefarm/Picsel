@@ -127,7 +127,7 @@ private extension SettingsView {
 
     func sectionTitle(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: 16, weight: .semibold))
+            .font(PicselFont.label01)
             .foregroundStyle(PicselColor.settingsSectionTitle)
     }
 }

@@ -47,7 +47,7 @@ extension ButtonStyle where Self == PrimaryGradientButtonStyle {
             print("Tapped")
         } label: {
             Text("최종 목적지로 선택하기")
-                .font(.system(size: 16, weight: .bold))
+                .font(PicselFont.label01)
         }
         .buttonStyle(.primaryGradient)
         
@@ -57,13 +57,13 @@ extension ButtonStyle where Self == PrimaryGradientButtonStyle {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: "photo")
-                    .font(.system(size: 24))
+                    .font(PicselFont.title02)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("사진으로 목적지 고르기")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(PicselFont.label01)
                     Text("반경 안의 사진들을 둘러보세요")
-                        .font(.system(size: 12))
+                        .font(PicselFont.caption01)
                         .foregroundStyle(.white.opacity(0.9))
                 }
             }

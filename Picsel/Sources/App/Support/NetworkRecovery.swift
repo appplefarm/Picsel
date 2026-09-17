@@ -97,11 +97,11 @@ struct RequestFailureView: View {
         VStack(spacing: 10) {
             if failure.retriesOnReconnect {
                 Image(systemName: "wifi.exclamationmark")
-                    .font(.title2)
+                    .font(PicselFont.title02)
                     .accessibilityHidden(true)
             }
             Text(failure.localizedDescription)
-                .font(.subheadline)
+                .font(PicselFont.body01)
                 .multilineTextAlignment(.center)
 
             // 눌러도 같은 결과가 나오는 실패에는 버튼을 두지 않습니다.

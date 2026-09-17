@@ -25,7 +25,7 @@ struct TripStopCard: View {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(name)
-                        .font(.system(size: Metric.nameFontSize, weight: .semibold))
+                        .font(PicselFont.label01)
                         .foregroundStyle(PicselColor.placeName)
                         .lineLimit(1)
 
@@ -33,10 +33,10 @@ struct TripStopCard: View {
                         HStack(spacing: 3) {
                             // TODO: 시안의 핀 아이콘 SVG를 Assets에 넣고 교체합니다.
                             Image(systemName: "mappin")
-                                .font(.system(size: Metric.regionFontSize, weight: .semibold))
+                                .font(PicselFont.caption01)
 
                             Text(regionText)
-                                .font(.system(size: Metric.regionFontSize, weight: .medium))
+                                .font(PicselFont.caption01)
                         }
                         .foregroundStyle(PicselColor.locationLabel)
                         .lineLimit(1)
@@ -66,10 +66,10 @@ struct TripStopCard: View {
         Button(action: onNavigateTapped) {
             HStack(spacing: 4) {
                 Text("➤")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(PicselFont.label03)
 
                 Text("길찾기")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(PicselFont.caption01)
             }
             .foregroundStyle(.white)
             .padding(10)

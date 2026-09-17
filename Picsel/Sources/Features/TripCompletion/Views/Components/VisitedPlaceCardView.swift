@@ -31,17 +31,17 @@ struct VisitedPlaceCardView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(stop.name)
-                        .font(.system(size: 18, weight: .bold))
+                        .font(PicselFont.title03)
                         .foregroundStyle(.black)
                         .lineLimit(1)
                     
                     HStack(spacing: 4) {
                         Image(systemName: "mappin.and.ellipse")
-                            .font(.system(size: 12))
+                            .font(PicselFont.caption01)
                             .foregroundStyle(Color(red: 47/255, green: 172/255, blue: 102/255))
                         
                         Text(ShortAddress.make(from: stop.address) ?? "주소 미상")
-                            .font(.system(size: 12))
+                            .font(PicselFont.caption01)
                             .foregroundStyle(Color(red: 47/255, green: 172/255, blue: 102/255))
                             .lineLimit(1)
                     }
@@ -55,7 +55,7 @@ struct VisitedPlaceCardView: View {
                     toggleSelection()
                 }) {
                     Text("완료")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(PicselFont.body01)
                         .foregroundStyle(isSelected ? .white : Color(white: 0.7))
                         .padding(.horizontal, 20)
                         .padding(.vertical, 8)
