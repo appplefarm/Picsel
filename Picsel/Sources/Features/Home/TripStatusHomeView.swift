@@ -10,10 +10,18 @@ enum TripHomePresentation {
     case ready
     case inProgress
 
-    var titleSuffix: String {
+    func title(for cityName: String) -> String {
         switch self {
-        case .ready: "여행 준비중"
-        case .inProgress: "여행 중"
+        case .ready:
+            // 받침이 없거나 ㄹ 받침이면 '로', 그 외에는 '으로'를 사용합니다.
+            let lastScalar = cityName.precomposedStringWithCanonicalMapping.unicodeScalars.last?.value
+            let finalConsonant = lastScalar.flatMap {
+                (0xAC00...0xD7A3).contains($0) ? Int(($0 - 0xAC00) % 28) : nil
+            }
+            let particle = finalConsonant == 0 || finalConsonant == 8 ? "로" : "으로"
+            return "\(cityName)\(particle) 떠나볼까요?"
+        case .inProgress:
+            return "\(cityName) 여행 중"
         }
     }
 
@@ -161,7 +169,7 @@ struct TripStatusHomeView: View {
 
     private var titleSection: some View {
         VStack(spacing: 10) {
-            Text("\(cityName) \(presentation.titleSuffix)")
+            Text(presentation.title(for: cityName))
                 .font(PicselFont.title01)
                 .foregroundStyle(PicselColor.tripHomeTitle)
 
