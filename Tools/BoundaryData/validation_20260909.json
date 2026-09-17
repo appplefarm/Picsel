@@ -1,0 +1,1573 @@
+{
+  "source": "AL_D001_00_20260909.zip",
+  "sourceSHA256": "3f8952dfda7763c2c594adb7a9f7ace1f40b996235fae6ef0d0f90f794dbce97",
+  "sourceEPSG": 5186,
+  "outputEPSG": 4326,
+  "gridMeters": 250,
+  "regionCount": 256,
+  "outputSHA256": "bbd862af38909116afab601bb956992c21178d6a845e538d01d2e12eaa0048fc",
+  "corrections": [
+    {
+      "recordNumber": 76,
+      "expectedCode": "26290",
+      "expectedName": "부산광역시 남구",
+      "expectedBounds": [
+        340551.4414088982,
+        357823.961846314,
+        345336.26925802894,
+        363653.7889515752
+      ],
+      "correctedCode": "27200",
+      "correctedName": "대구광역시 남구",
+      "reason": "부산 남구 속성이 대구 남구 도형에 중복 기재됨. 공간 대조 후 사용자 승인으로 속성만 보정; 좌표는 변경하지 않음.",
+      "verification": {
+        "referenceArchive": "N3A_G0100000.zip",
+        "referenceSHA256": "2daebab76e7e185b95723f0e933441a715ac4e88ec0608157631e97754d9e056",
+        "referenceEPSG": 5179,
+        "referenceCode": "2720000000",
+        "intersectionOverUnion": 0.9993162414411316,
+        "actualBusanRecordNumber": 63,
+        "actualBusanIntersectionOverUnion": 0.0,
+        "approvedOn": "2026-09-09"
+      }
+    }
+  ],
+  "geometryChanges": [
+    {
+      "code": "11110",
+      "repaired": false,
+      "sourceAreaSquareMeters": 23992350.85,
+      "outputAreaSquareMeters": 23718750.0
+    },
+    {
+      "code": "11140",
+      "repaired": false,
+      "sourceAreaSquareMeters": 9967276.47,
+      "outputAreaSquareMeters": 9875000.0
+    },
+    {
+      "code": "11170",
+      "repaired": false,
+      "sourceAreaSquareMeters": 21921668.0,
+      "outputAreaSquareMeters": 21968750.0
+    },
+    {
+      "code": "11200",
+      "repaired": false,
+      "sourceAreaSquareMeters": 16810590.87,
+      "outputAreaSquareMeters": 17000000.0
+    },
+    {
+      "code": "11215",
+      "repaired": false,
+      "sourceAreaSquareMeters": 17059863.48,
+      "outputAreaSquareMeters": 16968750.0
+    },
+    {
+      "code": "11230",
+      "repaired": false,
+      "sourceAreaSquareMeters": 14248320.22,
+      "outputAreaSquareMeters": 14437500.0
+    },
+    {
+      "code": "11260",
+      "repaired": false,
+      "sourceAreaSquareMeters": 18525722.21,
+      "outputAreaSquareMeters": 18468750.0
+    },
+    {
+      "code": "11290",
+      "repaired": false,
+      "sourceAreaSquareMeters": 24596680.98,
+      "outputAreaSquareMeters": 24687500.0
+    },
+    {
+      "code": "11305",
+      "repaired": false,
+      "sourceAreaSquareMeters": 23637278.97,
+      "outputAreaSquareMeters": 23437500.0
+    },
+    {
+      "code": "11320",
+      "repaired": false,
+      "sourceAreaSquareMeters": 20668363.44,
+      "outputAreaSquareMeters": 20812500.0
+    },
+    {
+      "code": "11350",
+      "repaired": false,
+      "sourceAreaSquareMeters": 35617522.14,
+      "outputAreaSquareMeters": 35531250.0
+    },
+    {
+      "code": "11380",
+      "repaired": false,
+      "sourceAreaSquareMeters": 29844286.69,
+      "outputAreaSquareMeters": 29812500.0
+    },
+    {
+      "code": "11410",
+      "repaired": false,
+      "sourceAreaSquareMeters": 17696731.87,
+      "outputAreaSquareMeters": 17593750.0
+    },
+    {
+      "code": "11440",
+      "repaired": false,
+      "sourceAreaSquareMeters": 23848280.94,
+      "outputAreaSquareMeters": 24218750.0
+    },
+    {
+      "code": "11470",
+      "repaired": false,
+      "sourceAreaSquareMeters": 17452212.35,
+      "outputAreaSquareMeters": 17500000.0
+    },
+    {
+      "code": "11500",
+      "repaired": false,
+      "sourceAreaSquareMeters": 41493027.59,
+      "outputAreaSquareMeters": 41437500.0
+    },
+    {
+      "code": "11530",
+      "repaired": false,
+      "sourceAreaSquareMeters": 20137665.6,
+      "outputAreaSquareMeters": 20093750.0
+    },
+    {
+      "code": "11545",
+      "repaired": false,
+      "sourceAreaSquareMeters": 13031082.8,
+      "outputAreaSquareMeters": 13031250.0
+    },
+    {
+      "code": "11560",
+      "repaired": false,
+      "sourceAreaSquareMeters": 24510609.47,
+      "outputAreaSquareMeters": 24125000.0
+    },
+    {
+      "code": "11590",
+      "repaired": false,
+      "sourceAreaSquareMeters": 16393388.35,
+      "outputAreaSquareMeters": 16468750.0
+    },
+    {
+      "code": "11620",
+      "repaired": false,
+      "sourceAreaSquareMeters": 29584465.8,
+      "outputAreaSquareMeters": 29343750.0
+    },
+    {
+      "code": "11650",
+      "repaired": false,
+      "sourceAreaSquareMeters": 47161116.29,
+      "outputAreaSquareMeters": 46968750.0
+    },
+    {
+      "code": "11680",
+      "repaired": false,
+      "sourceAreaSquareMeters": 39209601.0,
+      "outputAreaSquareMeters": 39375000.0
+    },
+    {
+      "code": "11710",
+      "repaired": false,
+      "sourceAreaSquareMeters": 33859553.31,
+      "outputAreaSquareMeters": 33312500.0
+    },
+    {
+      "code": "11740",
+      "repaired": false,
+      "sourceAreaSquareMeters": 24337218.64,
+      "outputAreaSquareMeters": 24156250.0
+    },
+    {
+      "code": "12110",
+      "repaired": false,
+      "sourceAreaSquareMeters": 51823549.37,
+      "outputAreaSquareMeters": 51656250.0
+    },
+    {
+      "code": "12130",
+      "repaired": false,
+      "sourceAreaSquareMeters": 509747658.92,
+      "outputAreaSquareMeters": 509375000.0
+    },
+    {
+      "code": "12150",
+      "repaired": false,
+      "sourceAreaSquareMeters": 909802604.38,
+      "outputAreaSquareMeters": 910031250.0
+    },
+    {
+      "code": "12170",
+      "repaired": false,
+      "sourceAreaSquareMeters": 605805282.88,
+      "outputAreaSquareMeters": 606125000.0
+    },
+    {
+      "code": "12190",
+      "repaired": false,
+      "sourceAreaSquareMeters": 462885636.84,
+      "outputAreaSquareMeters": 461843750.0
+    },
+    {
+      "code": "12210",
+      "repaired": false,
+      "sourceAreaSquareMeters": 48772260.84,
+      "outputAreaSquareMeters": 49031250.0
+    },
+    {
+      "code": "12240",
+      "repaired": false,
+      "sourceAreaSquareMeters": 47576358.21,
+      "outputAreaSquareMeters": 47656250.0
+    },
+    {
+      "code": "12270",
+      "repaired": false,
+      "sourceAreaSquareMeters": 60523322.94,
+      "outputAreaSquareMeters": 60343750.0
+    },
+    {
+      "code": "12300",
+      "repaired": false,
+      "sourceAreaSquareMeters": 119411873.56,
+      "outputAreaSquareMeters": 118968750.0
+    },
+    {
+      "code": "12330",
+      "repaired": false,
+      "sourceAreaSquareMeters": 222075705.81,
+      "outputAreaSquareMeters": 222468750.0
+    },
+    {
+      "code": "12710",
+      "repaired": false,
+      "sourceAreaSquareMeters": 453517461.64,
+      "outputAreaSquareMeters": 453281250.0
+    },
+    {
+      "code": "12720",
+      "repaired": false,
+      "sourceAreaSquareMeters": 548335502.63,
+      "outputAreaSquareMeters": 548562500.0
+    },
+    {
+      "code": "12730",
+      "repaired": false,
+      "sourceAreaSquareMeters": 439638174.43,
+      "outputAreaSquareMeters": 439625000.0
+    },
+    {
+      "code": "12740",
+      "repaired": false,
+      "sourceAreaSquareMeters": 806950100.68,
+      "outputAreaSquareMeters": 806875000.0
+    },
+    {
+      "code": "12750",
+      "repaired": false,
+      "sourceAreaSquareMeters": 664336675.65,
+      "outputAreaSquareMeters": 664218750.0
+    },
+    {
+      "code": "12760",
+      "repaired": false,
+      "sourceAreaSquareMeters": 788145893.63,
+      "outputAreaSquareMeters": 787468750.0
+    },
+    {
+      "code": "12770",
+      "repaired": false,
+      "sourceAreaSquareMeters": 616207531.54,
+      "outputAreaSquareMeters": 616812500.0
+    },
+    {
+      "code": "12780",
+      "repaired": true,
+      "sourceAreaSquareMeters": 498798888.8,
+      "outputAreaSquareMeters": 498437500.0
+    },
+    {
+      "code": "12790",
+      "repaired": true,
+      "sourceAreaSquareMeters": 1043430319.21,
+      "outputAreaSquareMeters": 1044156250.0
+    },
+    {
+      "code": "12800",
+      "repaired": false,
+      "sourceAreaSquareMeters": 612316898.01,
+      "outputAreaSquareMeters": 611625000.0
+    },
+    {
+      "code": "12810",
+      "repaired": false,
+      "sourceAreaSquareMeters": 452888404.27,
+      "outputAreaSquareMeters": 452406250.0
+    },
+    {
+      "code": "12820",
+      "repaired": false,
+      "sourceAreaSquareMeters": 389463234.71,
+      "outputAreaSquareMeters": 389250000.0
+    },
+    {
+      "code": "12830",
+      "repaired": false,
+      "sourceAreaSquareMeters": 472881240.23,
+      "outputAreaSquareMeters": 473281250.0
+    },
+    {
+      "code": "12840",
+      "repaired": false,
+      "sourceAreaSquareMeters": 518268860.14,
+      "outputAreaSquareMeters": 518000000.0
+    },
+    {
+      "code": "12850",
+      "repaired": false,
+      "sourceAreaSquareMeters": 392954995.06,
+      "outputAreaSquareMeters": 392468750.0
+    },
+    {
+      "code": "12860",
+      "repaired": false,
+      "sourceAreaSquareMeters": 438272859.51,
+      "outputAreaSquareMeters": 437718750.0
+    },
+    {
+      "code": "12870",
+      "repaired": false,
+      "sourceAreaSquareMeters": 651256472.82,
+      "outputAreaSquareMeters": 650312500.0
+    },
+    {
+      "code": "26110",
+      "repaired": false,
+      "sourceAreaSquareMeters": 3093561.09,
+      "outputAreaSquareMeters": 2906250.0
+    },
+    {
+      "code": "26140",
+      "repaired": false,
+      "sourceAreaSquareMeters": 14147651.92,
+      "outputAreaSquareMeters": 14500000.0
+    },
+    {
+      "code": "26170",
+      "repaired": false,
+      "sourceAreaSquareMeters": 10081878.51,
+      "outputAreaSquareMeters": 10000000.0
+    },
+    {
+      "code": "26200",
+      "repaired": false,
+      "sourceAreaSquareMeters": 14486255.19,
+      "outputAreaSquareMeters": 14531250.0
+    },
+    {
+      "code": "26230",
+      "repaired": false,
+      "sourceAreaSquareMeters": 29756476.75,
+      "outputAreaSquareMeters": 29812500.0
+    },
+    {
+      "code": "26260",
+      "repaired": false,
+      "sourceAreaSquareMeters": 16695880.34,
+      "outputAreaSquareMeters": 16781250.0
+    },
+    {
+      "code": "26290",
+      "repaired": false,
+      "sourceAreaSquareMeters": 27312127.69,
+      "outputAreaSquareMeters": 27312500.0
+    },
+    {
+      "code": "26320",
+      "repaired": false,
+      "sourceAreaSquareMeters": 39815592.77,
+      "outputAreaSquareMeters": 39718750.0
+    },
+    {
+      "code": "26350",
+      "repaired": false,
+      "sourceAreaSquareMeters": 52128573.17,
+      "outputAreaSquareMeters": 52312500.0
+    },
+    {
+      "code": "26380",
+      "repaired": false,
+      "sourceAreaSquareMeters": 42671722.65,
+      "outputAreaSquareMeters": 42718750.0
+    },
+    {
+      "code": "26410",
+      "repaired": false,
+      "sourceAreaSquareMeters": 65704750.75,
+      "outputAreaSquareMeters": 65531250.0
+    },
+    {
+      "code": "26440",
+      "repaired": false,
+      "sourceAreaSquareMeters": 184355400.22,
+      "outputAreaSquareMeters": 184156250.0
+    },
+    {
+      "code": "26470",
+      "repaired": false,
+      "sourceAreaSquareMeters": 12137811.18,
+      "outputAreaSquareMeters": 11937500.0
+    },
+    {
+      "code": "26500",
+      "repaired": false,
+      "sourceAreaSquareMeters": 10492461.59,
+      "outputAreaSquareMeters": 10500000.0
+    },
+    {
+      "code": "26530",
+      "repaired": false,
+      "sourceAreaSquareMeters": 36252708.62,
+      "outputAreaSquareMeters": 36312500.0
+    },
+    {
+      "code": "26710",
+      "repaired": false,
+      "sourceAreaSquareMeters": 219642984.17,
+      "outputAreaSquareMeters": 219843750.0
+    },
+    {
+      "code": "27110",
+      "repaired": false,
+      "sourceAreaSquareMeters": 7011004.93,
+      "outputAreaSquareMeters": 6906250.0
+    },
+    {
+      "code": "27140",
+      "repaired": false,
+      "sourceAreaSquareMeters": 181080817.68,
+      "outputAreaSquareMeters": 180906250.0
+    },
+    {
+      "code": "27170",
+      "repaired": false,
+      "sourceAreaSquareMeters": 17251490.96,
+      "outputAreaSquareMeters": 17218750.0
+    },
+    {
+      "code": "27200",
+      "repaired": false,
+      "sourceAreaSquareMeters": 17790321.48,
+      "outputAreaSquareMeters": 17781250.0
+    },
+    {
+      "code": "27230",
+      "repaired": false,
+      "sourceAreaSquareMeters": 93506242.15,
+      "outputAreaSquareMeters": 93125000.0
+    },
+    {
+      "code": "27260",
+      "repaired": false,
+      "sourceAreaSquareMeters": 76674705.2,
+      "outputAreaSquareMeters": 76562500.0
+    },
+    {
+      "code": "27290",
+      "repaired": false,
+      "sourceAreaSquareMeters": 62075990.81,
+      "outputAreaSquareMeters": 62562500.0
+    },
+    {
+      "code": "27710",
+      "repaired": false,
+      "sourceAreaSquareMeters": 422261176.03,
+      "outputAreaSquareMeters": 421562500.0
+    },
+    {
+      "code": "27720",
+      "repaired": false,
+      "sourceAreaSquareMeters": 613761083.61,
+      "outputAreaSquareMeters": 613062500.0
+    },
+    {
+      "code": "28125",
+      "repaired": false,
+      "sourceAreaSquareMeters": 21846473.46,
+      "outputAreaSquareMeters": 22187500.0
+    },
+    {
+      "code": "28155",
+      "repaired": false,
+      "sourceAreaSquareMeters": 126974730.12,
+      "outputAreaSquareMeters": 126343750.0
+    },
+    {
+      "code": "28177",
+      "repaired": false,
+      "sourceAreaSquareMeters": 24872201.71,
+      "outputAreaSquareMeters": 24718750.0
+    },
+    {
+      "code": "28185",
+      "repaired": false,
+      "sourceAreaSquareMeters": 58564308.83,
+      "outputAreaSquareMeters": 58718750.0
+    },
+    {
+      "code": "28200",
+      "repaired": false,
+      "sourceAreaSquareMeters": 57362374.9,
+      "outputAreaSquareMeters": 57500000.0
+    },
+    {
+      "code": "28237",
+      "repaired": false,
+      "sourceAreaSquareMeters": 32080893.06,
+      "outputAreaSquareMeters": 32718750.0
+    },
+    {
+      "code": "28245",
+      "repaired": false,
+      "sourceAreaSquareMeters": 45532694.61,
+      "outputAreaSquareMeters": 45312500.0
+    },
+    {
+      "code": "28275",
+      "repaired": false,
+      "sourceAreaSquareMeters": 72547047.31,
+      "outputAreaSquareMeters": 72062500.0
+    },
+    {
+      "code": "28290",
+      "repaired": false,
+      "sourceAreaSquareMeters": 59857423.2,
+      "outputAreaSquareMeters": 59593750.0
+    },
+    {
+      "code": "28710",
+      "repaired": false,
+      "sourceAreaSquareMeters": 410369953.74,
+      "outputAreaSquareMeters": 410531250.0
+    },
+    {
+      "code": "28720",
+      "repaired": true,
+      "sourceAreaSquareMeters": 172484682.9,
+      "outputAreaSquareMeters": 171156250.0
+    },
+    {
+      "code": "30110",
+      "repaired": false,
+      "sourceAreaSquareMeters": 137391712.96,
+      "outputAreaSquareMeters": 137500000.0
+    },
+    {
+      "code": "30140",
+      "repaired": false,
+      "sourceAreaSquareMeters": 62180220.39,
+      "outputAreaSquareMeters": 61968750.0
+    },
+    {
+      "code": "30170",
+      "repaired": false,
+      "sourceAreaSquareMeters": 95281447.25,
+      "outputAreaSquareMeters": 95125000.0
+    },
+    {
+      "code": "30200",
+      "repaired": false,
+      "sourceAreaSquareMeters": 176086601.3,
+      "outputAreaSquareMeters": 176468750.0
+    },
+    {
+      "code": "30230",
+      "repaired": false,
+      "sourceAreaSquareMeters": 69219416.28,
+      "outputAreaSquareMeters": 68781250.0
+    },
+    {
+      "code": "31110",
+      "repaired": false,
+      "sourceAreaSquareMeters": 37004950.32,
+      "outputAreaSquareMeters": 36812500.0
+    },
+    {
+      "code": "31140",
+      "repaired": false,
+      "sourceAreaSquareMeters": 73719025.82,
+      "outputAreaSquareMeters": 74031250.0
+    },
+    {
+      "code": "31170",
+      "repaired": false,
+      "sourceAreaSquareMeters": 36551975.71,
+      "outputAreaSquareMeters": 36531250.0
+    },
+    {
+      "code": "31200",
+      "repaired": false,
+      "sourceAreaSquareMeters": 157615242.27,
+      "outputAreaSquareMeters": 157906250.0
+    },
+    {
+      "code": "31710",
+      "repaired": false,
+      "sourceAreaSquareMeters": 757765458.12,
+      "outputAreaSquareMeters": 758312500.0
+    },
+    {
+      "code": "36110",
+      "repaired": false,
+      "sourceAreaSquareMeters": 464923926.31,
+      "outputAreaSquareMeters": 465156250.0
+    },
+    {
+      "code": "41111",
+      "repaired": false,
+      "sourceAreaSquareMeters": 33377136.05,
+      "outputAreaSquareMeters": 33500000.0
+    },
+    {
+      "code": "41113",
+      "repaired": false,
+      "sourceAreaSquareMeters": 47152038.04,
+      "outputAreaSquareMeters": 47125000.0
+    },
+    {
+      "code": "41115",
+      "repaired": false,
+      "sourceAreaSquareMeters": 12866308.72,
+      "outputAreaSquareMeters": 13187500.0
+    },
+    {
+      "code": "41117",
+      "repaired": false,
+      "sourceAreaSquareMeters": 27684939.15,
+      "outputAreaSquareMeters": 27343750.0
+    },
+    {
+      "code": "41131",
+      "repaired": false,
+      "sourceAreaSquareMeters": 45278515.2,
+      "outputAreaSquareMeters": 45281250.0
+    },
+    {
+      "code": "41133",
+      "repaired": false,
+      "sourceAreaSquareMeters": 26421808.25,
+      "outputAreaSquareMeters": 26593750.0
+    },
+    {
+      "code": "41135",
+      "repaired": false,
+      "sourceAreaSquareMeters": 69743877.55,
+      "outputAreaSquareMeters": 69812500.0
+    },
+    {
+      "code": "41150",
+      "repaired": false,
+      "sourceAreaSquareMeters": 81797624.3,
+      "outputAreaSquareMeters": 81593750.0
+    },
+    {
+      "code": "41171",
+      "repaired": false,
+      "sourceAreaSquareMeters": 36571245.0,
+      "outputAreaSquareMeters": 36562500.0
+    },
+    {
+      "code": "41173",
+      "repaired": false,
+      "sourceAreaSquareMeters": 21989530.96,
+      "outputAreaSquareMeters": 21937500.0
+    },
+    {
+      "code": "41192",
+      "repaired": false,
+      "sourceAreaSquareMeters": 20611166.89,
+      "outputAreaSquareMeters": 20406250.0
+    },
+    {
+      "code": "41194",
+      "repaired": false,
+      "sourceAreaSquareMeters": 12840697.86,
+      "outputAreaSquareMeters": 12687500.0
+    },
+    {
+      "code": "41196",
+      "repaired": false,
+      "sourceAreaSquareMeters": 20088834.01,
+      "outputAreaSquareMeters": 20125000.0
+    },
+    {
+      "code": "41210",
+      "repaired": false,
+      "sourceAreaSquareMeters": 38523504.78,
+      "outputAreaSquareMeters": 38437500.0
+    },
+    {
+      "code": "41220",
+      "repaired": false,
+      "sourceAreaSquareMeters": 470005512.0,
+      "outputAreaSquareMeters": 470468750.0
+    },
+    {
+      "code": "41250",
+      "repaired": false,
+      "sourceAreaSquareMeters": 95920537.65,
+      "outputAreaSquareMeters": 95906250.0
+    },
+    {
+      "code": "41271",
+      "repaired": false,
+      "sourceAreaSquareMeters": 57945590.7,
+      "outputAreaSquareMeters": 57875000.0
+    },
+    {
+      "code": "41273",
+      "repaired": false,
+      "sourceAreaSquareMeters": 114462455.0,
+      "outputAreaSquareMeters": 113968750.0
+    },
+    {
+      "code": "41281",
+      "repaired": false,
+      "sourceAreaSquareMeters": 165169148.56,
+      "outputAreaSquareMeters": 165468750.0
+    },
+    {
+      "code": "41285",
+      "repaired": false,
+      "sourceAreaSquareMeters": 59994138.24,
+      "outputAreaSquareMeters": 59875000.0
+    },
+    {
+      "code": "41287",
+      "repaired": false,
+      "sourceAreaSquareMeters": 41322705.69,
+      "outputAreaSquareMeters": 42187500.0
+    },
+    {
+      "code": "41290",
+      "repaired": false,
+      "sourceAreaSquareMeters": 35865092.54,
+      "outputAreaSquareMeters": 36000000.0
+    },
+    {
+      "code": "41310",
+      "repaired": false,
+      "sourceAreaSquareMeters": 33541560.56,
+      "outputAreaSquareMeters": 33937500.0
+    },
+    {
+      "code": "41360",
+      "repaired": false,
+      "sourceAreaSquareMeters": 459632022.31,
+      "outputAreaSquareMeters": 459468750.0
+    },
+    {
+      "code": "41370",
+      "repaired": false,
+      "sourceAreaSquareMeters": 42666666.81,
+      "outputAreaSquareMeters": 42625000.0
+    },
+    {
+      "code": "41390",
+      "repaired": false,
+      "sourceAreaSquareMeters": 140450374.88,
+      "outputAreaSquareMeters": 140562500.0
+    },
+    {
+      "code": "41410",
+      "repaired": false,
+      "sourceAreaSquareMeters": 36479942.06,
+      "outputAreaSquareMeters": 36687500.0
+    },
+    {
+      "code": "41430",
+      "repaired": false,
+      "sourceAreaSquareMeters": 53917959.35,
+      "outputAreaSquareMeters": 53750000.0
+    },
+    {
+      "code": "41450",
+      "repaired": false,
+      "sourceAreaSquareMeters": 92815528.43,
+      "outputAreaSquareMeters": 92531250.0
+    },
+    {
+      "code": "41461",
+      "repaired": false,
+      "sourceAreaSquareMeters": 467829403.44,
+      "outputAreaSquareMeters": 468437500.0
+    },
+    {
+      "code": "41463",
+      "repaired": false,
+      "sourceAreaSquareMeters": 81791254.84,
+      "outputAreaSquareMeters": 81937500.0
+    },
+    {
+      "code": "41465",
+      "repaired": false,
+      "sourceAreaSquareMeters": 42130049.22,
+      "outputAreaSquareMeters": 41937500.0
+    },
+    {
+      "code": "41480",
+      "repaired": false,
+      "sourceAreaSquareMeters": 674323624.98,
+      "outputAreaSquareMeters": 673562500.0
+    },
+    {
+      "code": "41500",
+      "repaired": false,
+      "sourceAreaSquareMeters": 461958430.11,
+      "outputAreaSquareMeters": 462437500.0
+    },
+    {
+      "code": "41550",
+      "repaired": false,
+      "sourceAreaSquareMeters": 553321561.39,
+      "outputAreaSquareMeters": 553125000.0
+    },
+    {
+      "code": "41570",
+      "repaired": false,
+      "sourceAreaSquareMeters": 277965122.11,
+      "outputAreaSquareMeters": 277375000.0
+    },
+    {
+      "code": "41591",
+      "repaired": false,
+      "sourceAreaSquareMeters": 554717437.21,
+      "outputAreaSquareMeters": 555718750.0
+    },
+    {
+      "code": "41593",
+      "repaired": false,
+      "sourceAreaSquareMeters": 153441209.82,
+      "outputAreaSquareMeters": 152843750.0
+    },
+    {
+      "code": "41595",
+      "repaired": false,
+      "sourceAreaSquareMeters": 25063687.38,
+      "outputAreaSquareMeters": 25093750.0
+    },
+    {
+      "code": "41597",
+      "repaired": false,
+      "sourceAreaSquareMeters": 55569479.2,
+      "outputAreaSquareMeters": 55437500.0
+    },
+    {
+      "code": "41610",
+      "repaired": false,
+      "sourceAreaSquareMeters": 429846337.45,
+      "outputAreaSquareMeters": 429875000.0
+    },
+    {
+      "code": "41630",
+      "repaired": false,
+      "sourceAreaSquareMeters": 310486319.73,
+      "outputAreaSquareMeters": 310218750.0
+    },
+    {
+      "code": "41650",
+      "repaired": false,
+      "sourceAreaSquareMeters": 825810227.76,
+      "outputAreaSquareMeters": 825687500.0
+    },
+    {
+      "code": "41670",
+      "repaired": false,
+      "sourceAreaSquareMeters": 607445499.23,
+      "outputAreaSquareMeters": 607000000.0
+    },
+    {
+      "code": "41800",
+      "repaired": false,
+      "sourceAreaSquareMeters": 675593137.48,
+      "outputAreaSquareMeters": 675750000.0
+    },
+    {
+      "code": "41820",
+      "repaired": false,
+      "sourceAreaSquareMeters": 840932222.43,
+      "outputAreaSquareMeters": 840312500.0
+    },
+    {
+      "code": "41830",
+      "repaired": false,
+      "sourceAreaSquareMeters": 876941255.67,
+      "outputAreaSquareMeters": 877218750.0
+    },
+    {
+      "code": "43111",
+      "repaired": false,
+      "sourceAreaSquareMeters": 403410990.21,
+      "outputAreaSquareMeters": 403250000.0
+    },
+    {
+      "code": "43112",
+      "repaired": false,
+      "sourceAreaSquareMeters": 122817553.49,
+      "outputAreaSquareMeters": 123500000.0
+    },
+    {
+      "code": "43113",
+      "repaired": false,
+      "sourceAreaSquareMeters": 199112979.3,
+      "outputAreaSquareMeters": 199000000.0
+    },
+    {
+      "code": "43114",
+      "repaired": false,
+      "sourceAreaSquareMeters": 214824860.48,
+      "outputAreaSquareMeters": 214718750.0
+    },
+    {
+      "code": "43130",
+      "repaired": false,
+      "sourceAreaSquareMeters": 982237759.65,
+      "outputAreaSquareMeters": 982093750.0
+    },
+    {
+      "code": "43150",
+      "repaired": false,
+      "sourceAreaSquareMeters": 880545868.76,
+      "outputAreaSquareMeters": 880468750.0
+    },
+    {
+      "code": "43720",
+      "repaired": false,
+      "sourceAreaSquareMeters": 583698510.93,
+      "outputAreaSquareMeters": 583125000.0
+    },
+    {
+      "code": "43730",
+      "repaired": false,
+      "sourceAreaSquareMeters": 541295106.56,
+      "outputAreaSquareMeters": 542093750.0
+    },
+    {
+      "code": "43740",
+      "repaired": false,
+      "sourceAreaSquareMeters": 852836277.33,
+      "outputAreaSquareMeters": 852625000.0
+    },
+    {
+      "code": "43745",
+      "repaired": false,
+      "sourceAreaSquareMeters": 81898701.2,
+      "outputAreaSquareMeters": 82125000.0
+    },
+    {
+      "code": "43750",
+      "repaired": false,
+      "sourceAreaSquareMeters": 408118457.59,
+      "outputAreaSquareMeters": 407750000.0
+    },
+    {
+      "code": "43760",
+      "repaired": false,
+      "sourceAreaSquareMeters": 842952691.88,
+      "outputAreaSquareMeters": 843437500.0
+    },
+    {
+      "code": "43770",
+      "repaired": false,
+      "sourceAreaSquareMeters": 519502112.08,
+      "outputAreaSquareMeters": 519187500.0
+    },
+    {
+      "code": "43800",
+      "repaired": false,
+      "sourceAreaSquareMeters": 780575193.27,
+      "outputAreaSquareMeters": 780781250.0
+    },
+    {
+      "code": "44131",
+      "repaired": false,
+      "sourceAreaSquareMeters": 442875355.13,
+      "outputAreaSquareMeters": 443093750.0
+    },
+    {
+      "code": "44133",
+      "repaired": false,
+      "sourceAreaSquareMeters": 193802493.46,
+      "outputAreaSquareMeters": 193812500.0
+    },
+    {
+      "code": "44150",
+      "repaired": false,
+      "sourceAreaSquareMeters": 864212920.04,
+      "outputAreaSquareMeters": 863687500.0
+    },
+    {
+      "code": "44180",
+      "repaired": false,
+      "sourceAreaSquareMeters": 581856803.6,
+      "outputAreaSquareMeters": 580437500.0
+    },
+    {
+      "code": "44200",
+      "repaired": false,
+      "sourceAreaSquareMeters": 543523794.11,
+      "outputAreaSquareMeters": 542750000.0
+    },
+    {
+      "code": "44210",
+      "repaired": false,
+      "sourceAreaSquareMeters": 742561047.96,
+      "outputAreaSquareMeters": 741812500.0
+    },
+    {
+      "code": "44230",
+      "repaired": false,
+      "sourceAreaSquareMeters": 554165937.32,
+      "outputAreaSquareMeters": 554187500.0
+    },
+    {
+      "code": "44250",
+      "repaired": false,
+      "sourceAreaSquareMeters": 60873412.34,
+      "outputAreaSquareMeters": 60875000.0
+    },
+    {
+      "code": "44270",
+      "repaired": false,
+      "sourceAreaSquareMeters": 708592011.56,
+      "outputAreaSquareMeters": 709656250.0
+    },
+    {
+      "code": "44710",
+      "repaired": false,
+      "sourceAreaSquareMeters": 576733565.29,
+      "outputAreaSquareMeters": 576562500.0
+    },
+    {
+      "code": "44760",
+      "repaired": false,
+      "sourceAreaSquareMeters": 624196042.09,
+      "outputAreaSquareMeters": 623906250.0
+    },
+    {
+      "code": "44770",
+      "repaired": false,
+      "sourceAreaSquareMeters": 365097423.41,
+      "outputAreaSquareMeters": 364843750.0
+    },
+    {
+      "code": "44790",
+      "repaired": false,
+      "sourceAreaSquareMeters": 479534612.93,
+      "outputAreaSquareMeters": 479406250.0
+    },
+    {
+      "code": "44800",
+      "repaired": false,
+      "sourceAreaSquareMeters": 445761263.06,
+      "outputAreaSquareMeters": 446343750.0
+    },
+    {
+      "code": "44810",
+      "repaired": false,
+      "sourceAreaSquareMeters": 543493993.03,
+      "outputAreaSquareMeters": 543281250.0
+    },
+    {
+      "code": "44825",
+      "repaired": true,
+      "sourceAreaSquareMeters": 525225904.73,
+      "outputAreaSquareMeters": 524343750.0
+    },
+    {
+      "code": "47111",
+      "repaired": false,
+      "sourceAreaSquareMeters": 396447138.0,
+      "outputAreaSquareMeters": 396906250.0
+    },
+    {
+      "code": "47113",
+      "repaired": false,
+      "sourceAreaSquareMeters": 737525850.6,
+      "outputAreaSquareMeters": 738406250.0
+    },
+    {
+      "code": "47130",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1319043217.12,
+      "outputAreaSquareMeters": 1318656250.0
+    },
+    {
+      "code": "47150",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1005589466.98,
+      "outputAreaSquareMeters": 1004781250.0
+    },
+    {
+      "code": "47170",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1528831503.96,
+      "outputAreaSquareMeters": 1529812500.0
+    },
+    {
+      "code": "47190",
+      "repaired": false,
+      "sourceAreaSquareMeters": 613787278.66,
+      "outputAreaSquareMeters": 614531250.0
+    },
+    {
+      "code": "47210",
+      "repaired": false,
+      "sourceAreaSquareMeters": 673354629.33,
+      "outputAreaSquareMeters": 673281250.0
+    },
+    {
+      "code": "47230",
+      "repaired": false,
+      "sourceAreaSquareMeters": 917111318.92,
+      "outputAreaSquareMeters": 917312500.0
+    },
+    {
+      "code": "47250",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1253138649.01,
+      "outputAreaSquareMeters": 1252593750.0
+    },
+    {
+      "code": "47280",
+      "repaired": false,
+      "sourceAreaSquareMeters": 916088528.3,
+      "outputAreaSquareMeters": 916062500.0
+    },
+    {
+      "code": "47290",
+      "repaired": false,
+      "sourceAreaSquareMeters": 413554744.95,
+      "outputAreaSquareMeters": 414125000.0
+    },
+    {
+      "code": "47730",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1170546055.14,
+      "outputAreaSquareMeters": 1170718750.0
+    },
+    {
+      "code": "47750",
+      "repaired": false,
+      "sourceAreaSquareMeters": 847710986.14,
+      "outputAreaSquareMeters": 847062500.0
+    },
+    {
+      "code": "47760",
+      "repaired": false,
+      "sourceAreaSquareMeters": 819921881.41,
+      "outputAreaSquareMeters": 819500000.0
+    },
+    {
+      "code": "47770",
+      "repaired": false,
+      "sourceAreaSquareMeters": 745383386.92,
+      "outputAreaSquareMeters": 746375000.0
+    },
+    {
+      "code": "47820",
+      "repaired": false,
+      "sourceAreaSquareMeters": 694103375.47,
+      "outputAreaSquareMeters": 693500000.0
+    },
+    {
+      "code": "47830",
+      "repaired": false,
+      "sourceAreaSquareMeters": 383475880.71,
+      "outputAreaSquareMeters": 383593750.0
+    },
+    {
+      "code": "47840",
+      "repaired": false,
+      "sourceAreaSquareMeters": 616286915.93,
+      "outputAreaSquareMeters": 616281250.0
+    },
+    {
+      "code": "47850",
+      "repaired": false,
+      "sourceAreaSquareMeters": 450658570.96,
+      "outputAreaSquareMeters": 450812500.0
+    },
+    {
+      "code": "47900",
+      "repaired": false,
+      "sourceAreaSquareMeters": 664427866.96,
+      "outputAreaSquareMeters": 664531250.0
+    },
+    {
+      "code": "47920",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1201979084.75,
+      "outputAreaSquareMeters": 1201718750.0
+    },
+    {
+      "code": "47930",
+      "repaired": false,
+      "sourceAreaSquareMeters": 995609827.9,
+      "outputAreaSquareMeters": 995812500.0
+    },
+    {
+      "code": "47940",
+      "repaired": false,
+      "sourceAreaSquareMeters": 73832341.36,
+      "outputAreaSquareMeters": 73968750.0
+    },
+    {
+      "code": "48121",
+      "repaired": false,
+      "sourceAreaSquareMeters": 204740583.33,
+      "outputAreaSquareMeters": 204406250.0
+    },
+    {
+      "code": "48123",
+      "repaired": false,
+      "sourceAreaSquareMeters": 88810983.02,
+      "outputAreaSquareMeters": 89031250.0
+    },
+    {
+      "code": "48125",
+      "repaired": false,
+      "sourceAreaSquareMeters": 242533672.2,
+      "outputAreaSquareMeters": 243218750.0
+    },
+    {
+      "code": "48127",
+      "repaired": false,
+      "sourceAreaSquareMeters": 91098816.42,
+      "outputAreaSquareMeters": 90687500.0
+    },
+    {
+      "code": "48129",
+      "repaired": false,
+      "sourceAreaSquareMeters": 127179121.53,
+      "outputAreaSquareMeters": 127625000.0
+    },
+    {
+      "code": "48170",
+      "repaired": false,
+      "sourceAreaSquareMeters": 713148485.11,
+      "outputAreaSquareMeters": 712000000.0
+    },
+    {
+      "code": "48220",
+      "repaired": false,
+      "sourceAreaSquareMeters": 245787409.86,
+      "outputAreaSquareMeters": 245875000.0
+    },
+    {
+      "code": "48240",
+      "repaired": false,
+      "sourceAreaSquareMeters": 400276005.77,
+      "outputAreaSquareMeters": 400218750.0
+    },
+    {
+      "code": "48250",
+      "repaired": false,
+      "sourceAreaSquareMeters": 462121912.64,
+      "outputAreaSquareMeters": 462687500.0
+    },
+    {
+      "code": "48270",
+      "repaired": false,
+      "sourceAreaSquareMeters": 800504545.26,
+      "outputAreaSquareMeters": 800593750.0
+    },
+    {
+      "code": "48310",
+      "repaired": false,
+      "sourceAreaSquareMeters": 408412425.71,
+      "outputAreaSquareMeters": 407750000.0
+    },
+    {
+      "code": "48330",
+      "repaired": false,
+      "sourceAreaSquareMeters": 487111405.99,
+      "outputAreaSquareMeters": 486718750.0
+    },
+    {
+      "code": "48720",
+      "repaired": false,
+      "sourceAreaSquareMeters": 481931373.57,
+      "outputAreaSquareMeters": 482125000.0
+    },
+    {
+      "code": "48730",
+      "repaired": false,
+      "sourceAreaSquareMeters": 415807092.1,
+      "outputAreaSquareMeters": 415968750.0
+    },
+    {
+      "code": "48740",
+      "repaired": false,
+      "sourceAreaSquareMeters": 532402213.49,
+      "outputAreaSquareMeters": 532156250.0
+    },
+    {
+      "code": "48820",
+      "repaired": false,
+      "sourceAreaSquareMeters": 519720128.75,
+      "outputAreaSquareMeters": 520593750.0
+    },
+    {
+      "code": "48840",
+      "repaired": false,
+      "sourceAreaSquareMeters": 361391460.64,
+      "outputAreaSquareMeters": 362000000.0
+    },
+    {
+      "code": "48850",
+      "repaired": false,
+      "sourceAreaSquareMeters": 677971628.76,
+      "outputAreaSquareMeters": 677656250.0
+    },
+    {
+      "code": "48860",
+      "repaired": false,
+      "sourceAreaSquareMeters": 792153405.23,
+      "outputAreaSquareMeters": 792437500.0
+    },
+    {
+      "code": "48870",
+      "repaired": false,
+      "sourceAreaSquareMeters": 720849878.56,
+      "outputAreaSquareMeters": 721093750.0
+    },
+    {
+      "code": "48880",
+      "repaired": false,
+      "sourceAreaSquareMeters": 799685367.8,
+      "outputAreaSquareMeters": 799593750.0
+    },
+    {
+      "code": "48890",
+      "repaired": false,
+      "sourceAreaSquareMeters": 985118690.01,
+      "outputAreaSquareMeters": 985031250.0
+    },
+    {
+      "code": "50110",
+      "repaired": false,
+      "sourceAreaSquareMeters": 982088764.36,
+      "outputAreaSquareMeters": 981937500.0
+    },
+    {
+      "code": "50130",
+      "repaired": false,
+      "sourceAreaSquareMeters": 875998410.95,
+      "outputAreaSquareMeters": 875781250.0
+    },
+    {
+      "code": "51110",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1115948235.74,
+      "outputAreaSquareMeters": 1116531250.0
+    },
+    {
+      "code": "51130",
+      "repaired": false,
+      "sourceAreaSquareMeters": 866707514.37,
+      "outputAreaSquareMeters": 866625000.0
+    },
+    {
+      "code": "51150",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1041803202.18,
+      "outputAreaSquareMeters": 1042093750.0
+    },
+    {
+      "code": "51170",
+      "repaired": false,
+      "sourceAreaSquareMeters": 181322718.22,
+      "outputAreaSquareMeters": 181375000.0
+    },
+    {
+      "code": "51190",
+      "repaired": false,
+      "sourceAreaSquareMeters": 303287649.88,
+      "outputAreaSquareMeters": 303718750.0
+    },
+    {
+      "code": "51210",
+      "repaired": false,
+      "sourceAreaSquareMeters": 105899216.75,
+      "outputAreaSquareMeters": 106343750.0
+    },
+    {
+      "code": "51230",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1188987550.58,
+      "outputAreaSquareMeters": 1188750000.0
+    },
+    {
+      "code": "51720",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1817957308.12,
+      "outputAreaSquareMeters": 1818468750.0
+    },
+    {
+      "code": "51730",
+      "repaired": false,
+      "sourceAreaSquareMeters": 998137300.2,
+      "outputAreaSquareMeters": 998031250.0
+    },
+    {
+      "code": "51750",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1126635438.16,
+      "outputAreaSquareMeters": 1126250000.0
+    },
+    {
+      "code": "51760",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1464242419.28,
+      "outputAreaSquareMeters": 1464281250.0
+    },
+    {
+      "code": "51770",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1219763509.54,
+      "outputAreaSquareMeters": 1219125000.0
+    },
+    {
+      "code": "51780",
+      "repaired": false,
+      "sourceAreaSquareMeters": 887184573.67,
+      "outputAreaSquareMeters": 887531250.0
+    },
+    {
+      "code": "51790",
+      "repaired": false,
+      "sourceAreaSquareMeters": 907636416.58,
+      "outputAreaSquareMeters": 906781250.0
+    },
+    {
+      "code": "51800",
+      "repaired": false,
+      "sourceAreaSquareMeters": 692975332.52,
+      "outputAreaSquareMeters": 692906250.0
+    },
+    {
+      "code": "51810",
+      "repaired": false,
+      "sourceAreaSquareMeters": 1642167352.92,
+      "outputAreaSquareMeters": 1642000000.0
+    },
+    {
+      "code": "51820",
+      "repaired": false,
+      "sourceAreaSquareMeters": 664128263.5,
+      "outputAreaSquareMeters": 664187500.0
+    },
+    {
+      "code": "51830",
+      "repaired": false,
+      "sourceAreaSquareMeters": 631371526.75,
+      "outputAreaSquareMeters": 631593750.0
+    },
+    {
+      "code": "52111",
+      "repaired": false,
+      "sourceAreaSquareMeters": 92138034.91,
+      "outputAreaSquareMeters": 92593750.0
+    },
+    {
+      "code": "52113",
+      "repaired": false,
+      "sourceAreaSquareMeters": 112724944.45,
+      "outputAreaSquareMeters": 111906250.0
+    },
+    {
+      "code": "52130",
+      "repaired": false,
+      "sourceAreaSquareMeters": 397355052.58,
+      "outputAreaSquareMeters": 397406250.0
+    },
+    {
+      "code": "52140",
+      "repaired": false,
+      "sourceAreaSquareMeters": 507565076.72,
+      "outputAreaSquareMeters": 507937500.0
+    },
+    {
+      "code": "52180",
+      "repaired": false,
+      "sourceAreaSquareMeters": 697337039.68,
+      "outputAreaSquareMeters": 697500000.0
+    },
+    {
+      "code": "52190",
+      "repaired": false,
+      "sourceAreaSquareMeters": 750291154.84,
+      "outputAreaSquareMeters": 750000000.0
+    },
+    {
+      "code": "52210",
+      "repaired": false,
+      "sourceAreaSquareMeters": 546389098.3,
+      "outputAreaSquareMeters": 545531250.0
+    },
+    {
+      "code": "52710",
+      "repaired": false,
+      "sourceAreaSquareMeters": 822464517.63,
+      "outputAreaSquareMeters": 822687500.0
+    },
+    {
+      "code": "52720",
+      "repaired": false,
+      "sourceAreaSquareMeters": 788988317.82,
+      "outputAreaSquareMeters": 789125000.0
+    },
+    {
+      "code": "52730",
+      "repaired": false,
+      "sourceAreaSquareMeters": 630043466.45,
+      "outputAreaSquareMeters": 630468750.0
+    },
+    {
+      "code": "52740",
+      "repaired": false,
+      "sourceAreaSquareMeters": 532214039.99,
+      "outputAreaSquareMeters": 532093750.0
+    },
+    {
+      "code": "52750",
+      "repaired": false,
+      "sourceAreaSquareMeters": 596814183.32,
+      "outputAreaSquareMeters": 597218750.0
+    },
+    {
+      "code": "52770",
+      "repaired": false,
+      "sourceAreaSquareMeters": 500553394.21,
+      "outputAreaSquareMeters": 500718750.0
+    },
+    {
+      "code": "52790",
+      "repaired": false,
+      "sourceAreaSquareMeters": 611415761.99,
+      "outputAreaSquareMeters": 612312500.0
+    },
+    {
+      "code": "52800",
+      "repaired": false,
+      "sourceAreaSquareMeters": 491092668.92,
+      "outputAreaSquareMeters": 490625000.0
+    }
+  ]
+}

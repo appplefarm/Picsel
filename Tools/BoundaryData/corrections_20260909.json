@@ -1,0 +1,25 @@
+{
+  "sourceSHA256": "3f8952dfda7763c2c594adb7a9f7ace1f40b996235fae6ef0d0f90f794dbce97",
+  "sourceEPSG": 5186,
+  "records": [
+    {
+      "recordNumber": 76,
+      "expectedCode": "26290",
+      "expectedName": "부산광역시 남구",
+      "expectedBounds": [340551.4414088982, 357823.961846314, 345336.26925802894, 363653.7889515752],
+      "correctedCode": "27200",
+      "correctedName": "대구광역시 남구",
+      "reason": "부산 남구 속성이 대구 남구 도형에 중복 기재됨. 공간 대조 후 사용자 승인으로 속성만 보정; 좌표는 변경하지 않음.",
+      "verification": {
+        "referenceArchive": "N3A_G0100000.zip",
+        "referenceSHA256": "2daebab76e7e185b95723f0e933441a715ac4e88ec0608157631e97754d9e056",
+        "referenceEPSG": 5179,
+        "referenceCode": "2720000000",
+        "intersectionOverUnion": 0.9993162414411316,
+        "actualBusanRecordNumber": 63,
+        "actualBusanIntersectionOverUnion": 0.0,
+        "approvedOn": "2026-09-09"
+      }
+    }
+  ]
+}
