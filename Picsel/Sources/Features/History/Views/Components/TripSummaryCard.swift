@@ -31,14 +31,14 @@ struct TripSummaryCard: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(travelDate, format: .dateTime.year().month(.twoDigits).day(.twoDigits))
-                    .font(.caption)
+                    .font(PicselFont.caption01)
                     .foregroundStyle(.secondary)
                 
                 Text(title)
-                    .font(.headline)
+                    .font(PicselFont.label01)
                 
                 Text("사진 \(photoCount)장 · 방문 \(placeCount)곳")
-                    .font(.caption)
+                    .font(PicselFont.caption01)
                     .foregroundStyle(.secondary)
             }
             

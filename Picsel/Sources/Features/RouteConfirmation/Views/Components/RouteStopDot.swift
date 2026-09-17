@@ -87,7 +87,7 @@ struct RouteStopDot: View {
                     .frame(width: 22, height: 22)
 
                 Text(String(describing: kind))
-                    .font(.system(size: 11))
+                    .font(PicselFont.caption01)
                     .foregroundStyle(.secondary)
             }
         }

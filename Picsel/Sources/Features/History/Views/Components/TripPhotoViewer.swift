@@ -42,7 +42,7 @@ struct TripPhotoViewer: View {
                 dismiss()
             } label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(PicselFont.label01)
                     .foregroundStyle(.white)
                     // 아이콘보다 넉넉한 탭 영역을 줍니다.
                     .frame(width: 44, height: 44)

@@ -35,12 +35,12 @@ struct VisitedPlaceRow: View {
                 // 정보 텍스트
                 VStack(alignment: .leading, spacing: 6) {
                     Text(stop.name)
-                        .font(.system(size: 16, weight: .bold))
+                        .font(PicselFont.label01)
                         .foregroundStyle(isSelected ? .black : Color(white: 0.6))
                         .lineLimit(1)
                     
                     Text(stop.address ?? "주소 미상")
-                        .font(.system(size: 12))
+                        .font(PicselFont.caption01)
                         .foregroundStyle(Color(white: 0.6))
                         .lineLimit(1)
                 }

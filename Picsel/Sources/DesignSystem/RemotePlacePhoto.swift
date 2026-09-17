@@ -38,7 +38,7 @@ struct RemotePlacePhoto: View {
                             Image(systemName: "arrow.clockwise")
                             if !compact {
                                 Text(failure.retriesOnReconnect ? "사진 연결 실패 · 다시 시도" : "사진을 불러오지 못했어요 · 다시 시도")
-                                    .font(.caption)
+                                    .font(PicselFont.caption01)
                                     .multilineTextAlignment(.center)
                             }
                         }

@@ -11,7 +11,6 @@ import SwiftUI
 struct PhotoExploreLoadingView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
-    @ScaledMetric(relativeTo: .subheadline) private var messageFontSize = 14
 
     var body: some View {
         GeometryReader { geometry in
@@ -29,7 +28,7 @@ struct PhotoExploreLoadingView: View {
             .clipped()
             .overlay(alignment: .bottom) {
                 Text("사진을 공간에 펼치는 중이에요...")
-                    .font(.system(size: messageFontSize))
+                    .font(PicselFont.body01)
                     .foregroundStyle(PicselColor.photoLoadingText)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)

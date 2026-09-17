@@ -15,10 +15,10 @@ struct VisitedPlacesConfirmView: View {
             VStack(alignment: .leading, spacing: 8) {
                 // TODO: 뷰모델의 Trip 데이터에서 지역명만 추출하는 로직 적용 가능
                 Text("\(viewModel.trip.title)을 마칠까요?")
-                    .font(.system(size: 24, weight: .bold))
+                    .font(PicselFont.title02)
                 
                 Text("방문한 장소는 완료를 체크해주세요")
-                    .font(.system(size: 14))
+                    .font(PicselFont.body01)
                     .foregroundStyle(.gray)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -75,7 +75,7 @@ struct VisitedPlacesConfirmView: View {
             if let topCard = viewModel.displayStops.last,
                let originalIndex = viewModel.trip.orderedStops.firstIndex(of: topCard) {
                 Text("\(originalIndex + 1) / \(viewModel.trip.orderedStops.count)")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(PicselFont.body01)
                     .foregroundColor(.gray)
                     .padding(.bottom, 20)
             }
@@ -93,7 +93,7 @@ struct VisitedPlacesConfirmView: View {
                     }
                 } label: {
                     Text("여행 완료하기")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(PicselFont.label01)
                 }
                 .buttonStyle(.primaryGradient)
                 .padding(.horizontal, 24)

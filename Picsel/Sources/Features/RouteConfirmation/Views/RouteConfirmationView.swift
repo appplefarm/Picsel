@@ -140,7 +140,7 @@ struct RouteConfirmationView: View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(viewModel.isRouteEmpty ? "경로에 남은 장소가 없어요" : "최종 경로가 완성되었어요")
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(PicselFont.title02)
                     .foregroundStyle(.black)
 
                 Text(
@@ -148,7 +148,7 @@ struct RouteConfirmationView: View {
                         ? "장소를 다시 골라야 여행 계획표를 만들 수 있어요"
                         : "일정을 확인하고 편집을 이용해 자유롭게 수정해보세요"
                 )
-                .font(.system(size: 13))
+                .font(PicselFont.body02)
                 .foregroundStyle(PicselColor.subtitle)
             }
             .padding(.vertical, 10)
@@ -160,20 +160,20 @@ struct RouteConfirmationView: View {
 
             VStack(spacing: 4) {
                 Text(viewModel.routeSummary)
-                    .font(.system(size: 12))
+                    .font(PicselFont.caption01)
                     .foregroundStyle(PicselColor.summaryText)
 
                 // 내비 앱마다 값이 조금씩 다르므로 어림값임을 알려 줍니다.
                 if let caption = viewModel.routeSummaryCaption {
                     Text(caption)
-                        .font(.system(size: 11))
+                        .font(PicselFont.caption01)
                         .foregroundStyle(PicselColor.summaryText.opacity(0.7))
                 }
 
                 // 경로가 그려졌더라도 빠진 장소가 있으면 그 사실을 함께 알립니다.
                 if let notice = viewModel.unreachableNotice {
                     Label(notice, systemImage: "exclamationmark.triangle")
-                        .font(.system(size: 11))
+                        .font(PicselFont.caption01)
                         .foregroundStyle(.secondary)
                         .padding(.top, 2)
                 }
@@ -196,7 +196,7 @@ struct RouteConfirmationView: View {
                     Button(editMode.isEditing ? "완료" : "편집") {
                         toggleEditing()
                     }
-                    .font(.system(size: 12))
+                    .font(PicselFont.caption01)
                     .foregroundStyle(PicselColor.editLabel)
                     .buttonStyle(.plain)
                     .accessibilityHint(
@@ -227,7 +227,7 @@ struct RouteConfirmationView: View {
             .overlay {
                 if NetworkRecovery.shared.isConnected == false {
                     Text("인터넷 연결이 없어 지도가 일부 표시되지 않을 수 있어요.")
-                        .font(.caption)
+                        .font(PicselFont.caption01)
                         .padding(12)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                         .padding()
@@ -245,7 +245,7 @@ struct RouteConfirmationView: View {
             VStack(spacing: 8) {
                 ProgressView()
                 Text("경로를 계산하고 있어요")
-                    .font(.caption)
+                    .font(PicselFont.caption01)
                     .foregroundStyle(.secondary)
             }
         }
@@ -266,7 +266,7 @@ struct RouteConfirmationView: View {
             }
         } label: {
             Text(viewModel.isRouteEmpty ? "장소 다시 고르기" : "이대로 여행 계획표 만들기")
-                .font(.system(size: 16, weight: .bold))
+                .font(PicselFont.label01)
         }
         .buttonStyle(.primaryGradient)
         .padding(.horizontal, 24)

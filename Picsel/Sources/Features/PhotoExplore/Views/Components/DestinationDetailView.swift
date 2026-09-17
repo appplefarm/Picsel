@@ -49,7 +49,7 @@ struct DestinationDetailView: View {
 
                         if let locationName = destination.address, !locationName.isEmpty {
                             Text(locationName)
-                                .font(PicselFont.body01)
+                                .font(PicselFont.title03)
                                 .multilineTextAlignment(.center)
                                 .padding(.top, 16)
                         }
@@ -58,13 +58,13 @@ struct DestinationDetailView: View {
                             .padding(.top, 56)
 
                         Text("이 사진을 목적지로 선택하면 다음 단계에서 출발지와 목적지 사이에서 들를 장소를 추천해드려요")
-                            .font(PicselFont.caption01)
+                            .font(PicselFont.body01)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.top, 32)
 
                         if !destination.canSelectAsDestination {
                             Text("위치 정보가 없거나 검증되지 않았어요. 사진은 볼 수 있지만 경로에는 추가할 수 없어요.")
-                                .font(PicselFont.caption01)
+                                .font(PicselFont.body01)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.top, 16)
                         }
@@ -197,20 +197,21 @@ struct DestinationDetailView: View {
         switch viewModel.travelState {
         case .loading:
             ProgressView("거리·시간을 확인하고 있어요")
-                .font(PicselFont.caption01)
+                .font(PicselFont.body01)
                 .tint(.white)
 
         case let .loaded(info):
             VStack(spacing: 8) {
                 travelChips(info.chips)
                 Text("이동 수단 · 교통 상황에 따라 달라질 수 있어요")
+//                    .font(PicselFont.body01)
                     .font(PicselFont.caption01)
                     .multilineTextAlignment(.center)
             }
 
         case let .unavailable(message):
             Text(message)
-                .font(PicselFont.caption01)
+                .font(PicselFont.body01)
                 .multilineTextAlignment(.center)
 
         case .failed(let failure):
@@ -229,12 +230,19 @@ struct DestinationDetailView: View {
     private func chipLabels(_ chips: [String]) -> some View {
         ForEach(chips, id: \.self) { chip in
             Text(chip)
-                .font(PicselFont.caption01)
+                .font(PicselFont.body01)
                 .foregroundStyle(.white)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
                 .frame(minWidth: 112, minHeight: 30)
-                .background(.white.opacity(0.65), in: .capsule)
+                .background {
+                    ZStack {
+                        Capsule()
+                            .fill(.ultraThinMaterial)
+                        Capsule()
+                            .fill(PicselColor.primaryGreen.opacity(0.25))
+                    }
+                }
         }
     }
 

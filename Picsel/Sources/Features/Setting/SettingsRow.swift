@@ -20,7 +20,7 @@ struct SettingsRow: View {
             HStack(spacing: 15) {
 
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .regular))
+                    .font(PicselFont.title03)
                     .foregroundStyle(PicselColor.settingsIcon)
                     .frame(width: 36, height: 36)
                     .background(
@@ -30,18 +30,18 @@ struct SettingsRow: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.system(size: 15, weight: .medium))
+                        .font(PicselFont.label02)
                         .foregroundStyle(PicselColor.homeText)
 
                     Text(description)
-                        .font(.system(size: 12))
+                        .font(PicselFont.caption01)
                         .foregroundStyle(PicselColor.settingsSecondaryText)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(PicselFont.caption01)
                     .foregroundStyle(PicselColor.settingsSecondaryText.opacity(0.75))
                     .frame(width: 20)
             }

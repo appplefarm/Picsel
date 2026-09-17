@@ -147,7 +147,7 @@ struct TripStatusHomeView: View {
                 .accessibilityHidden(true)
         } else {
             Image(systemName: "square.grid.3x3.fill")
-                .font(.system(size: 92, weight: .light))
+                .font(PicselFont.title01)
                 .foregroundStyle(PicselColor.tripHomeSubtitle.opacity(0.8))
                 .frame(width: presentation.pixelSize.width, height: presentation.pixelSize.height)
                 .scaleEffect(presentation.pixelDisplayScale)
@@ -180,7 +180,7 @@ struct TripStatusHomeView: View {
                     .font(PicselFont.label01)
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(PicselFont.label03)
             }
             .foregroundStyle(PicselColor.tripHomeTitle)
             .padding(20)

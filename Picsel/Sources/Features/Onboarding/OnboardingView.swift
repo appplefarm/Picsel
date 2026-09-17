@@ -21,7 +21,7 @@ struct OnboardingView: View {
                     .padding(.top, proxy.size.height * OnboardingStyle.logoTopRatio)
 
                 Text("사진으로 고르고,\n여행을 떠나고,\n픽셀로 남겨요.")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(PicselFont.title03)
                     .foregroundStyle(OnboardingStyle.subtitleGradient)
                     .lineSpacing(6)
                     .padding(.leading, proxy.size.width * OnboardingStyle.subtitleLeadingRatio)

@@ -27,11 +27,11 @@ private extension PrivacyPolicyView {
     var header: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("시행일: \(PrivacyPolicyContent.effectiveDate) | Picsel")
-                .font(.system(size: 12))
+                .font(PicselFont.caption01)
                 .foregroundStyle(Color(hex: 0x8D9795))
 
             Text("Picsel 운영팀(이하 ‘운영팀’)은 이용자의 개인정보를 중요하게 생각합니다. 이 방침은 현재 버전의 Picsel이 실제로 처리하는 정보와 이용 목적, 저장 방식을 안내합니다.")
-                .font(.system(size: 13, weight: .medium))
+                .font(PicselFont.body02)
                 .foregroundStyle(Color(hex: 0x688276))
                 .lineSpacing(4)
                 .padding(14)
@@ -49,7 +49,7 @@ private struct PolicySection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(section.title)
-                .font(.system(size: 15, weight: .semibold))
+                .font(PicselFont.label02)
                 .foregroundStyle(Color(hex: 0x2B3431))
 
             ForEach(Array(section.blocks.enumerated()), id: \.offset) { _, block in
@@ -61,9 +61,9 @@ private struct PolicySection: View {
                     HStack(spacing: 5) {
                         Text(link.title)
                         Image(systemName: "arrow.up.right")
-                            .font(.system(size: 10, weight: .semibold))
+                            .font(PicselFont.caption01)
                     }
-                    .font(.system(size: 12, weight: .medium))
+                    .font(PicselFont.caption01)
                     .foregroundStyle(PicselColor.navigationButtonHighlight)
                 }
                 .accessibilityHint("외부 웹 페이지를 엽니다")
@@ -79,13 +79,13 @@ private struct PolicyBlockView: View {
         VStack(alignment: .leading, spacing: 7) {
             if let heading = block.heading {
                 Text(heading)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(PicselFont.caption01)
                     .foregroundStyle(Color(hex: 0x36423D))
             }
 
             if let paragraph = block.paragraph {
                 Text(paragraph)
-                    .font(.system(size: 12))
+                    .font(PicselFont.caption01)
                     .foregroundStyle(Color(hex: 0x475651))
                     .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
@@ -101,7 +101,7 @@ private struct PolicyBlockView: View {
                                 .padding(.top, 6)
 
                             Text(item)
-                                .font(.system(size: 12))
+                                .font(PicselFont.caption01)
                                 .foregroundStyle(Color(hex: 0x475651))
                                 .lineSpacing(4)
                                 .fixedSize(horizontal: false, vertical: true)

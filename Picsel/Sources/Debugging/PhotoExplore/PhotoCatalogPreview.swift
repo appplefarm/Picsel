@@ -23,13 +23,13 @@ private struct PhotoCatalogPreview: View {
                         selectedPhoto = photo.destination
                     } label: {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(photo.placeName).font(.headline)
+                            Text(photo.placeName).font(PicselFont.label01)
                             Text("\(photo.photoID) · \(photo.photoTitle)")
                             Text(photo.address ?? "주소 없음")
                             Text(photo.locationConfirmed ? "위치 확인됨" : "위치 미검증 · 확정 차단 테스트")
                                 .foregroundStyle(photo.locationConfirmed ? Color.secondary : .orange)
                         }
-                        .font(.caption)
+                        .font(PicselFont.caption01)
                     }
                     .buttonStyle(.plain)
                 }

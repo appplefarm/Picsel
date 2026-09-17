@@ -123,7 +123,7 @@ struct PhotoInteractionSettingsPanel: View {
 
                 Section {
                     Text("Apple은 3D 탐색용 고정 수치를 제시하지 않습니다. 이 범위는 기기에서 비교 테스트하기 위한 안전 범위입니다.")
-                        .font(.footnote)
+                        .font(PicselFont.body02)
                         .foregroundStyle(.secondary)
                 }
             }

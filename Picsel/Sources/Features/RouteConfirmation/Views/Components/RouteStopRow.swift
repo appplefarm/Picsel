@@ -130,7 +130,7 @@ struct RouteStopRow: View {
                 .frame(width: Metric.dotSize, height: Metric.dotSize)
 
             Text("현재 위치")
-                .font(.system(size: 12, weight: .medium))
+                .font(PicselFont.caption01)
                 .foregroundStyle(PicselColor.locationLabel)
 
             Spacer(minLength: 0)
@@ -149,7 +149,7 @@ struct RouteStopRow: View {
 
             if let minutes {
                 Text("\(minutes)분")
-                .font(.system(size: 11, weight: .medium))
+                .font(PicselFont.caption01)
                 .foregroundStyle(PicselColor.travelMinutes)
                 .lineLimit(1)
                 .fixedSize()
@@ -229,13 +229,13 @@ struct RouteStopRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(stop.name)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(PicselFont.body01)
                     .foregroundStyle(PicselColor.subtitle)
                     .lineLimit(1)
 
                 if isUnreachable {
                     Text("자동차로 갈 수 없어 경로에서 빠졌어요")
-                        .font(.system(size: 11))
+                        .font(PicselFont.caption01)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }

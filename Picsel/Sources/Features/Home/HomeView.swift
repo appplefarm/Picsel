@@ -153,10 +153,10 @@ struct HomeView: View {
         ZStack(alignment: .topTrailing) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("여행을 떠나기 좋은 날이에요")
-                    .font(.callout)
+                    .font(PicselFont.subtitle01)
 
                 Text("어디로 떠나볼까요?")
-                    .font(.title)
+                    .font(PicselFont.title01)
                     .fontWeight(.bold)
             }
             .foregroundStyle(PicselColor.homeText)
@@ -205,10 +205,10 @@ struct HomeView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(PicselFont.label01)
                         .foregroundStyle(PicselColor.radiusGreen)
                     Text("어디에서 출발하시나요?")
-                        .font(.callout)
+                        .font(PicselFont.subtitle01)
                         .foregroundStyle(.gray)
                     Spacer()
                 }
@@ -224,7 +224,7 @@ struct HomeView: View {
                 Text("현재 위치를 가져올 수 없어요 :(")
                 Text("출발할 지역이나 장소를 직접 검색해주세요")
             }
-            .font(.footnote)
+            .font(PicselFont.body02)
             .foregroundColor(Color(red: 85/255, green: 135/255, blue: 110/255))
             .multilineTextAlignment(.center)
             
@@ -253,14 +253,14 @@ struct HomeView: View {
                     .foregroundStyle(PicselColor.radiusGreen)
 
                 Text("\(mapLocationName) · 반경 \(Int(viewModel.currentRadiusKm))km")
-                    .font(.footnote)
+                    .font(PicselFont.body02)
                     .fontWeight(.semibold)
                     .foregroundStyle(PicselColor.homeText)
                     .contentTransition(.numericText())
                 
                 if !locationManager.isLocationAuthorized {
                     Image(systemName: "chevron.right")
-                        .font(.footnote)
+                        .font(PicselFont.body02)
                         .foregroundStyle(.gray)
                 }
             }
@@ -317,17 +317,17 @@ struct HomeView: View {
                 // 텍스트는 ZStack의 기본 속성으로 버튼 정중앙에 위치
                 VStack(spacing: 4) {
                     Text("사진으로 목적지 고르기")
-                        .font(.headline)
+                        .font(PicselFont.label01)
                         .fontWeight(.bold)
                     Text("반경 안의 사진들을 둘러보세요")
-                        .font(.caption)
+                        .font(PicselFont.caption01)
                         .foregroundStyle(.white.opacity(0.9))
                 }
 
                 // 아이콘은 텍스트의 중앙 정렬에 영향을 주지 않고 좌측에 배치
                 HStack {
                     Image(systemName: "photo")
-                        .font(.title2)
+                        .font(PicselFont.title02)
                     Spacer()
                 }
                 .padding(.leading, 64)

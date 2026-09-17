@@ -13,13 +13,13 @@ private struct SettingsNavigationHeader: View {
     var body: some View {
         ZStack {
             Text(title)
-                .font(.system(size: 20, weight: .semibold))
+                .font(PicselFont.title03)
                 .foregroundStyle(PicselColor.textPrimary)
 
             HStack(spacing: 0) {
                 Button(action: dismiss.callAsFunction) {
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 22, weight: .medium))
+                        .font(PicselFont.title02)
                         .frame(width: 36, height: 36)
                 }
                 .buttonStyle(.glass)

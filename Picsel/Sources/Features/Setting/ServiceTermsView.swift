@@ -25,7 +25,7 @@ struct ServiceTermsView: View {
 private extension ServiceTermsView {
     var header: some View {
         Text("시행일: \(ServiceTermsContent.effectiveDate) | Picsel")
-            .font(.system(size: 12))
+            .font(PicselFont.caption01)
             .foregroundStyle(Color(hex: 0x8D9795))
     }
 }
@@ -36,12 +36,12 @@ private struct TermsArticleView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(article.title)
-                .font(.system(size: 13, weight: .semibold))
+                .font(PicselFont.label03)
                 .foregroundStyle(Color(hex: 0x2B3431))
 
             ForEach(article.paragraphs, id: \.self) { paragraph in
                 Text(paragraph)
-                    .font(.system(size: 12))
+                    .font(PicselFont.caption01)
                     .foregroundStyle(Color(hex: 0x475651))
                     .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
@@ -57,7 +57,7 @@ private struct TermsArticleView: View {
                             Text(item)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .font(.system(size: 12))
+                        .font(PicselFont.caption01)
                         .foregroundStyle(Color(hex: 0x475651))
                         .lineSpacing(4)
                         .fixedSize(horizontal: false, vertical: true)
