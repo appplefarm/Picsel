@@ -89,9 +89,9 @@ enum PicselColor {
     static let photoAddIcon = Color(hex: 0xABABAB)
 
     // MARK: - 보조 버튼 (픽셀 획득 화면 "홈으로")
-    static let secondaryButtonBackground = Color(hex: 0xFBFDFD)
-    static let secondaryButtonBorder = Color(hex: 0xE4F1EB)
-    static let secondaryButtonText = Color(hex: 0xA4B8B0)
+    static let secondaryButtonBackground = surface
+    static let secondaryButtonBorder = homeCTA
+    static let secondaryButtonText = textSecondary
 
     /// 픽셀맵에서 아직 가보지 않은 칸
     /// 경로 타임라인의 점과 선
