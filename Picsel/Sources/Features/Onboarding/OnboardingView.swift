@@ -23,13 +23,14 @@ struct OnboardingView: View {
                 Text("사진으로 고르고,\n여행을 떠나고,\n픽셀로 남겨요.")
                     .font(PicselFont.title03)
                     .foregroundStyle(OnboardingStyle.subtitleGradient)
-                    .lineSpacing(6)
                     .padding(.leading, proxy.size.width * OnboardingStyle.subtitleLeadingRatio)
                     .padding(.top, proxy.size.height * OnboardingStyle.subtitleTopRatio)
                     .opacity(isShowingSlogan ? 1 : 0)
                     .offset(y: reduceMotion || isShowingSlogan ? 0 : 18)
             }
         }
+        .ignoresSafeArea()
+        .preferredColorScheme(.light)
         .accessibilityElement(children: .combine)
         .task {
             guard !hasFinishedPresentation else { return }
