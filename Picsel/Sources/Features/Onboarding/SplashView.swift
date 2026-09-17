@@ -16,6 +16,8 @@ struct SplashView: View {
                     .padding(.top, proxy.size.height * OnboardingStyle.logoTopRatio)
             }
         }
+        .ignoresSafeArea()
+        .preferredColorScheme(.light)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Picsel")
     }
@@ -23,10 +25,19 @@ struct SplashView: View {
 
 struct OnboardingLogo: View {
     var body: some View {
-        Text("Picsel")
-            .font(PicselFont.title01)
-            .foregroundStyle(OnboardingStyle.logoColor)
-            .frame(maxWidth: .infinity)
+        HStack(spacing: 15) {
+            Image("OnboardingLogoMark")
+                .resizable()
+                .frame(width: 35, height: 39)
+                .accessibilityHidden(true)
+
+            Text("Picsel")
+                .font(PicselFont.title01)
+                .foregroundStyle(OnboardingStyle.logoColor)
+        }
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity)
+        .offset(x: -9)
     }
 }
 
