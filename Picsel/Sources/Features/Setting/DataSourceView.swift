@@ -121,7 +121,7 @@ private enum DataSourceContent {
             title: "지도 및 경로 API",
             paragraphs: [],
             items: [
-                "Google Maps Platform: 홈 화면 지도와 현재 위치 기반 반경 표시",
+                "NAVER Maps SDK: 홈 화면과 경로 확인 화면의 지도 표시",
                 "카카오모빌리티 길찾기 API: 출발지·경유지·목적지를 이용한 자동차 경로 계산"
             ],
             footerParagraphs: [
@@ -150,7 +150,8 @@ private enum DataSourceContent {
             items: [
                 "PhotosUI 사진 선택기: 이용자가 선택한 사진 불러오기",
                 "CoreLocation 위치 서비스: 현재 위치와 행정구역 확인",
-                "SwiftData: 여행 기록, 선택 사진 및 픽셀 정보의 기기 내 저장"
+                "SwiftData: 여행 기록, 선택 사진 및 픽셀 정보의 기기 내 저장",
+                "CloudKit Public Database: 개인정보가 아닌 관광 사진 좌표 카탈로그 제공"
             ]
         ),
         DataSourceSection(

@@ -165,7 +165,7 @@ private enum PrivacyPolicyContent {
                     "저장된 앱 데이터는 관련 기록을 삭제하거나 앱을 삭제할 때까지 기기에 남을 수 있습니다."
                 ]),
                 PolicyBlock(
-                    paragraph: "현재 버전은 CloudKit Private/Public Database를 통한 개인 데이터 또는 공용 콘텐츠 동기화를 사용하지 않습니다. 향후 CloudKit 저장 기능을 제공하는 경우 적용 전에 이 방침을 갱신합니다."
+                    paragraph: "CloudKit Public Database는 개인정보가 아닌 관광 사진 좌표 카탈로그를 제공하기 위해 사용합니다. 여행 기록, 선택 사진과 픽셀 정보 등 개인 데이터는 CloudKit에 업로드하지 않고 기기 내부에 저장합니다."
                 )
             ]
         ),
@@ -177,16 +177,17 @@ private enum PrivacyPolicyContent {
                 ),
                 PolicyBlock(items: [
                     "Apple Core Location 및 지오코딩: 현재 위치 확인과 행정구역명 변환에 iOS 시스템 서비스를 사용합니다.",
-                    "Google Maps Platform: 지도 화면과 지도 데이터를 제공하며, 서비스 요청 과정에서 Google이 접속 정보 등을 처리할 수 있습니다.",
+                    "NAVER Maps SDK: 홈 화면과 경로 확인 화면에서 지도를 표시합니다.",
                     "카카오모빌리티 길찾기 API: 경로 확인 시 현재 출발지, 경유지 및 목적지 좌표가 경로 계산을 위해 전송됩니다.",
+                    "Apple CloudKit Public Database: 개인정보가 아닌 관광 사진 좌표 카탈로그를 내려받는 데 사용합니다.",
                     "카카오맵·네이버지도·티맵: 이용자가 길 안내를 직접 실행하면 목적지 이름과 좌표가 선택한 앱에 전달됩니다. 출발지는 해당 외부 앱이 현재 위치를 기준으로 결정합니다.",
                     "한국관광공사 관광정보 API: 여행지 추천을 위해 선택 지역과 시·군·구 조건이 요청에 포함될 수 있습니다."
                 ])
             ],
             links: [
                 PolicyLink(
-                    title: "Google 개인정보처리방침 확인",
-                    url: URL(string: "https://policies.google.com/privacy")!
+                    title: "NAVER Cloud Platform 개인정보처리방침 확인",
+                    url: URL(string: "https://www.ncloud.com/policy/infou/infou")!
                 ),
                 PolicyLink(
                     title: "카카오모빌리티 개인정보처리방침 확인",
