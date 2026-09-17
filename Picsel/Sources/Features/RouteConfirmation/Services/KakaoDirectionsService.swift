@@ -53,17 +53,46 @@ struct KakaoDirectionsService: RouteDirectionsProviding {
             destination: destination
         )
 
+        #if DEBUG
+        KakaoDirectionsDiagnostics.record(
+            origin: origin,
+            waypoints: trimmedWaypoints,
+            destination: destination
+        )
+        #endif
+
+        let startedAt = Date()
+
         let data: Data
         let response: URLResponse
         do {
             (data, response) = try await session.data(for: request)
         } catch {
             if Task.isCancelled || RequestFailure.isCancellation(error) { throw CancellationError() }
+            #if DEBUG
+            KakaoDirectionsDiagnostics.record(
+                networkError: error,
+                waypointCount: trimmedWaypoints.count,
+                elapsed: Date().timeIntervalSince(startedAt)
+            )
+            #endif
             throw RouteDirectionsError.networkFailure(underlying: error)
         }
 
+        let status = (response as? HTTPURLResponse)?.statusCode ?? -1
+
+        // 실패 문구는 원인을 뭉개서 보여 주므로, 업체가 실제로 뭐라고 했는지는 여기서만 남습니다.
+        #if DEBUG
+        KakaoDirectionsDiagnostics.record(
+            status: status,
+            waypointCount: trimmedWaypoints.count,
+            elapsed: Date().timeIntervalSince(startedAt),
+            data: data
+        )
+        #endif
+
         // 키가 틀리거나 권한이 없으면 routes 없이 게이트웨이 에러만 내려옵니다.
-        if let status = (response as? HTTPURLResponse)?.statusCode, !(200..<300).contains(status) {
+        if !(200..<300).contains(status) {
             throw Self.gatewayError(status: status, data: data)
         }
 
@@ -75,10 +104,7 @@ struct KakaoDirectionsService: RouteDirectionsProviding {
 
         // 요청 자체는 200이어도 경로 계산에 실패하면 result_code로 알려 줍니다.
         guard route.resultCode == 0 else {
-            throw RouteDirectionsError.providerError(
-                code: String(route.resultCode),
-                message: route.resultMessage ?? "경로를 계산하지 못했어요."
-            )
+            throw Self.routeError(code: route.resultCode, message: route.resultMessage)
         }
 
         guard let directions = route.toDomain(
@@ -89,6 +115,64 @@ struct KakaoDirectionsService: RouteDirectionsProviding {
         }
 
         return directions
+    }
+
+    // MARK: - 갈 수 없는 경유지 골라내기
+
+    /// 경유지 하나하나에 "여기까지 자동차로 갈 수 있나"를 따로 물어봅니다.
+    ///
+    /// 카카오는 경유지 중에 못 가는 곳이 있다는 사실만 알려 주고 어느 것인지는 말하지 않습니다.
+    /// 하나씩 빼 보며 찾으면 경유지 수만큼 왕복이 쌓이므로, 전부 동시에 물어 한 번에 끝냅니다.
+    ///
+    /// 경유지가 아니라 목적지 자리에 넣어 물어봅니다. 그래야 그 지점 하나만의 문제인지가
+    /// 다른 지점에 가려지지 않습니다.
+    func unreachableWaypointIndices(
+        origin: CLLocationCoordinate2D,
+        waypoints: [CLLocationCoordinate2D]
+    ) async -> Set<Int> {
+        let trimmed = Array(waypoints.prefix(Self.maximumWaypointCount))
+        guard !trimmed.isEmpty else { return [] }
+
+        let indices = await withTaskGroup(of: (offset: Int, isUnreachable: Bool).self) { group in
+            for (offset, waypoint) in trimmed.enumerated() {
+                group.addTask { (offset, await self.isUnreachable(from: origin, to: waypoint)) }
+            }
+
+            var found: Set<Int> = []
+            for await result in group where result.isUnreachable {
+                found.insert(result.offset)
+            }
+            return found
+        }
+
+        #if DEBUG
+        KakaoDirectionsDiagnostics.recordUnreachable(indices: indices, of: trimmed)
+        #endif
+
+        return indices
+    }
+
+    private func isUnreachable(
+        from origin: CLLocationCoordinate2D,
+        to waypoint: CLLocationCoordinate2D
+    ) async -> Bool {
+        do {
+            _ = try await directions(origin: origin, waypoints: [], destination: waypoint)
+            return false
+        } catch let error as RouteDirectionsError {
+            switch error {
+            // 업체가 "이 지점으로는 경로를 만들 수 없다"고 판단한 경우입니다.
+            // 코드가 무엇이든 결론은 같으므로 한데 묶습니다.
+            case .unreachableWaypoint, .providerError, .routeNotFound, .routeTooLong:
+                return true
+            // 네트워크나 키 문제는 이 지점의 잘못이 아닙니다.
+            // 여기서 true를 돌려주면 멀쩡한 장소를 경로에서 빼 버리게 됩니다.
+            case .networkFailure, .missingAPIKey, .invalidRequest:
+                return false
+            }
+        } catch {
+            return false
+        }
     }
 
     // MARK: - 요청 만들기
@@ -126,6 +210,23 @@ struct KakaoDirectionsService: RouteDirectionsProviding {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = httpBody
         return request
+    }
+
+    /// 카카오가 "경유지 지점 주변의 도로를 탐색할 수 없음"으로 거절할 때의 코드입니다.
+    private static let unreachableWaypointCode = 101
+
+    /// 경로 계산 실패 코드를 화면이 다룰 수 있는 실패로 옮깁니다.
+    ///
+    /// 101만 따로 빼는 이유는 대응이 완전히 다르기 때문입니다.
+    /// 나머지는 잠시 후 다시 해보면 될 수 있지만, 101은 좌표가 그대로인 한 언제 다시 보내도
+    /// 같은 대답이 옵니다. 같은 문구로 묶어 두면 "다시 시도"가 영원히 듣지 않습니다.
+    private static func routeError(code: Int, message: String?) -> RouteDirectionsError {
+        guard code != unreachableWaypointCode else { return .unreachableWaypoint }
+
+        return .providerError(
+            code: String(code),
+            message: message ?? "경로를 계산하지 못했어요."
+        )
     }
 
     private static func gatewayError(status: Int, data: Data) -> RouteDirectionsError {

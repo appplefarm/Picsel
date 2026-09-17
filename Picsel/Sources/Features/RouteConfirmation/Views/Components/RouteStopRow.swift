@@ -20,6 +20,11 @@ struct RouteStopRow: View {
     /// 이 장소가 경로에서 맡은 역할입니다. 점 모양을 지도 마커와 맞추는 데 씁니다.
     let kind: RouteMapMarker.Kind
     let position: Position
+    /// 자동차로 갈 수 없어 경로 계산에서 빠진 장소인지 여부입니다.
+    ///
+    /// 목록에서 지우지는 않습니다. 사용자가 고른 장소를 앱이 말없이 없애면 안 되고,
+    /// 걸어서는 갈 수 있는 곳일 수도 있습니다. 대신 경로에 없다는 사실을 드러냅니다.
+    let isUnreachable: Bool
     /// 경로가 현재 위치에서 출발하는지 여부입니다.
     ///
     /// 예전에는 "첫 줄에 이동 시간이 있으면 현재 위치에서 출발하는 것"이라고 짐작했는데,
@@ -82,6 +87,7 @@ struct RouteStopRow: View {
             }
         }
         .accessibilityElement(children: .combine)
+        .accessibilityHint(isUnreachable ? "자동차로 갈 수 없어 경로에서 빠진 장소입니다" : "")
     }
 
     // MARK: - 타임라인
@@ -175,7 +181,7 @@ struct RouteStopRow: View {
                 Color.clear.frame(maxHeight: .infinity)
             }
             
-            RouteStopDot(kind: kind)
+            routeDot
                 // 점 크기는 역할마다 다르지만 열 너비는 고정해야 줄이 흔들리지 않습니다.
                 .frame(width: Metric.dotSize, height: Metric.dotSize)
 
@@ -187,6 +193,24 @@ struct RouteStopRow: View {
         }
         .frame(width: Metric.dotSize)
         .accessibilityHidden(true)
+    }
+
+    /// 경로 위의 지점인지 아닌지를 점 모양으로 구분합니다.
+    ///
+    /// 빠진 장소에 채워진 점을 그대로 두면 들르는 곳처럼 읽힙니다.
+    /// 끊긴 테두리는 "여기는 경로에 없다"를 색이 아니라 형태로 말해 줍니다.
+    @ViewBuilder
+    private var routeDot: some View {
+        if isUnreachable {
+            Circle()
+                .strokeBorder(
+                    Color.secondary.opacity(0.5),
+                    style: StrokeStyle(lineWidth: 2, dash: [3, 2])
+                )
+                .frame(width: Metric.excludedDotSize, height: Metric.excludedDotSize)
+        } else {
+            RouteStopDot(kind: kind)
+        }
     }
 
     private var dashedLine: some View {
@@ -203,13 +227,24 @@ struct RouteStopRow: View {
         HStack(spacing: Metric.cardContentSpacing) {
             thumbnail
 
-            Text(stop.name)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(PicselColor.subtitle)
-                .lineLimit(1)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(stop.name)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(PicselColor.subtitle)
+                    .lineLimit(1)
+
+                if isUnreachable {
+                    Text("자동차로 갈 수 없어 경로에서 빠졌어요")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
 
             Spacer(minLength: 0)
         }
+        // 목록에는 남되 경로의 일부가 아니라는 것이 한눈에 보이게 합니다.
+        .opacity(isUnreachable ? 0.6 : 1)
         .padding(Metric.cardPadding)
         .background(PicselColor.rowBackground)
         .clipShape(RoundedRectangle(cornerRadius: Metric.cardCornerRadius, style: .continuous))
@@ -241,6 +276,8 @@ private struct VerticalDashedLine: Shape {
 private enum Metric {
     /// 점이 놓이는 열의 너비입니다. 점 자체의 크기는 역할에 따라 RouteMarkerStyle이 정합니다.
     static let dotSize: CGFloat = 22
+    /// 경로에서 빠진 장소의 점입니다. 들르는 곳보다 작게 두어 눈에 덜 걸리게 합니다.
+    static let excludedDotSize: CGFloat = 14
     static let timelineSpacing: CGFloat = 12
     /// 이동 시간이 놓이는 구간 높이
     static let segmentHeight: CGFloat = 30
@@ -295,6 +332,7 @@ private enum RouteStopRowPreviewData {
     static func list(
         count: Int,
         startsFromCurrentLocation: Bool,
+        unreachableIndices: Set<Int> = [],
         travelMinutes: @escaping (Int) -> Int?
     ) -> some View {
         let stops = makeStops(count: count)
@@ -304,11 +342,12 @@ private enum RouteStopRowPreviewData {
                 RouteStopRow(
                     stop: stop,
                     thumbnailURL: nil,
-                    travelMinutes: travelMinutes(index),
+                    // 경로에서 빠진 장소에는 구간 시간이 붙지 않습니다.
+                    travelMinutes: unreachableIndices.contains(index) ? nil : travelMinutes(index),
                     kind: stop.isDestination
                         ? .destination
                         : (index == 0 && !startsFromCurrentLocation ? .origin : .waypoint),
-                    position: position(at: index, of: count),
+                    position: position(at: index, of: count), isUnreachable: unreachableIndices.contains(index),
                     startsFromCurrentLocation: startsFromCurrentLocation,
                     showsTimeline: true
                 )
@@ -334,6 +373,17 @@ private enum RouteStopRowPreviewData {
 
 #Preview("장소 한 곳") {
     RouteStopRowPreviewData.list(count: 1, startsFromCurrentLocation: true) { _ in 43 }
+}
+
+#Preview("갈 수 없는 장소 포함") {
+    // 가운데 장소가 자동차로 갈 수 없어 경로에서 빠진 경우입니다.
+    RouteStopRowPreviewData.list(
+        count: 3,
+        startsFromCurrentLocation: true,
+        unreachableIndices: [1]
+    ) { index in
+        RouteStopRowPreviewData.minutes[index]
+    }
 }
 
 #Preview("이동 시간 없음") {

@@ -64,6 +64,24 @@ protocol RouteDirectionsProviding: Sendable {
         waypoints: [CLLocationCoordinate2D],
         destination: CLLocationCoordinate2D
     ) async throws -> RouteDirections
+
+    /// 자동차로 갈 수 없는 경유지를 골라냅니다. 돌려주는 값은 waypoints의 인덱스입니다.
+    ///
+    /// 업체는 "경유지 중에 못 가는 곳이 있다"고만 알려 주고 어느 것인지는 말해 주지 않습니다.
+    /// 그래서 지점마다 따로 물어봐야 합니다.
+    func unreachableWaypointIndices(
+        origin: CLLocationCoordinate2D,
+        waypoints: [CLLocationCoordinate2D]
+    ) async -> Set<Int>
+}
+
+extension RouteDirectionsProviding {
+    /// 골라내지 못하는 업체도 있으므로 기본값은 "모르겠음"입니다.
+    /// 빈 값을 돌려주면 호출한 쪽이 아무 경유지도 빼지 않습니다.
+    func unreachableWaypointIndices(
+        origin: CLLocationCoordinate2D,
+        waypoints: [CLLocationCoordinate2D]
+    ) async -> Set<Int> { [] }
 }
 
 enum RouteDirectionsError: LocalizedError {
@@ -77,6 +95,12 @@ enum RouteDirectionsError: LocalizedError {
     case routeNotFound
     /// 업체가 허용하는 총 경로 길이를 넘은 경우입니다.
     case routeTooLong
+    /// 경유지 주변에 자동차로 갈 수 있는 도로가 없는 경우입니다.
+    ///
+    /// 관광 API가 주는 좌표에는 산·해상·등산로처럼 도로에서 떨어진 지점이 섞입니다.
+    /// 좌표가 바뀌지 않는 한 몇 번을 보내도 같은 대답이 오므로,
+    /// 잠시 후 다시 해보면 되는 실패와 구분해서 다룹니다.
+    case unreachableWaypoint
 
     var requestFailure: RequestFailure {
         switch self {
@@ -84,6 +108,7 @@ enum RouteDirectionsError: LocalizedError {
         case .missingAPIKey, .invalidRequest: .configuration
         case .providerError: .server
         case .routeNotFound, .routeTooLong: .unavailable
+        case .unreachableWaypoint: .unreachableWaypoint
         }
     }
 
@@ -101,6 +126,8 @@ enum RouteDirectionsError: LocalizedError {
             "이 경로는 길찾기를 지원하지 않아요."
         case .routeTooLong:
             "경로가 너무 길어요. 목적지나 경유지를 줄여 주세요."
+        case .unreachableWaypoint:
+            "자동차로 갈 수 없는 장소가 있어요."
         }
     }
 }

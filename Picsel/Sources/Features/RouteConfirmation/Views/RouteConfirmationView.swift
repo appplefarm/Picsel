@@ -65,7 +65,7 @@ struct RouteConfirmationView: View {
                         thumbnailURL: viewModel.thumbnailURL(for: stop),
                         travelMinutes: viewModel.travelMinutes(before: stop),
                         kind: viewModel.stopKind(for: stop),
-                        position: position(for: stop),
+                        position: position(for: stop), isUnreachable: viewModel.isUnreachable(stop),
                         startsFromCurrentLocation: viewModel.startsFromCurrentLocation,
                         showsTimeline: !editMode.isEditing
                     )
@@ -168,6 +168,14 @@ struct RouteConfirmationView: View {
                     Text(caption)
                         .font(.system(size: 11))
                         .foregroundStyle(PicselColor.summaryText.opacity(0.7))
+                }
+
+                // 경로가 그려졌더라도 빠진 장소가 있으면 그 사실을 함께 알립니다.
+                if let notice = viewModel.unreachableNotice {
+                    Label(notice, systemImage: "exclamationmark.triangle")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 2)
                 }
             }
             .frame(maxWidth: .infinity)
