@@ -67,7 +67,7 @@
 
 ## 🛠 기술 스택 (Tech Stack)
 
-- **Platform:** iOS 17.0+
+- **Platform:** iOS 26+
 - **Framework:** SwiftUI
 - **Architecture:** MVVM
 - **Database:** SwiftData
