@@ -18,6 +18,7 @@ final class RouteConfirmationViewModel {
     private let travelMinutesByStopID: [UUID: Int]
     private let estimatedDurationMinutes: Int?
     private let directionsService: RouteDirectionsProviding
+    private let coordinateCorrector: RouteCoordinateCorrecting
 
     private(set) var routeStops: [RouteStop]
 
@@ -40,6 +41,12 @@ final class RouteConfirmationViewModel {
     /// 갈 수 없는 장소를 빼고 다시 계산하면 응답의 구간 수가 목록보다 적어집니다.
     /// 목록 순번으로 구간을 세면 한 칸씩 밀려 엉뚱한 장소에 시간이 붙습니다.
     private var routedStopIDs: [UUID] = []
+    /// 도로 쪽으로 옮겨 놓은 좌표입니다. 장소 본래의 좌표는 건드리지 않습니다.
+    ///
+    /// 관광 API가 주는 좌표는 "사진을 찍은 자리"라 산 중턱이거나 물 위일 수 있습니다.
+    /// 길찾기에는 그 좌표가 쓸모없지만, 저장된 좌표는 여행 기록과 픽셀 판정의 근거라
+    /// 길찾기 사정으로 고쳐 쓰면 안 됩니다. 그래서 계산할 때만 이 값으로 갈아 끼웁니다.
+    private var correctedCoordinates: [UUID: CLLocationCoordinate2D] = [:]
     /// 다시 시도할 때 같은 출발지를 쓰기 위해 보관합니다.
     private var lastOrigin: CLLocationCoordinate2D?
     @ObservationIgnored private var directionsTask: Task<RouteDirections, Error>?
@@ -59,13 +66,15 @@ final class RouteConfirmationViewModel {
         estimatedDurationMinutes: Int? = nil,
         thumbnailURLsByStopID: [UUID: URL] = [:],
         travelMinutesByStopID: [UUID: Int] = [:],
-        directionsService: (any RouteDirectionsProviding)? = nil
+        directionsService: (any RouteDirectionsProviding)? = nil,
+        coordinateCorrector: (any RouteCoordinateCorrecting)? = nil
     ) {
         self.trip = trip
         self.estimatedDurationMinutes = estimatedDurationMinutes
         self.thumbnailURLsByStopID = thumbnailURLsByStopID
         self.travelMinutesByStopID = travelMinutesByStopID
         self.directionsService = directionsService ?? KakaoDirectionsService()
+        self.coordinateCorrector = coordinateCorrector ?? NaverCoordinateCorrector()
         routeStops = trip.orderedStops
     }
 
@@ -160,11 +169,7 @@ final class RouteConfirmationViewModel {
         needsOrigin = false
         guard let destinationStop = stops.last else {
             cancelDirections()
-            directions = nil
-            startsFromCurrentLocation = false
-            routeOriginCoordinate = nil
-            unreachableStopIDs = []
-            routedStopIDs = []
+            resetRouteState()
             // 장소를 다시 넣었을 때 같은 조건이라도 반드시 다시 계산하도록 표식을 지웁니다.
             lastRequestSignature = nil
             // 장소가 아예 없는 것과, 장소는 있는데 좌표가 없는 것은 다릅니다.
@@ -173,7 +178,6 @@ final class RouteConfirmationViewModel {
             return
         }
 
-        let destination = coordinate(of: destinationStop)
         let remainingStops = Array(stops.dropLast())
 
         let start: CLLocationCoordinate2D
@@ -188,7 +192,8 @@ final class RouteConfirmationViewModel {
             startStop = nil
             waypointStops = remainingStops
         } else if let first = remainingStops.first {
-            start = coordinate(of: first)
+            // 보정 좌표는 계산을 시작하면서 지우므로, 여기서는 장소 본래의 좌표를 씁니다.
+            start = rawCoordinate(of: first)
             startStop = first
             waypointStops = Array(remainingStops.dropFirst())
         } else {
@@ -203,11 +208,12 @@ final class RouteConfirmationViewModel {
             return
         }
 
-        let waypoints = waypointStops.map(coordinate(of:))
-
-        let signature = "\(start.latitude),\(start.longitude)>"
-            + waypoints.map { "\($0.latitude),\($0.longitude)" }.joined(separator: "|")
-            + ">\(destination.latitude),\(destination.longitude)"
+        let plannedStops = Self.routedList(
+            startStop: startStop,
+            waypointStops: waypointStops,
+            destinationStop: destinationStop
+        )
+        let signature = Self.requestSignature(origin: origin, stops: plannedStops)
 
         guard lastRequestSignature != signature || directionsTask?.isCancelled == true else { return }
         directionsTask?.cancel()
@@ -220,12 +226,12 @@ final class RouteConfirmationViewModel {
         
         // 새 경로를 계산하는 동안 이전 경로의 잔상이 지도에 남지 않도록 비워둡니다.
         // 출발지 표시도 같이 지웁니다. 남겨 두면 옛 출발지 마커가 새 경로 위에 떠 있게 됩니다.
-        directions = nil
-        startsFromCurrentLocation = false
-        routeOriginCoordinate = nil
-        unreachableStopIDs = []
-        routedStopIDs = []
-        
+        resetRouteState()
+
+        // 보정 좌표까지 지운 뒤에 꺼내야 첫 계산이 장소 본래의 좌표로 나갑니다.
+        let waypoints = waypointStops.map(coordinate(of:))
+        let destination = coordinate(of: destinationStop)
+
         defer {
             if activeRequestID == requestID {
                 isLoadingDirections = false
@@ -241,15 +247,7 @@ final class RouteConfirmationViewModel {
             )
             try Task.checkCancellation()
             guard activeRequestID == requestID else { return }
-            apply(
-                result,
-                origin: origin,
-                routedStops: Self.routedList(
-                    startStop: startStop,
-                    waypointStops: waypointStops,
-                    destinationStop: destinationStop
-                )
-            )
+            apply(result, origin: origin, routedStops: plannedStops)
         } catch {
             guard activeRequestID == requestID else { return }
             guard !Task.isCancelled, !RequestFailure.isCancellation(error) else { return }
@@ -309,6 +307,32 @@ final class RouteConfirmationViewModel {
         [startStop].compactMap { $0 } + waypointStops + [destinationStop]
     }
 
+    /// 같은 요청인지 가리는 표식입니다.
+    ///
+    /// 보정된 좌표가 아니라 장소 본래의 좌표로 만듭니다.
+    /// 보정은 계산 도중에 생겨나는 값이라, 그것까지 넣으면 조건이 그대로인데도
+    /// 표식이 매번 달라져서 화면을 열 때마다 경로를 새로 물어보게 됩니다.
+    private static func requestSignature(
+        origin: CLLocationCoordinate2D?,
+        stops: [RouteStop]
+    ) -> String {
+        let originText = origin.map { "\($0.latitude),\($0.longitude)" } ?? "-"
+        let stopsText = stops.map { "\($0.latitude),\($0.longitude)" }.joined(separator: "|")
+        return "\(originText)>\(stopsText)"
+    }
+
+    /// 지난 계산의 흔적을 모두 지웁니다.
+    ///
+    /// 하나라도 남기면 옛 출발지 마커나 지난 경로 선이 새 경로 위에 겹쳐 뜹니다.
+    private func resetRouteState() {
+        directions = nil
+        startsFromCurrentLocation = false
+        routeOriginCoordinate = nil
+        unreachableStopIDs = []
+        routedStopIDs = []
+        correctedCoordinates = [:]
+    }
+
     /// 계산 결과를 화면이 쓰는 상태로 옮깁니다.
     private func apply(
         _ result: RouteDirections,
@@ -349,34 +373,133 @@ final class RouteConfirmationViewModel {
             return
         }
 
-        // 경유지가 전부 빠져도 출발지에서 목적지까지는 그릴 수 있습니다.
-        let keptStops = waypointStops.filter { !unreachableStopIDs.contains($0.id) }
+        let blockedStops = waypointStops.filter { unreachableStopIDs.contains($0.id) }
 
+        // 빼기 전에 먼저 옮겨 봅니다. 자리를 옮겨 길이 잡히면 그 장소는 경로에 남습니다.
+        await correctUnreachableStops(blockedStops, requestID: requestID)
+        guard activeRequestID == requestID else { return }
+        let didCorrect = !correctedCoordinates.isEmpty
+
+        // 경유지가 전부 빠져도 출발지에서 목적지까지는 그릴 수 있습니다.
+        var failure = await requestAndApply(
+            origin: origin,
+            start: start,
+            startStop: startStop,
+            waypointStops: waypointStops.filter { !unreachableStopIDs.contains($0.id) },
+            destinationStop: destinationStop,
+            requestID: requestID
+        )
+
+        // 옮긴 좌표로도 길이 안 잡히는 경우입니다.
+        // 보정을 포기하고 원래대로 빼서, 갈 수 있는 곳까지의 경로라도 남깁니다.
+        if failure != nil, didCorrect, activeRequestID == requestID {
+            correctedCoordinates = [:]
+            unreachableStopIDs = Set(blockedStops.map(\.id))
+
+            failure = await requestAndApply(
+                origin: origin,
+                start: start,
+                startStop: startStop,
+                waypointStops: waypointStops.filter { !unreachableStopIDs.contains($0.id) },
+                destinationStop: destinationStop,
+                requestID: requestID
+            )
+        }
+
+        guard let failure, activeRequestID == requestID else { return }
+        lastRequestSignature = nil
+        directionsFailure = failure
+    }
+
+    /// 주어진 경유지로 한 번 계산해 화면에 반영합니다.
+    ///
+    /// 실패하면 그 이유를 돌려줍니다. 성공했거나, 화면을 떠나 결과가 쓸모없어졌으면
+    /// 더 할 일이 없다는 뜻으로 nil을 돌려줍니다.
+    private func requestAndApply(
+        origin: CLLocationCoordinate2D?,
+        start: CLLocationCoordinate2D,
+        startStop: RouteStop?,
+        waypointStops: [RouteStop],
+        destinationStop: RouteStop,
+        requestID: UUID
+    ) async -> RequestFailure? {
         do {
             let result = try await requestDirections(
                 origin: start,
-                waypoints: keptStops.map(coordinate(of:)),
+                waypoints: waypointStops.map(coordinate(of:)),
                 destination: coordinate(of: destinationStop)
             )
             try Task.checkCancellation()
-            guard activeRequestID == requestID else { return }
+            guard activeRequestID == requestID else { return nil }
             apply(
                 result,
                 origin: origin,
                 routedStops: Self.routedList(
                     startStop: startStop,
-                    waypointStops: keptStops,
+                    waypointStops: waypointStops,
                     destinationStop: destinationStop
                 )
             )
+            return nil
         } catch {
-            guard activeRequestID == requestID else { return }
-            guard !Task.isCancelled, !RequestFailure.isCancellation(error) else { return }
-
-            lastRequestSignature = nil
-            directionsFailure = (error as? RouteDirectionsError)?.requestFailure
-                ?? RequestFailure(error)
+            guard activeRequestID == requestID else { return nil }
+            guard !Task.isCancelled, !RequestFailure.isCancellation(error) else { return nil }
+            return (error as? RouteDirectionsError)?.requestFailure ?? RequestFailure(error)
         }
+    }
+
+    /// 갈 수 없다고 판정된 장소를 도로 가까운 지점으로 옮겨 봅니다.
+    ///
+    /// 주소는 사람이 찾아가는 곳을 가리키므로, 주소를 다시 좌표로 바꾸면 도로 쪽 지점이 나옵니다.
+    /// 옮기는 데 성공한 장소는 갈 수 없는 목록에서 빼내 경로에 다시 넣습니다.
+    /// 도로명주소가 없어 옮기지 못한 장소만 최종적으로 경로에서 빠집니다.
+    private func correctUnreachableStops(_ stops: [RouteStop], requestID: UUID) async {
+        // RouteStop은 다른 실행 흐름으로 넘길 수 없으므로 필요한 값만 미리 꺼내 둡니다.
+        let targets = stops.map {
+            (id: $0.id, address: $0.address, coordinate: coordinate(of: $0))
+        }
+        guard !targets.isEmpty else { return }
+
+        let corrector = coordinateCorrector
+        let corrected = await withTaskGroup(
+            of: (id: UUID, coordinate: CLLocationCoordinate2D?).self
+        ) { group in
+            for target in targets {
+                group.addTask {
+                    (
+                        target.id,
+                        await corrector.correctedCoordinate(
+                            forAddress: target.address,
+                            near: target.coordinate
+                        )
+                    )
+                }
+            }
+
+            var found: [UUID: CLLocationCoordinate2D] = [:]
+            for await result in group {
+                if let coordinate = result.coordinate { found[result.id] = coordinate }
+            }
+            return found
+        }
+
+        // 기다리는 사이 더 새로운 요청이 시작됐다면 이 결과는 낡은 것입니다.
+        guard activeRequestID == requestID else { return }
+
+        #if DEBUG
+        // 갈아 끼우기 전에 남겨야 옮기기 전 좌표가 찍힙니다.
+        for stop in stops {
+            RouteCoordinateDiagnostics.record(
+                name: stop.name,
+                address: stop.address,
+                from: coordinate(of: stop),
+                to: corrected[stop.id]
+            )
+        }
+        #endif
+
+        correctedCoordinates.merge(corrected) { _, new in new }
+        unreachableStopIDs.subtract(corrected.keys)
     }
 
     /// 자동차로 갈 수 없는 장소를 골라내 표시해 둡니다.
@@ -425,7 +548,15 @@ final class RouteConfirmationViewModel {
         isLoadingDirections = false
     }
 
+    /// 경로 계산과 지도에 쓸 좌표입니다. 옮겨 놓은 좌표가 있으면 그것을 씁니다.
+    ///
+    /// 경로 선과 마커가 같은 지점을 가리키도록 두 곳 모두 이 값을 통해 좌표를 꺼냅니다.
     private func coordinate(of stop: RouteStop) -> CLLocationCoordinate2D {
+        correctedCoordinates[stop.id] ?? rawCoordinate(of: stop)
+    }
+
+    /// 장소가 원래 들고 있는 좌표입니다.
+    private func rawCoordinate(of stop: RouteStop) -> CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: stop.latitude, longitude: stop.longitude)
     }
 
