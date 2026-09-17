@@ -486,6 +486,18 @@ final class RouteConfirmationViewModel {
         // 기다리는 사이 더 새로운 요청이 시작됐다면 이 결과는 낡은 것입니다.
         guard activeRequestID == requestID else { return }
 
+        #if DEBUG
+        // 갈아 끼우기 전에 남겨야 옮기기 전 좌표가 찍힙니다.
+        for stop in stops {
+            RouteCoordinateDiagnostics.record(
+                name: stop.name,
+                address: stop.address,
+                from: coordinate(of: stop),
+                to: corrected[stop.id]
+            )
+        }
+        #endif
+
         correctedCoordinates.merge(corrected) { _, new in new }
         unreachableStopIDs.subtract(corrected.keys)
     }
