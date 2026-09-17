@@ -30,7 +30,7 @@ HomeView
 - 화면 위에 **포항 목업 · 위치·반경 필터 미적용**을 표시한다. 홈의 위치/반경을 적용한 결과가 아니다.
 - `PhotoCatalogPreview.swift`의 **포항 목업 · 원본 응답 20개** Preview에서는 모든 응답을 목록으로 확인하고 각 사진의 상세를 열 수 있다.
 - JSON 응답에는 API 키나 네트워크가 필요 없다. 사진 파일은 기존 HTTPS URL에서 읽으므로 인터넷이 필요하다.
-- 앱 시작의 Google Maps 키와 다음 경유지 화면의 TourAPI 키는 기존과 동일하게 필요하다. 이 작업은 해당 설정을 변경하지 않는다.
+- 앱 시작의 네이버 지도 Client ID와 다음 경유지 화면의 TourAPI 키는 기존과 동일하게 필요하다.
 
 Xcode → Scheme → Run → Arguments → Environment Variables:
 

@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		0C1C3EE6304CC61C001A4A24 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = 0C1C3EE5304CC61C001A4A24 /* NMapsMap */; };
-		4137A4D830459E08008474B6 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 4137A4D730459E08008474B6 /* GoogleMaps */; };
-		41ACC5C9305B018600D7BC60 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 41ACC5C8305B018600D7BC60 /* Secrets.xcconfig */; };
 		41ACC902305B651A00D7BC60 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 41ACC901305B651A00D7BC60 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
@@ -35,7 +33,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4137A4D830459E08008474B6 /* GoogleMaps in Frameworks */,
 				0C1C3EE6304CC61C001A4A24 /* NMapsMap in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -92,7 +89,6 @@
 			);
 			name = Picsel;
 			packageProductDependencies = (
-				4137A4D730459E08008474B6 /* GoogleMaps */,
 				0C1C3EE5304CC61C001A4A24 /* NMapsMap */,
 			);
 			productName = Picxel;
@@ -125,7 +121,6 @@
 			mainGroup = 639548E8302DE738001B48E6;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				4137A4D630459E08008474B6 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */,
 				0C1C3EE4304CC61C001A4A24 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -143,7 +138,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				41ACC5C9305B018600D7BC60 /* Secrets.xcconfig in Resources */,
 				41ACC902305B651A00D7BC60 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -394,14 +388,6 @@
 				minimumVersion = 3.23.3;
 			};
 		};
-		4137A4D630459E08008474B6 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/googlemaps/ios-maps-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 11.1.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -409,11 +395,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0C1C3EE4304CC61C001A4A24 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */;
 			productName = NMapsMap;
-		};
-		4137A4D730459E08008474B6 /* GoogleMaps */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4137A4D630459E08008474B6 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */;
-			productName = GoogleMaps;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

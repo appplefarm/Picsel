@@ -7,7 +7,6 @@
 
 import SwiftUI
 import SwiftData
-import GoogleMaps
 
 @main
 struct PicselApp: App {
@@ -19,16 +18,6 @@ struct PicselApp: App {
 #else
         print("[Picsel] Release 실행 중")
 #endif
-        guard let apiKey = Bundle.main.object(
-            forInfoDictionaryKey: "GOOGLE_MAPS_API_KEY"
-        ) as? String,
-        !apiKey.isEmpty,
-        !apiKey.contains("$(")
-        else {
-            fatalError("GoogleMapsAPIKey를 불러오지 못했습니다.")
-        }
-        GMSServices.provideAPIKey(apiKey)
-
         let schema = Schema([
             Trip.self,
             RouteStop.self,

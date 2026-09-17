@@ -2,15 +2,6 @@
   "originHash" : "66a5a2d914b2044e734547777dfe43d1eb19afed8bb79323025daf8da90298c1",
   "pins" : [
     {
-      "identity" : "ios-maps-sdk",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/googlemaps/ios-maps-sdk",
-      "state" : {
-        "revision" : "bb35529d3660739497b35d5de53dc7e6c5942198",
-        "version" : "11.1.0"
-      }
-    },
-    {
       "identity" : "spm-nmapsgeometry",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/navermaps/SPM-NMapsGeometry.git",
