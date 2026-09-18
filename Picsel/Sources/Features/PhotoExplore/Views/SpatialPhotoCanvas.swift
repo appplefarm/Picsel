@@ -71,10 +71,15 @@ struct SpatialPhotoCanvas: View {
         ZStack {
             PhotoExploreBackground()
             photoScene(in: viewportSize)
+            if viewModel.canInteract {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .gesture(photoTapGesture(in: viewportSize))
+                    .accessibilityHidden(true)
+            }
             sceneStatusOverlay
         }
         .contentShape(Rectangle())
-        .simultaneousGesture(selectionGesture(in: viewportSize))
         .simultaneousGesture(cameraGesture(in: viewportSize))
         .clipped()
         .onChange(of: viewModel.camera) { _, newCamera in
@@ -279,12 +284,11 @@ struct SpatialPhotoCanvas: View {
         }
     }
 
-    private func selectionGesture(in viewportSize: CGSize) -> some Gesture {
+    private func photoTapGesture(in viewportSize: CGSize) -> some Gesture {
         SpatialTapGesture()
-            .targetedToAnyEntity()
             .onEnded { value in
                 guard viewModel.canInteract,
-                      let id = renderer.placeID(for: value.entity) else { return }
+                      let id = renderer.placeID(at: value.location, in: viewportSize) else { return }
 
                 if id == viewModel.selectedPlaceID,
                    let selectedPlace = viewModel.selectedPlace {
@@ -293,13 +297,14 @@ struct SpatialPhotoCanvas: View {
                 }
 
                 withAnimation(momentumAnimation) {
-                    viewModel.select(placeID: id, in: viewportSize)
+                    viewModel.select(placeID: id)
                 }
             }
     }
 
     private func cameraGesture(in viewportSize: CGSize) -> some Gesture {
-        DragGesture(minimumDistance: CGFloat(settings.dragStartDistance))
+        // 가벼운 탭이 0pt 드래그로 인식되어 사진 선택을 덮어쓰지 않게 합니다.
+        DragGesture(minimumDistance: CGFloat(max(8, settings.dragStartDistance)))
             .simultaneously(
                 with: MagnifyGesture(
                     minimumScaleDelta: CGFloat(settings.pinchStartDelta)

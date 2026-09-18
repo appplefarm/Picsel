@@ -156,19 +156,60 @@ final class RealityPhotoRenderer {
         )
     }
 
-    func placeID(for entity: Entity) -> PhotoDestination.ID? {
-        var current: Entity? = entity
+    /// RealityKit의 엔티티 대상 터치 판정과 별개로 화면에 그려진 사진을 찾습니다.
+    func placeID(at point: CGPoint, in viewportSize: CGSize) -> PhotoDestination.ID? {
+        entries.values.compactMap { entry -> (id: PhotoDestination.ID, depth: Float)? in
+            guard entry.entity.isEnabled,
+                  let bounds = projectedBounds(for: entry.entity, in: viewportSize),
+                  hitBounds(for: bounds).contains(point) else { return nil }
 
-        while let candidate = current {
-            if candidate.name.hasPrefix(Constants.entityNamePrefix) {
-                return String(
-                    candidate.name.dropFirst(Constants.entityNamePrefix.count)
-                )
-            }
-            current = candidate.parent
+            return (entry.item.id, camera.position.z - entry.entity.position.z)
         }
+        .min(by: { $0.depth < $1.depth })?.id
+    }
 
-        return nil
+    private func hitBounds(for bounds: CGRect) -> CGRect {
+        // 멀리서 작게 보이는 사진도 손가락으로 누를 수 있도록 최소 터치 영역을 유지합니다.
+        let width = max(bounds.width + 16, 44)
+        let height = max(bounds.height + 16, 44)
+        return CGRect(
+            x: bounds.midX - width / 2,
+            y: bounds.midY - height / 2,
+            width: width,
+            height: height
+        )
+    }
+
+    private func projectedBounds(for entity: ModelEntity, in viewportSize: CGSize) -> CGRect? {
+        guard viewportSize.width > 0, viewportSize.height > 0,
+              let extents = entity.model?.mesh.bounds.extents else { return nil }
+
+        let halfWidth = extents.x / 2
+        let halfHeight = extents.y / 2
+        let corners = [
+            SIMD3<Float>(-halfWidth, -halfHeight, 0),
+            SIMD3<Float>(halfWidth, -halfHeight, 0),
+            SIMD3<Float>(-halfWidth, halfHeight, 0),
+            SIMD3<Float>(halfWidth, halfHeight, 0)
+        ]
+        let tangent = tan(PhotoSpace.verticalFieldOfViewDegrees * .pi / 360)
+        let aspect = Float(viewportSize.width / viewportSize.height)
+        let cameraPosition = camera.position(relativeTo: nil)
+        let points = corners.compactMap { corner -> CGPoint? in
+            let relative = entity.convert(position: corner, to: nil) - cameraPosition
+            let forwardDepth = -relative.z
+            guard forwardDepth > 0.01 else { return nil }
+
+            return CGPoint(
+                x: viewportSize.width * CGFloat(1 + relative.x / (forwardDepth * tangent * aspect)) / 2,
+                y: viewportSize.height * CGFloat(1 - relative.y / (forwardDepth * tangent)) / 2
+            )
+        }
+        guard points.count == corners.count,
+              let minX = points.map(\.x).min(), let maxX = points.map(\.x).max(),
+              let minY = points.map(\.y).min(), let maxY = points.map(\.y).max() else { return nil }
+
+        return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
     }
 
     // MARK: - Entity construction

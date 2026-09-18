@@ -89,7 +89,7 @@ struct SnapChecks {
         focus(vm)
         let initialFocus = vm.camera
         try check(vm.selectedPlaceID == hub.id, "User focus starts hub navigation")
-        vm.select(placeID: places[1].id, in: viewport)
+        vm.select(placeID: places[1].id)
         for slot in [7, 3, 4, 6, 5, 2] {
             swipe(vm, to: places[slot - 1], momentum: true)
             try check(vm.selectedPlace?.placementNumber == slot, "Clockwise ring visit \(slot)")
@@ -107,9 +107,13 @@ struct SnapChecks {
             try check(connected.selectedPlaceID == hub.id, "Outer swipe returns to hub")
         }
 
-        // 현재 2번에서는 연결되지 않은 4번을 직접 탭해 건너뛰지 않습니다.
-        vm.select(placeID: places[3].id, in: viewport)
-        try check(vm.selectedPlace?.placementNumber == 2, "Unconnected tap is not a jump")
+        // 직접 탭은 연결 고리와 거리 제한 없이 이동합니다.
+        vm.select(placeID: places[3].id)
+        try check(vm.selectedPlace?.placementNumber == 4, "Direct tap reaches an unconnected photo")
+        let distant = ready()
+        distant.select(placeID: places[3].id)
+        try check(distant.selectedPlace?.placementNumber == 4, "Direct tap works from initial distant camera")
+        vm.select(placeID: places[1].id)
         vm.beginGesture(at: vm.camera)
         vm.updateGesture(.init(translation: .init(width: 4, height: 3)), in: viewport, settings: settings)
         vm.endGesture(.init(), projectsMomentum: false, in: viewport, settings: settings)
@@ -127,7 +131,7 @@ struct SnapChecks {
         let tapped = ready()
         focus(tapped)
         tapped.beginGesture(at: tapped.camera)
-        tapped.select(placeID: places[1].id, in: viewport)
+        tapped.select(placeID: places[1].id)
         tapped.endGesture(.init(), projectsMomentum: false, in: viewport, settings: settings)
         try check(tapped.selectedPlace?.placementNumber == 2, "Zero-distance drag does not swallow connected tap")
 
