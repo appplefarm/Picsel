@@ -15,6 +15,10 @@
 	<string>$(NAVER_MAPS_CLIENT_ID)</string>
 	<key>NAVER_MAPS_CLIENT_SECRET</key>
 	<string>$(NAVER_MAPS_CLIENT_SECRET)</string>
+	<key>NAVER_SEARCH_CLIENT_ID</key>
+	<string>$(NAVER_SEARCH_CLIENT_ID)</string>
+	<key>NAVER_SEARCH_CLIENT_SECRET</key>
+	<string>$(NAVER_SEARCH_CLIENT_SECRET)</string>
 	<key>NMFNcpKeyId</key>
 	<string>$(NAVER_MAPS_CLIENT_ID)</string>
 	<key>TOUR_API_SERVICE_KEY_ENTRY</key>

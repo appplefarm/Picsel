@@ -456,29 +456,30 @@ final class RouteConfirmationViewModel {
     private func correctUnreachableStops(_ stops: [RouteStop], requestID: UUID) async {
         // RouteStop은 다른 실행 흐름으로 넘길 수 없으므로 필요한 값만 미리 꺼내 둡니다.
         let targets = stops.map {
-            (id: $0.id, address: $0.address, coordinate: coordinate(of: $0))
+            (id: $0.id, name: $0.name, address: $0.address, coordinate: coordinate(of: $0))
         }
         guard !targets.isEmpty else { return }
 
         let corrector = coordinateCorrector
-        let corrected = await withTaskGroup(
-            of: (id: UUID, coordinate: CLLocationCoordinate2D?).self
+        let corrections = await withTaskGroup(
+            of: (id: UUID, correction: RouteCoordinateCorrection?).self
         ) { group in
             for target in targets {
                 group.addTask {
                     (
                         target.id,
                         await corrector.correctedCoordinate(
-                            forAddress: target.address,
+                            forName: target.name,
+                            address: target.address,
                             near: target.coordinate
                         )
                     )
                 }
             }
 
-            var found: [UUID: CLLocationCoordinate2D] = [:]
+            var found: [UUID: RouteCoordinateCorrection] = [:]
             for await result in group {
-                if let coordinate = result.coordinate { found[result.id] = coordinate }
+                if let correction = result.correction { found[result.id] = correction }
             }
             return found
         }
@@ -489,18 +490,22 @@ final class RouteConfirmationViewModel {
         #if DEBUG
         // 갈아 끼우기 전에 남겨야 옮기기 전 좌표가 찍힙니다.
         for stop in stops {
+            let correction = corrections[stop.id]
             RouteCoordinateDiagnostics.record(
                 name: stop.name,
                 address: stop.address,
                 from: coordinate(of: stop),
-                to: corrected[stop.id]
+                to: correction?.coordinate,
+                step: correction?.stepDescription
             )
         }
         #endif
 
-        correctedCoordinates.merge(corrected) { _, new in new }
-        unreachableStopIDs.subtract(corrected.keys)
+        let correctedCoordinatesMap = corrections.mapValues(\.coordinate)
+        correctedCoordinates.merge(correctedCoordinatesMap) { _, new in new }
+        unreachableStopIDs.subtract(corrections.keys)
     }
+
 
     /// 자동차로 갈 수 없는 장소를 골라내 표시해 둡니다.
     ///

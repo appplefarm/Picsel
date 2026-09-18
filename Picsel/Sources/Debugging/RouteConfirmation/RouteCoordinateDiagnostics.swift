@@ -25,7 +25,8 @@ nonisolated enum RouteCoordinateDiagnostics {
         name: String,
         address: String?,
         from original: CLLocationCoordinate2D,
-        to corrected: CLLocationCoordinate2D?
+        to corrected: CLLocationCoordinate2D?,
+        step: String? = nil
     ) {
         guard let corrected else {
             print(
@@ -38,9 +39,10 @@ nonisolated enum RouteCoordinateDiagnostics {
             return
         }
 
+        let stepText = step.map { " (\($0))" } ?? ""
         print(
             """
-            [보정 ✓] \(name)
+            [보정 ✓] \(name)\(stepText)
               주소: \(address ?? "없음")
               \(format(original)) → \(format(corrected))  \(movedText(from: original, to: corrected))
             """
