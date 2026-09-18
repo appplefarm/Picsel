@@ -169,15 +169,8 @@ struct RouteConfirmationView: View {
                         .font(PicselFont.caption01)
                         .foregroundStyle(PicselColor.summaryText.opacity(0.7))
                 }
-
-                // 경로가 그려졌더라도 빠진 장소가 있으면 그 사실을 함께 알립니다.
-                if let notice = viewModel.unreachableNotice {
-                    Label(notice, systemImage: "exclamationmark.triangle")
-                        .font(PicselFont.caption01)
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 2)
-                }
             }
+
             .frame(maxWidth: .infinity)
             .multilineTextAlignment(.center)
             .padding(.top, 14)

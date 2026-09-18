@@ -72,7 +72,7 @@ struct NaverCoordinateCorrector: RouteCoordinateCorrecting {
         }
 
         // 3단계: 주소 자체가 산번지인 경우 장소명으로 지역검색을 하여 대표 지점의 도로명주소를 찾습니다.
-        if let found = await localSearchCoordinate(forName: name, near: coordinate) {
+        if let found = await localSearchCoordinate(forName: name, address: address, near: coordinate) {
             return RouteCoordinateCorrection(coordinate: found, stepDescription: "3단계 지역검색")
         }
 
@@ -130,51 +130,130 @@ struct NaverCoordinateCorrector: RouteCoordinateCorrecting {
 
     private func localSearchCoordinate(
         forName name: String,
+        address: String?,
         near coordinate: CLLocationCoordinate2D
     ) async -> CLLocationCoordinate2D? {
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedName.isEmpty else { return nil }
-
-        guard var components = URLComponents(url: searchLocalURL, resolvingAgainstBaseURL: false) else {
-            return nil
-        }
-        components.queryItems = [
-            URLQueryItem(name: "query", value: trimmedName),
-            URLQueryItem(name: "display", value: "5"),
-            URLQueryItem(name: "start", value: "1"),
-            URLQueryItem(name: "sort", value: "random")
-        ]
-
-        guard
-            let url = components.url,
-            let data = await sendSearchAPI(url),
-            let response = try? JSONDecoder().decode(NaverLocalSearchResponseDTO.self, from: data)
-        else { return nil }
+        let queries = candidateQueries(forName: name, address: address)
+        guard !queries.isEmpty else { return nil }
 
         let originalLocation = CLLocation(
             latitude: coordinate.latitude,
             longitude: coordinate.longitude
         )
 
-        // 검색 결과 중 roadAddress가 있고 원래 위치에서 3km 이내인 첫 번째 유효 좌표를 찾습니다.
-        for item in response.items {
-            guard let roadAddress = item.roadAddress, !roadAddress.isEmpty else { continue }
-            guard let foundCoordinate = await geocode(roadAddress) else { continue }
+        for query in queries {
+            guard var components = URLComponents(url: searchLocalURL, resolvingAgainstBaseURL: false) else {
+                continue
+            }
+            components.queryItems = [
+                URLQueryItem(name: "query", value: query),
+                URLQueryItem(name: "display", value: "5"),
+                URLQueryItem(name: "start", value: "1"),
+                URLQueryItem(name: "sort", value: "random")
+            ]
 
-            let candidateLocation = CLLocation(
-                latitude: foundCoordinate.latitude,
-                longitude: foundCoordinate.longitude
-            )
-            let distance = originalLocation.distance(from: candidateLocation)
+            guard
+                let url = components.url,
+                let data = await sendSearchAPI(url),
+                let response = try? JSONDecoder().decode(NaverLocalSearchResponseDTO.self, from: data),
+                !response.items.isEmpty
+            else { continue }
 
-            // 엉뚱한 동네의 동명 장소를 잡지 않도록 거리 상한을 검증합니다.
-            if distance <= maxLocalSearchDistanceMeters {
-                return foundCoordinate
+            var bestCandidate: (coordinate: CLLocationCoordinate2D, distance: CLLocationDistance)?
+
+            for item in response.items {
+                guard let roadAddress = item.roadAddress, !roadAddress.isEmpty else { continue }
+                guard let foundCoordinate = await geocode(roadAddress) else { continue }
+
+                let candidateLocation = CLLocation(
+                    latitude: foundCoordinate.latitude,
+                    longitude: foundCoordinate.longitude
+                )
+                let distance = originalLocation.distance(from: candidateLocation)
+
+                // 엉뚱한 동네의 동명 장소를 잡지 않도록 거리 상한을 검증합니다.
+                if distance <= maxLocalSearchDistanceMeters {
+                    if let best = bestCandidate {
+                        if distance < best.distance {
+                            bestCandidate = (foundCoordinate, distance)
+                        }
+                    } else {
+                        bestCandidate = (foundCoordinate, distance)
+                    }
+                }
+            }
+
+            if let best = bestCandidate {
+                return best.coordinate
             }
         }
 
         return nil
     }
+
+    /// 공원·단지 등 행정 명칭이나 괄호가 붙어 검색이 실패하는 경우를 대비해 다양한 검색어 후보를 생성합니다.
+    /// 예: "내연산 보경사 시립공원" -> ["내연산 보경사 시립공원", "내연산 보경사", "보경사", "포항 보경사"]
+    private func candidateQueries(forName name: String, address: String?) -> [String] {
+        var queries: [String] = []
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+
+        queries.append(trimmed)
+
+        // 1. 괄호 내용 제거: "임허사(포항)" -> "임허사"
+        let withoutParentheses = trimmed
+            .replacingOccurrences(of: "\\(.*?\\)", with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if !withoutParentheses.isEmpty, !queries.contains(withoutParentheses) {
+            queries.append(withoutParentheses)
+        }
+
+        // 2. 검색에 방해되는 공원/관광지 접미어 제거: "내연산 보경사 시립공원" -> "내연산 보경사"
+        let suffixesToRemove = [
+            "시립공원", "군립공원", "도립공원", "국립공원", "도시공원", "생태공원",
+            "테마공원", "체육공원", "수변공원", "공원", "관광단지", "관광지",
+            "유원지", "체험관", "홍보관", "전시관"
+        ]
+        var strippedSuffix = withoutParentheses
+        for suffix in suffixesToRemove {
+            if strippedSuffix.hasSuffix(suffix) {
+                strippedSuffix = String(strippedSuffix.dropLast(suffix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+        if !strippedSuffix.isEmpty, !queries.contains(strippedSuffix) {
+            queries.append(strippedSuffix)
+        }
+
+        // 3. 띄어쓰기된 단어들의 개별 키워드 ("내연산 보경사" -> "보경사", "내연산")
+        let tokens = withoutParentheses.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+        if tokens.count > 1 {
+            for token in tokens.reversed() {
+                if token.count >= 2, !queries.contains(token) {
+                    queries.append(token)
+                }
+            }
+        }
+
+        // 4. 주소의 지역 힌트(시·군·구) + 핵심 명칭 결합 (예: "포항 보경사")
+        if let address, !address.isEmpty {
+            let addressTokens = address.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+            if let city = addressTokens.first(where: { $0.hasSuffix("시") || $0.hasSuffix("군") || $0.hasSuffix("구") }) {
+                let shortCity = city
+                    .replacingOccurrences(of: "시", with: "")
+                    .replacingOccurrences(of: "군", with: "")
+                    .replacingOccurrences(of: "구", with: "")
+                for base in [strippedSuffix, tokens.last].compactMap({ $0 }) where !base.isEmpty {
+                    let combined = "\(shortCity) \(base)"
+                    if !queries.contains(combined) {
+                        queries.append(combined)
+                    }
+                }
+            }
+        }
+
+        return queries
+    }
+
 
     // MARK: - 통신 공통
 

@@ -70,13 +70,13 @@ struct RouteStopRow: View {
                     timelineFiller(height: Metric.lineAboveCard)
                 }
 
-                // 첫 줄은 출발지 표시가 있을 때만 위쪽 구간이 필요합니다.
-                // 나머지 줄은 앞 장소의 카드가 이미 위에 있으므로, 캡슐을 놓을
-                // 이동 시간이 있을 때만 자리를 벌립니다. 시간이 없으면 점선만으로 이어집니다.
-                if showsOriginRow || (!position.isFirst && travelMinutes != nil) {
+                // 첫 줄은 출발지 표시가 있을 때 위쪽 구간이 필요하고,
+                // 나머지 줄은 앞 장소와의 구간 간격과 이동 시간을 항상 표시합니다.
+                if showsOriginRow || !position.isFirst {
                     travelSegment(minutes: travelMinutes)
                 }
             }
+
 
             HStack(spacing: Metric.timelineSpacing) {
                 if showsTimeline {
@@ -87,8 +87,8 @@ struct RouteStopRow: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityHint(isUnreachable ? "자동차로 갈 수 없어 경로에서 빠진 장소입니다" : "")
     }
+
 
     // MARK: - 타임라인
 
@@ -195,22 +195,8 @@ struct RouteStopRow: View {
         .accessibilityHidden(true)
     }
 
-    /// 경로 위의 지점인지 아닌지를 점 모양으로 구분합니다.
-    ///
-    /// 빠진 장소에 채워진 점을 그대로 두면 들르는 곳처럼 읽힙니다.
-    /// 끊긴 테두리는 "여기는 경로에 없다"를 색이 아니라 형태로 말해 줍니다.
-    @ViewBuilder
     private var routeDot: some View {
-        if isUnreachable {
-            Circle()
-                .strokeBorder(
-                    Color.secondary.opacity(0.5),
-                    style: StrokeStyle(lineWidth: 2, dash: [3, 2])
-                )
-                .frame(width: Metric.excludedDotSize, height: Metric.excludedDotSize)
-        } else {
-            RouteStopDot(kind: kind)
-        }
+        RouteStopDot(kind: kind)
     }
 
     private var dashedLine: some View {
@@ -227,24 +213,13 @@ struct RouteStopRow: View {
         HStack(spacing: Metric.cardContentSpacing) {
             thumbnail
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(stop.name)
-                    .font(PicselFont.body01)
-                    .foregroundStyle(PicselColor.subtitle)
-                    .lineLimit(1)
-
-                if isUnreachable {
-                    Text("자동차로 갈 수 없어 경로에서 빠졌어요")
-                        .font(PicselFont.caption01)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-            }
+            Text(stop.name)
+                .font(PicselFont.body01)
+                .foregroundStyle(PicselColor.subtitle)
+                .lineLimit(1)
 
             Spacer(minLength: 0)
         }
-        // 목록에는 남되 경로의 일부가 아니라는 것이 한눈에 보이게 합니다.
-        .opacity(isUnreachable ? 0.6 : 1)
         .padding(Metric.cardPadding)
         .background(PicselColor.rowBackground)
         .clipShape(RoundedRectangle(cornerRadius: Metric.cardCornerRadius, style: .continuous))
@@ -253,6 +228,7 @@ struct RouteStopRow: View {
                 .stroke(PicselColor.rowBorder, lineWidth: 1)
         }
     }
+
 
     @ViewBuilder
     private var thumbnail: some View {
