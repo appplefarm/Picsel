@@ -146,17 +146,9 @@ final class SpatialPhotoCanvasViewModel {
         selectedPlaceID = nearestID
     }
 
-    func select(placeID: PhotoDestination.ID, in viewportSize: CGSize) {
-        // minimumDistance가 0인 드래그와 탭이 동시에 인식돼도, 실제 이동 없는 탭은 허용합니다.
-        guard !didPinch, hypot(activeGesture.translation.width, activeGesture.translation.height) < 8,
-              let place = availablePlaces.first(where: { $0.id == placeID }) else { return }
-        if let anchor = availablePlaces.first(where: { $0.id == snapAnchorID }) {
-            guard place.id == anchor.id
-                    || snapNavigation.neighbors(of: anchor, among: availablePlaces).contains(place) else { return }
-        } else {
-            guard selectionPolicy.isSelectable(place, from: camera, viewportSize: viewportSize) else { return }
-        }
-
+    func select(placeID: PhotoDestination.ID) {
+        guard let place = availablePlaces.first(where: { $0.id == placeID }) else { return }
+        // 직접 탭한 사진은 깊이와 마그넷 연결 관계에 상관없이 선택합니다.
         commitSelection(place, from: camera)
     }
 
