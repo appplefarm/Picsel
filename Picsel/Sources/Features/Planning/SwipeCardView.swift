@@ -13,6 +13,7 @@ struct SwipeCardView: View {
     var isTopCard: Bool = false
     var onSwipeLeft: () -> Void
     var onSwipeRight: () -> Void
+    var onDragOffsetChanged: (CGFloat) -> Void = { _ in }
     
     // 제스처에 따른 카드 이동 상태
     @State private var offset: CGSize = .zero
@@ -25,53 +26,28 @@ struct SwipeCardView: View {
             .clipped()
             .cornerRadius(10)
             
-            // MARK: - 스와이프 방향에 따른 시각적 피드백 (오버레이 및 아이콘)
-            ZStack {
-                // 오른쪽 스와이프 (초록색 그라데이션 - 오른쪽 가장자리)
-                LinearGradient(
-                    gradient: Gradient(stops: [
-                        .init(color: .clear, location: 0.5),
-                        .init(color: .green, location: 1.0)
-                    ]),
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                .opacity(Double(max(0, offset.width) / 150) * 0.8)
-                
-                // 왼쪽 스와이프 (빨간색 그라데이션 - 왼쪽 가장자리)
-                LinearGradient(
-                    gradient: Gradient(stops: [
-                        .init(color: .red, location: 0.0),
-                        .init(color: .clear, location: 0.5)
-                    ]),
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                .opacity(Double(max(0, -offset.width) / 150) * 0.8)
-                
-                HStack {
-                    // 왼쪽 X 아이콘
-                    Image(systemName: "xmark.circle")
-                        .resizable()
-                        .frame(width: 30, height: 30)
-                        .foregroundColor(.red)
-                        .background(Circle().fill(Color.white))
-                        .opacity(Double(max(0, -offset.width) / 100))
-                        .padding(.leading, 30)
-                    
-                    Spacer()
-                    
-                    // 오른쪽 O 아이콘
-                    Image(systemName: "checkmark.circle")
-                        .resizable()
-                        .frame(width: 30, height: 30)
-                        .foregroundColor(.green)
-                        .background(Circle().fill(Color.white))
-                        .opacity(Double(max(0, offset.width) / 100))
-                        .padding(.trailing, 30)
-                }
+            // MARK: - 스와이프 방향 아이콘
+            HStack {
+                // 왼쪽 X 아이콘
+                Image(systemName: "xmark.circle")
+                    .resizable()
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(.red)
+                    .background(Circle().fill(Color.white))
+                    .opacity(min(max(Double(-offset.width) / 100, 0), 1))
+                    .padding(.leading, 30)
+
+                Spacer()
+
+                // 오른쪽 O 아이콘
+                Image(systemName: "checkmark.circle")
+                    .resizable()
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(.green)
+                    .background(Circle().fill(Color.white))
+                    .opacity(min(max(Double(offset.width) / 100, 0), 1))
+                    .padding(.trailing, 30)
             }
-            .cornerRadius(10) // 사진 밖으로 삐져나가지 않도록 마스크 처리
             .allowsHitTesting(false)
         }
         .frame(width: 334, height: 239) // 피그마 가로형 디자인 고정 사이즈로 복구 (레이아웃 붕괴 방지)
@@ -83,8 +59,10 @@ struct SwipeCardView: View {
             DragGesture()
                 .onChanged { gesture in
                     offset = gesture.translation
+                    onDragOffsetChanged(gesture.translation.width)
                 }
                 .onEnded { _ in
+                    onDragOffsetChanged(0)
                     handleSwipe()
                 }
         )
