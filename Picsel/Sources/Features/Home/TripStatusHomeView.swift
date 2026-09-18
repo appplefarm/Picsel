@@ -190,29 +190,52 @@ struct TripStatusHomeView: View {
                 Image(systemName: "chevron.right")
                     .font(PicselFont.label03)
             }
-            .foregroundStyle(PicselColor.tripHomeTitle)
+            .foregroundStyle(
+                isReady
+                    ? Color.black
+                    : PicselColor.tripHomeTitle
+            )
             .padding(20)
             .frame(width: 362, alignment: .leading)
-            .background(
-                LinearGradient(
-                    stops: [
-                        .init(
-                            color: Color(red: 0.22, green: 0.70, blue: 0.53),
-                            location: 0.60
-                        ),
-                        .init(
-                            color: Color(red: 0.50, green: 0.82, blue: 0.71),
-                            location: 1
-                        )
-                    ],
-                    startPoint: UnitPoint(x: 0, y: 0.5),
-                    endPoint: UnitPoint(x: 1, y: 0.5)
-                )
-            )
+            .background { primaryButtonBackground }
             .cornerRadius(18)
+            .shadow(
+                color: isReady
+                    ? Color(hex: 0x39D29C)
+                    : .clear,
+                radius: isReady ? 11 : 0
+            )
         }
         .buttonStyle(.plain)
         .accessibilityHint(presentation.actionHint)
+    }
+
+    private var isReady: Bool {
+        if case .ready = presentation { return true }
+        return false
+    }
+
+    @ViewBuilder
+    private var primaryButtonBackground: some View {
+        switch presentation {
+        case .ready:
+            Color(hex: 0xF4FEFB)
+        case .inProgress:
+            LinearGradient(
+                stops: [
+                    .init(
+                        color: Color(red: 0.22, green: 0.70, blue: 0.53),
+                        location: 0.60
+                    ),
+                    .init(
+                        color: Color(red: 0.50, green: 0.82, blue: 0.71),
+                        location: 1
+                    )
+                ],
+                startPoint: UnitPoint(x: 0, y: 0.5),
+                endPoint: UnitPoint(x: 1, y: 0.5)
+            )
+        }
     }
 }
 
