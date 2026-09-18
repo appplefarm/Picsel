@@ -236,8 +236,8 @@ struct SpatialPhotoCanvas: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 // 실제 거리 필터가 연결되기 전에는 시안의 80km를 고정 표기하지 않습니다.
-                Text(sourceNotice ?? "관광사진 \(viewModel.places.count)장을 둘러보세요")
-                Text("사진을 밀어 이동하고, 선택된 사진을 눌러 목적지를 확인해보세요")
+                Text("마음에 드는 사진을 골라보세요")
+                Text("화면을 확대·축소해 둘러보고, 마음에 드는 풍경을 선택해보세요")
             }
             .font(PicselFont.body01)
             .fixedSize(horizontal: false, vertical: true)

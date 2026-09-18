@@ -152,17 +152,17 @@ struct HomeView: View {
     private var headerSection: some View {
         ZStack(alignment: .topTrailing) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("여행을 떠나기 좋은 날이에요")
+                Text("내 반경 안의 숨은 풍경를 만나보세요")
                     .font(PicselFont.subtitle01)
 
-                Text("어디로 떠나볼까요?")
+                Text("여행 범위를 정해볼까요?")
                     .font(PicselFont.title01)
                     .fontWeight(.bold)
             }
             .foregroundStyle(PicselColor.homeText)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
 
-            HomeSettingsButton {
+            HomeSettingsButton(foregroundColor: .black) {
                 isSettingsPresented = true
             }
         }

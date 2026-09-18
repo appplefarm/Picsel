@@ -23,17 +23,26 @@ struct TransitSwipeView: View {
     @State private var tripStartErrorMessage: String?
     @State private var showSwipeToast = false
     @State private var retryAttempt = 0
+    @State private var swipeOffsetWidth: CGFloat = 0
     
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack {
+            VStack(spacing: 0) {
             // MARK: - 상단 헤더
             VStack(alignment: .leading, spacing: 8) {
-                Text("경유지를 골라보세요")
+                Text("주변 여행지를 골라보세요")
                     .font(PicselFont.title01)
                     .bold()
-                Text("목적지 부근에서 들르기 좋은 장소를 최대 \(TransitSwipeViewModel.maximumRecommendationCount)곳 추천해드릴게요")
-                    .font(PicselFont.body01)
-                    .foregroundColor(.gray)
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("목적지 주변에서 함께 방문하기 좋은 장소를 추천해 드릴게요")
+                        .font(PicselFont.body01)
+                        .foregroundStyle(PicselColor.textPrimary)
+
+                    Text("다음 단계에서 장소 명칭과 위치를 확인할 수 있어요")
+                        .font(PicselFont.body02)
+                        .foregroundStyle(PicselColor.textTertiary)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 24)
@@ -66,6 +75,8 @@ struct TransitSwipeView: View {
                             withAnimation(.spring()) { viewModel.swipeLeft(on: place) }
                         } onSwipeRight: {
                             withAnimation(.spring()) { viewModel.swipeRight(on: place) }
+                        } onDragOffsetChanged: { width in
+                            swipeOffsetWidth = width
                         }
                         .rotationEffect(.degrees(index == 0 ? 0 : angle))
                         .opacity(index < 3 ? 1 : 0)
@@ -98,7 +109,7 @@ struct TransitSwipeView: View {
                     .onTapGesture { showToast() }
             }
             .padding(.horizontal, 32)
-            .font(PicselFont.caption01)
+            .font(PicselFont.body02)
             .foregroundColor(Color(white: 0.42))
             .padding(.bottom, 10)
             
@@ -112,6 +123,9 @@ struct TransitSwipeView: View {
                     isShowingRouteConfirmation = true
                 }
             )
+            }
+
+            screenSwipeFeedback
         }
         .navigationBarTitleDisplayMode(.inline)
         .background(PlanningBackGestureGuard())
@@ -195,6 +209,61 @@ struct TransitSwipeView: View {
         if case .loaded = viewModel.loadState { return true }
         return false
     }
+
+    private var screenSwipeFeedback: some View {
+        HStack(spacing: 0) {
+            // 왼쪽 스와이프: 오른쪽 도형을 좌우 반전한 빨간색 빛 번짐
+            SwipeGradientShape()
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0.331731),
+                            .init(color: .red, location: 0.98186)
+                        ],
+                        startPoint: UnitPoint(x: -0.255, y: 0.5),
+                        endPoint: UnitPoint(x: 0.826, y: 0.5)
+                    )
+                )
+                .frame(width: 117, height: 568)
+                .blur(radius: 5)
+                .scaleEffect(x: -1, y: 1)
+                .offset(x: -20, y: 35)
+                .opacity(leftSwipeOpacity)
+
+            Spacer(minLength: 0)
+
+            // 오른쪽 스와이프: Figma의 세로형 초록색 빛 번짐
+            SwipeGradientShape()
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0.331731),
+                            .init(
+                                color: Color(red: 77 / 255, green: 219 / 255, blue: 161 / 255),
+                                location: 0.98186
+                            )
+                        ],
+                        startPoint: UnitPoint(x: -0.255, y: 0.5),
+                        endPoint: UnitPoint(x: 0.826, y: 0.5)
+                    )
+                )
+                .frame(width: 117, height: 568)
+                .blur(radius: 5)
+                .offset(x: 20, y: 35)
+                .opacity(rightSwipeOpacity)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+    }
+
+    private var rightSwipeOpacity: Double {
+        min(max(Double(swipeOffsetWidth) / 150, 0), 1) * 0.8
+    }
+
+    private var leftSwipeOpacity: Double {
+        min(max(Double(-swipeOffsetWidth) / 150, 0), 1) * 0.8
+    }
     
     private func showToast() {
         withAnimation {
@@ -205,6 +274,22 @@ struct TransitSwipeView: View {
                 showSwipeToast = false
             }
         }
+    }
+}
+
+/// Figma의 오른쪽 스와이프 그라데이션 외곽선을 화면 크기에 맞춰 재현합니다.
+private struct SwipeGradientShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let scaleX = rect.width / 117
+        let scaleY = rect.height / 568
+
+        var path = Path()
+        path.move(to: CGPoint(x: 10 * scaleX, y: 10 * scaleY))
+        path.addLine(to: CGPoint(x: 107 * scaleX, y: 56.4104 * scaleY))
+        path.addLine(to: CGPoint(x: 107 * scaleX, y: 499.094 * scaleY))
+        path.addLine(to: CGPoint(x: 10 * scaleX, y: 558 * scaleY))
+        path.closeSubpath()
+        return path
     }
 }
 
