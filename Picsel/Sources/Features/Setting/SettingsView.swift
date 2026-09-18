@@ -24,7 +24,9 @@ struct SettingsView: View {
         }
         .scrollIndicators(.hidden)
         .background(PicselColor.settingsBackground.ignoresSafeArea())
-        .settingsNavigationBar(title: "설정")
+        .navigationTitle("설정")
+        .navigationBarTitleDisplayMode(.inline)
+        .tint(.black)
         .preferredColorScheme(.light)
         .navigationDestination(isPresented: $isNavigationAppPresented) {
             NavigationAppSelectionView(presentation: .settings) {

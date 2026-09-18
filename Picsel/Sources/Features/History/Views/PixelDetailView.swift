@@ -82,8 +82,6 @@ struct PixelDetailView: View {
         .toolbar(.hidden, for: .tabBar)
         .toolbarBackground(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(isEditing)
-        // 뒤로가기와 편집·취소·완료 버튼을 검정색으로 표시합니다.
-        .tint(.black)
         .toolbarColorScheme(.light, for: .navigationBar)
         .toolbar { toolbarContent }
         .onChange(of: pickerItems) { _, newItems in
@@ -117,19 +115,23 @@ struct PixelDetailView: View {
         if isEditing {
             ToolbarItem(placement: .topBarLeading) {
                 Button("취소", action: cancelEditing)
+                    .foregroundStyle(.black)
             }
 
             ToolbarItem(placement: .topBarTrailing) {
                 Button("완료", action: finishEditing)
                     .fontWeight(.semibold)
                     .disabled(!editor.canSave)
+                    .foregroundStyle(.black)
             }
         } else if trip != nil {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("편집", action: startEditing)
+                    .foregroundStyle(.black)
             }
         }
     }
+
 
     // MARK: - 기록 시트
 

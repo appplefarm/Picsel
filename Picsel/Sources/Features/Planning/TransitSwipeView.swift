@@ -31,9 +31,16 @@ struct TransitSwipeView: View {
                 Text("주변 여행지를 골라보세요")
                     .font(PicselFont.title01)
                     .bold()
-                Text("목적지 주변에서 함께 방문하기 좋은 장소를 추천해 드릴게요")
-                    .font(PicselFont.body01)
-                    .foregroundColor(.gray)
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("목적지 주변에서 함께 방문하기 좋은 장소를 추천해 드릴게요")
+                        .font(PicselFont.body01)
+                        .foregroundStyle(PicselColor.textPrimary)
+
+                    Text("다음 단계에서 장소 명칭과 위치를 확인할 수 있어요")
+                        .font(PicselFont.body02)
+                        .foregroundStyle(PicselColor.textTertiary)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 24)
