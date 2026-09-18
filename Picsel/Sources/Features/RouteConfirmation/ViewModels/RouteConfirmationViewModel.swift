@@ -456,29 +456,30 @@ final class RouteConfirmationViewModel {
     private func correctUnreachableStops(_ stops: [RouteStop], requestID: UUID) async {
         // RouteStop은 다른 실행 흐름으로 넘길 수 없으므로 필요한 값만 미리 꺼내 둡니다.
         let targets = stops.map {
-            (id: $0.id, address: $0.address, coordinate: coordinate(of: $0))
+            (id: $0.id, name: $0.name, address: $0.address, coordinate: coordinate(of: $0))
         }
         guard !targets.isEmpty else { return }
 
         let corrector = coordinateCorrector
-        let corrected = await withTaskGroup(
-            of: (id: UUID, coordinate: CLLocationCoordinate2D?).self
+        let corrections = await withTaskGroup(
+            of: (id: UUID, correction: RouteCoordinateCorrection?).self
         ) { group in
             for target in targets {
                 group.addTask {
                     (
                         target.id,
                         await corrector.correctedCoordinate(
-                            forAddress: target.address,
+                            forName: target.name,
+                            address: target.address,
                             near: target.coordinate
                         )
                     )
                 }
             }
 
-            var found: [UUID: CLLocationCoordinate2D] = [:]
+            var found: [UUID: RouteCoordinateCorrection] = [:]
             for await result in group {
-                if let coordinate = result.coordinate { found[result.id] = coordinate }
+                if let correction = result.correction { found[result.id] = correction }
             }
             return found
         }
@@ -489,18 +490,22 @@ final class RouteConfirmationViewModel {
         #if DEBUG
         // 갈아 끼우기 전에 남겨야 옮기기 전 좌표가 찍힙니다.
         for stop in stops {
+            let correction = corrections[stop.id]
             RouteCoordinateDiagnostics.record(
                 name: stop.name,
                 address: stop.address,
                 from: coordinate(of: stop),
-                to: corrected[stop.id]
+                to: correction?.coordinate,
+                step: correction?.stepDescription
             )
         }
         #endif
 
-        correctedCoordinates.merge(corrected) { _, new in new }
-        unreachableStopIDs.subtract(corrected.keys)
+        let correctedCoordinatesMap = corrections.mapValues(\.coordinate)
+        correctedCoordinates.merge(correctedCoordinatesMap) { _, new in new }
+        unreachableStopIDs.subtract(corrections.keys)
     }
+
 
     /// 자동차로 갈 수 없는 장소를 골라내 표시해 둡니다.
     ///
@@ -596,22 +601,44 @@ final class RouteConfirmationViewModel {
     /// 경로 응답의 leg는 "출발지 → 첫 지점", "첫 지점 → 두 번째 지점" 순서라
     /// 장소 순번에 그대로 대응합니다. 다만 현재 위치에서 출발하지 못한 경우에는
     /// 첫 장소가 곧 출발지이므로 한 칸씩 밀어서 맞춥니다.
+    /// 응답에 구간이 없거나 예외인 경우에도 직전 장소와의 거리 기반 어림값을 계산해 정상 표시합니다.
     func travelMinutes(before stop: RouteStop) -> Int? {
-        guard let legs = directions?.legs else {
-            return travelMinutesByStopID[stop.id]
+        if let legs = directions?.legs,
+           let index = routedStops.firstIndex(where: { $0.id == stop.id }) {
+            let legIndex = startsFromCurrentLocation ? index : index - 1
+            if legs.indices.contains(legIndex), let minutes = legs[legIndex].durationMinutes {
+                return minutes
+            }
         }
 
-        // 응답의 구간은 경로에 실제로 들어간 장소만큼만 있습니다.
-        // 목록 순번으로 세면 빠진 장소 뒤로 한 칸씩 밀립니다.
-        guard let index = routedStops.firstIndex(where: { $0.id == stop.id }) else {
+        if let saved = travelMinutesByStopID[stop.id] {
+            return saved
+        }
+
+        // 경로 응답이나 저장된 값이 없는 경우 직전 지점과의 거리 기반으로 어림 시간을 계산합니다.
+        guard let stopIndex = routeStops.firstIndex(where: { $0.id == stop.id }) else {
             return nil
         }
 
-        let legIndex = startsFromCurrentLocation ? index : index - 1
+        let previousCoordinate: CLLocationCoordinate2D?
+        if stopIndex == 0 {
+            previousCoordinate = startsFromCurrentLocation ? routeOriginCoordinate : nil
+        } else {
+            let prevStop = routeStops[stopIndex - 1]
+            previousCoordinate = coordinate(of: prevStop)
+        }
 
-        guard legs.indices.contains(legIndex) else { return nil }
-        return legs[legIndex].durationMinutes
+        guard let previousCoordinate else { return nil }
+
+        let prevLocation = CLLocation(latitude: previousCoordinate.latitude, longitude: previousCoordinate.longitude)
+        let currentLocation = CLLocation(latitude: stop.latitude, longitude: stop.longitude)
+        let distanceMeters = prevLocation.distance(from: currentLocation)
+
+        // 자동차 기준(시속 약 45km = 분당 750m) 어림 시간 계산
+        let estimatedMinutes = max(1, Int((distanceMeters / 750.0).rounded()))
+        return estimatedMinutes
     }
+
 
     func beginEditing() {
         routeStops = trip.orderedStops

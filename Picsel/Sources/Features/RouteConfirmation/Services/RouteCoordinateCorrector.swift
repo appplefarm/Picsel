@@ -11,46 +11,75 @@ import Foundation
 /// 자동차로 갈 수 없는 지점을 갈 수 있는 지점으로 옮겨 줍니다.
 ///
 /// 관광 API가 주는 좌표는 "사진을 찍은 자리"라 산 중턱이나 공원 한가운데일 수 있습니다.
-/// 반면 주소는 사람이 찾아가는 곳을 가리키므로, 주소를 다시 좌표로 바꾸면
+/// 반면 주소나 장소명은 사람이 찾아가는 곳을 가리키므로, 주소나 장소명으로 검색하면
 /// 자연스럽게 도로 가까운 지점이 나옵니다.
 protocol RouteCoordinateCorrecting: Sendable {
-    /// 보정된 좌표입니다. 도로가 없어 보정할 수 없으면 nil입니다.
+    /// 보정된 좌표와 성공한 단계 정보입니다. 도로가 없어 보정할 수 없으면 nil입니다.
     func correctedCoordinate(
-        forAddress address: String?,
+        forName name: String,
+        address: String?,
         near coordinate: CLLocationCoordinate2D
-    ) async -> CLLocationCoordinate2D?
+    ) async -> RouteCoordinateCorrection?
 }
 
-/// 네이버 클라우드 지오코딩으로 좌표를 보정합니다.
+/// 보정된 좌표와 보정에 성공한 단계 정보입니다.
+struct RouteCoordinateCorrection: Sendable, Equatable {
+    let coordinate: CLLocationCoordinate2D
+    let stepDescription: String
+
+    static func == (lhs: RouteCoordinateCorrection, rhs: RouteCoordinateCorrection) -> Bool {
+        lhs.coordinate.latitude == rhs.coordinate.latitude
+            && lhs.coordinate.longitude == rhs.coordinate.longitude
+            && lhs.stepDescription == rhs.stepDescription
+    }
+}
+
+/// 네이버 클라우드 플랫폼(NCP) 지오코딩 및 지역검색으로 좌표를 보정합니다.
 ///
-/// 지도 SDK 때문에 이미 쓰고 있는 계정을 그대로 씁니다.
-/// 월 300만 건까지 무료라, 경로가 실패했을 때만 부르는 이 용도에는 넉넉합니다.
+/// 1단계: 장소 주소 지오코딩
+/// 2단계: 원래 좌표 역지오코딩 → 도로명주소 지오코딩
+/// 3단계: 장소명 네이버 지역검색 → roadAddress 지오코딩 (3km 거리 상한 검증)
 struct NaverCoordinateCorrector: RouteCoordinateCorrecting {
 
     private let session: URLSession
     private let geocodeURL = URL(string: "https://maps.apigw.ntruss.com/map-geocode/v2/geocode")!
     private let reverseGeocodeURL =
         URL(string: "https://maps.apigw.ntruss.com/map-reversegeocode/v2/gc")!
+    private let searchLocalURL =
+        URL(string: "https://naverapihub.apigw.ntruss.com/search/v1/local")!
+
+    /// 지역검색으로 찾은 위치가 원래 장소와 너무 멀면 다른 동네의 동명 장소로 보고 버립니다.
+    private let maxLocalSearchDistanceMeters: CLLocationDistance = 3_000
 
     init(session: URLSession = .shared) {
         self.session = session
     }
 
     func correctedCoordinate(
-        forAddress address: String?,
+        forName name: String,
+        address: String?,
         near coordinate: CLLocationCoordinate2D
-    ) async -> CLLocationCoordinate2D? {
-        // 이미 주소를 들고 있으면 한 번만 물어보면 됩니다.
+    ) async -> RouteCoordinateCorrection? {
+        // 1단계: 이미 주소를 들고 있으면 주소로 지오코딩합니다.
         if let address, !address.isEmpty, let found = await geocode(address) {
-            return found
+            return RouteCoordinateCorrection(coordinate: found, stepDescription: "1단계 주소")
         }
 
-        // 주소가 없거나 그 주소로 못 찾은 경우입니다. 좌표에서 도로명주소를 얻어 다시 찾습니다.
-        guard let roadAddress = await roadAddress(near: coordinate) else { return nil }
-        return await geocode(roadAddress)
+        // 2단계: 주소가 없거나 실패하면 좌표에서 도로명주소를 역지오코딩으로 얻어 다시 찾습니다.
+        if let roadAddress = await roadAddress(near: coordinate),
+           let found = await geocode(roadAddress) {
+            return RouteCoordinateCorrection(coordinate: found, stepDescription: "2단계 역지오코딩")
+        }
+
+        // 3단계: 주소 자체가 산번지인 경우 장소명으로 지역검색을 하여 대표 지점의 도로명주소를 찾습니다.
+        if let found = await localSearchCoordinate(forName: name, address: address, near: coordinate) {
+            return RouteCoordinateCorrection(coordinate: found, stepDescription: "3단계 지역검색")
+        }
+
+        return nil
     }
 
-    // MARK: - 주소 → 좌표
+    // MARK: - 1·2단계: 주소 → 좌표
 
     /// 도로명주소를 가진 결과만 받아들입니다.
     ///
@@ -65,7 +94,7 @@ struct NaverCoordinateCorrector: RouteCoordinateCorrecting {
 
         guard
             let url = components.url,
-            let data = await send(url),
+            let data = await sendMapAPI(url),
             let response = try? JSONDecoder().decode(NaverGeocodeResponseDTO.self, from: data),
             let match = response.addresses.first(where: { !($0.roadAddress ?? "").isEmpty }),
             let coordinate = match.coordinate
@@ -74,7 +103,7 @@ struct NaverCoordinateCorrector: RouteCoordinateCorrecting {
         return coordinate
     }
 
-    // MARK: - 좌표 → 도로명주소
+    // MARK: - 2단계: 좌표 → 도로명주소
 
     private func roadAddress(near coordinate: CLLocationCoordinate2D) async -> String? {
         guard
@@ -90,16 +119,145 @@ struct NaverCoordinateCorrector: RouteCoordinateCorrecting {
 
         guard
             let url = components.url,
-            let data = await send(url),
+            let data = await sendMapAPI(url),
             let response = try? JSONDecoder().decode(NaverReverseGeocodeResponseDTO.self, from: data)
         else { return nil }
 
         return response.results.first(where: { $0.name == "roadaddr" })?.roadAddressText
     }
 
-    // MARK: - 공통
+    // MARK: - 3단계: 장소명 → 지역검색 → 도로명주소 → 좌표
 
-    private func send(_ url: URL) async -> Data? {
+    private func localSearchCoordinate(
+        forName name: String,
+        address: String?,
+        near coordinate: CLLocationCoordinate2D
+    ) async -> CLLocationCoordinate2D? {
+        let queries = candidateQueries(forName: name, address: address)
+        guard !queries.isEmpty else { return nil }
+
+        let originalLocation = CLLocation(
+            latitude: coordinate.latitude,
+            longitude: coordinate.longitude
+        )
+
+        for query in queries {
+            guard var components = URLComponents(url: searchLocalURL, resolvingAgainstBaseURL: false) else {
+                continue
+            }
+            components.queryItems = [
+                URLQueryItem(name: "query", value: query),
+                URLQueryItem(name: "display", value: "5"),
+                URLQueryItem(name: "start", value: "1"),
+                URLQueryItem(name: "sort", value: "random")
+            ]
+
+            guard
+                let url = components.url,
+                let data = await sendSearchAPI(url),
+                let response = try? JSONDecoder().decode(NaverLocalSearchResponseDTO.self, from: data),
+                !response.items.isEmpty
+            else { continue }
+
+            var bestCandidate: (coordinate: CLLocationCoordinate2D, distance: CLLocationDistance)?
+
+            for item in response.items {
+                guard let roadAddress = item.roadAddress, !roadAddress.isEmpty else { continue }
+                guard let foundCoordinate = await geocode(roadAddress) else { continue }
+
+                let candidateLocation = CLLocation(
+                    latitude: foundCoordinate.latitude,
+                    longitude: foundCoordinate.longitude
+                )
+                let distance = originalLocation.distance(from: candidateLocation)
+
+                // 엉뚱한 동네의 동명 장소를 잡지 않도록 거리 상한을 검증합니다.
+                if distance <= maxLocalSearchDistanceMeters {
+                    if let best = bestCandidate {
+                        if distance < best.distance {
+                            bestCandidate = (foundCoordinate, distance)
+                        }
+                    } else {
+                        bestCandidate = (foundCoordinate, distance)
+                    }
+                }
+            }
+
+            if let best = bestCandidate {
+                return best.coordinate
+            }
+        }
+
+        return nil
+    }
+
+    /// 공원·단지 등 행정 명칭이나 괄호가 붙어 검색이 실패하는 경우를 대비해 다양한 검색어 후보를 생성합니다.
+    /// 예: "내연산 보경사 시립공원" -> ["내연산 보경사 시립공원", "내연산 보경사", "보경사", "포항 보경사"]
+    private func candidateQueries(forName name: String, address: String?) -> [String] {
+        var queries: [String] = []
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+
+        queries.append(trimmed)
+
+        // 1. 괄호 내용 제거: "임허사(포항)" -> "임허사"
+        let withoutParentheses = trimmed
+            .replacingOccurrences(of: "\\(.*?\\)", with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if !withoutParentheses.isEmpty, !queries.contains(withoutParentheses) {
+            queries.append(withoutParentheses)
+        }
+
+        // 2. 검색에 방해되는 공원/관광지 접미어 제거: "내연산 보경사 시립공원" -> "내연산 보경사"
+        let suffixesToRemove = [
+            "시립공원", "군립공원", "도립공원", "국립공원", "도시공원", "생태공원",
+            "테마공원", "체육공원", "수변공원", "공원", "관광단지", "관광지",
+            "유원지", "체험관", "홍보관", "전시관"
+        ]
+        var strippedSuffix = withoutParentheses
+        for suffix in suffixesToRemove {
+            if strippedSuffix.hasSuffix(suffix) {
+                strippedSuffix = String(strippedSuffix.dropLast(suffix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+        if !strippedSuffix.isEmpty, !queries.contains(strippedSuffix) {
+            queries.append(strippedSuffix)
+        }
+
+        // 3. 띄어쓰기된 단어들의 개별 키워드 ("내연산 보경사" -> "보경사", "내연산")
+        let tokens = withoutParentheses.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+        if tokens.count > 1 {
+            for token in tokens.reversed() {
+                if token.count >= 2, !queries.contains(token) {
+                    queries.append(token)
+                }
+            }
+        }
+
+        // 4. 주소의 지역 힌트(시·군·구) + 핵심 명칭 결합 (예: "포항 보경사")
+        if let address, !address.isEmpty {
+            let addressTokens = address.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+            if let city = addressTokens.first(where: { $0.hasSuffix("시") || $0.hasSuffix("군") || $0.hasSuffix("구") }) {
+                let shortCity = city
+                    .replacingOccurrences(of: "시", with: "")
+                    .replacingOccurrences(of: "군", with: "")
+                    .replacingOccurrences(of: "구", with: "")
+                for base in [strippedSuffix, tokens.last].compactMap({ $0 }) where !base.isEmpty {
+                    let combined = "\(shortCity) \(base)"
+                    if !queries.contains(combined) {
+                        queries.append(combined)
+                    }
+                }
+            }
+        }
+
+        return queries
+    }
+
+
+    // MARK: - 통신 공통
+
+    private func sendMapAPI(_ url: URL) async -> Data? {
         guard
             let clientID = Bundle.main.object(forInfoDictionaryKey: "NAVER_MAPS_CLIENT_ID") as? String,
             let clientSecret = Bundle.main
@@ -112,8 +270,28 @@ struct NaverCoordinateCorrector: RouteCoordinateCorrecting {
         request.setValue(clientID, forHTTPHeaderField: "x-ncp-apigw-api-key-id")
         request.setValue(clientSecret, forHTTPHeaderField: "x-ncp-apigw-api-key")
 
-        // 보정은 있으면 좋은 정도의 기능입니다. 실패해도 경로 자체는 계속 만들어야 하므로
-        // 오류를 던지지 않고 "보정하지 못했다"로만 처리합니다.
+        guard
+            let (data, response) = try? await session.data(for: request),
+            let status = (response as? HTTPURLResponse)?.statusCode,
+            (200..<300).contains(status)
+        else { return nil }
+
+        return data
+    }
+
+    private func sendSearchAPI(_ url: URL) async -> Data? {
+        guard
+            let clientID = Bundle.main.object(forInfoDictionaryKey: "NAVER_SEARCH_CLIENT_ID") as? String,
+            let clientSecret = Bundle.main
+                .object(forInfoDictionaryKey: "NAVER_SEARCH_CLIENT_SECRET") as? String,
+            !clientID.isEmpty, !clientSecret.isEmpty,
+            !clientID.contains("$("), !clientSecret.contains("$(")
+        else { return nil }
+
+        var request = URLRequest(url: url)
+        request.setValue(clientID, forHTTPHeaderField: "x-ncp-apigw-api-key-id")
+        request.setValue(clientSecret, forHTTPHeaderField: "x-ncp-apigw-api-key")
+
         guard
             let (data, response) = try? await session.data(for: request),
             let status = (response as? HTTPURLResponse)?.statusCode,
@@ -179,3 +357,20 @@ private struct NaverReverseGeocodeResponseDTO: Decodable {
 
     let results: [Result]
 }
+
+private struct NaverLocalSearchResponseDTO: Decodable {
+    struct Item: Decodable {
+        let title: String?
+        let link: String?
+        let category: String?
+        let description: String?
+        let telephone: String?
+        let address: String?
+        let roadAddress: String?
+        let mapx: String?
+        let mapy: String?
+    }
+
+    let items: [Item]
+}
+
