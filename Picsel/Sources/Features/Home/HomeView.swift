@@ -162,7 +162,7 @@ struct HomeView: View {
             .foregroundStyle(PicselColor.homeText)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
 
-            HomeSettingsButton {
+            HomeSettingsButton(foregroundColor: .black) {
                 isSettingsPresented = true
             }
         }

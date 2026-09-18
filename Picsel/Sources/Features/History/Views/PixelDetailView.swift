@@ -82,9 +82,9 @@ struct PixelDetailView: View {
         .toolbar(.hidden, for: .tabBar)
         .toolbarBackground(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(isEditing)
-        // 사진 위에 얹히는 버튼이라 밝은 색으로 그려야 읽힙니다.
-        // tint를 쓰면 본문의 입력 칸·커서까지 흰색이 되므로 바에만 거는 쪽을 씁니다.
-        .toolbarColorScheme(.dark, for: .navigationBar)
+        // 뒤로가기와 편집·취소·완료 버튼을 검정색으로 표시합니다.
+        .tint(.black)
+        .toolbarColorScheme(.light, for: .navigationBar)
         .toolbar { toolbarContent }
         .onChange(of: pickerItems) { _, newItems in
             guard !newItems.isEmpty else { return }

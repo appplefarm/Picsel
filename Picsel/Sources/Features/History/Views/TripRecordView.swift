@@ -65,6 +65,9 @@ struct TripRecordView: View {
             .padding(.bottom, 24)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .onTapGesture {
+            focusedField = nil
+        }
         .scrollDismissesKeyboard(.interactively)
         .background(PicselColor.backgroundWarmWhite)
         // 고정된 밝은 배경에 맞춰 캐럿·키보드·상태바도 밝은 모드로 표시합니다.
@@ -96,13 +99,6 @@ struct TripRecordView: View {
                 unlockedRegionCode: trip.targetPixelCode
             )
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-
-                Button("완료") { focusedField = nil }
-            }
-        }
     }
 
     // MARK: - 구성 요소
@@ -113,7 +109,7 @@ struct TripRecordView: View {
                 .font(PicselFont.title02)
                 .foregroundStyle(.black)
 
-            Text("이번 여행은 어떠셨나요?\n나만의 여행 기록을 남겨 픽셀에 보관해보세요")
+            Text("이번 여행은 어떠셨나요?\n나만의 여행 기록을 남겨 픽셀에 보관해 보세요")
                 .font(PicselFont.body01)
                 .foregroundStyle(.black)
                 .fixedSize(horizontal: false, vertical: true)
